@@ -1,2 +1,4 @@
-.idea
+.idea/
+.settings
+target/
 Manage.iml
