@@ -1,4 +1,4 @@
-FROM java
+FROM java:8
 
 COPY target/Manage-1.0-SNAPSHOT.jar /Manage.jar
 
