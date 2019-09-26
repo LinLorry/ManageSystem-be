@@ -4,5 +4,8 @@ import com.dghysc.hy.user.model.User;
 import org.springframework.data.repository.CrudRepository;
 
 public interface UserRepository extends CrudRepository<User, Integer> {
+    User findUserByUsername(String username);
+
+    User findUsersByName(String name);
 
 }
