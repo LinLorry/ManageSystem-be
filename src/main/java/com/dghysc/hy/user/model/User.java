@@ -1,9 +1,14 @@
 package com.dghysc.hy.user.model;
 
 import javax.persistence.*;
+import java.io.Serializable;
 
 @Entity
-public class User {
+@IdClass(UserKey.class)
+public class User implements Serializable {
+    @Id
+    private Integer id;
+
     @Id
     private String username;
 
@@ -11,6 +16,13 @@ public class User {
 
     private String password;
 
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
 
     public String getUsername() {
         return username;
