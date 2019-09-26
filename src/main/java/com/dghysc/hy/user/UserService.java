@@ -3,15 +3,17 @@ package com.dghysc.hy.user;
 import com.dghysc.hy.until.MD5Tool;
 import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.user.repo.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UserService {
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    public boolean addUser(String username, String name, String password) {
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    boolean addUser(String username, String name, String password) {
         User user = userRepository.findUserByUsername(username);
         if (user != null) {
             return false;
@@ -29,11 +31,11 @@ public class UserService {
         return true;
     }
 
-    public boolean checkPassword(User user, String password) {
+    boolean checkPassword(User user, String password) {
         return user.getPassword().compareTo(MD5Tool.encode(password)) == 0;
     }
 
-    public User getUser(String username) {
+    User getUser(String username) {
         return userRepository.findUserByUsername(username);
     }
 }

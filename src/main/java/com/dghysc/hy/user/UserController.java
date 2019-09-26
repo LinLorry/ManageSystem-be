@@ -3,17 +3,17 @@ package com.dghysc.hy.user;
 import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.user.model.User;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-
 
 @RestController
 @RequestMapping("/api/user")
 public class UserController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 
     @ResponseBody
     @PostMapping("/registry")
