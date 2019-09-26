@@ -32,4 +32,30 @@ public class UserController {
         }
         return result;
     }
+
+    @ResponseBody
+    @PostMapping("/login")
+    public JSONObject login(@RequestBody JSONObject json) {
+        JSONObject result = new JSONObject();
+
+        String username = json.getString("username");
+        String password = json.getString("password");
+
+        User user = userService.getUser(username);
+        if (user != null) {
+            if (userService.checkPassword(user, password)) {
+                result.put("status", 1);
+                result.put("message", "Login success");
+            } else {
+                result.put("status", 0);
+                result.put("message", "Wrong password.");
+            }
+        } else {
+            result.put("status", 0);
+            result.put("message", "The user does not exist.");
+        }
+
+        return result;
+    }
+
 }
