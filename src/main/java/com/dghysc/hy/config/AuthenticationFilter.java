@@ -43,7 +43,6 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
         if (requestTokenHeader != null && requestTokenHeader.startsWith(AuthenticationName + " ")) {
             token = requestTokenHeader.substring(AuthenticationName.length() + 1);
-            System.out.println(token);
 
             try {
                 username = tokenUtil.getUsernameFromToken(token);
@@ -53,8 +52,6 @@ public class AuthenticationFilter extends OncePerRequestFilter {
                 System.out.println("JWT Token has expired");
             }
         }
-
-        System.out.println(username);
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
