@@ -3,11 +3,15 @@ package com.dghysc.hy.user;
 import com.dghysc.hy.until.MD5Tool;
 import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.user.repo.UserRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UserService {
     private final UserRepository userRepository;
+
+    @Value("${Manage.salt}")
+    private String salt;
 
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -18,9 +22,8 @@ public class UserService {
         if (user != null) {
             return false;
         }
+        String hash = MD5Tool.encode(salt + password + salt);
         user = new User();
-
-        String hash = MD5Tool.encode(password);
 
         user.setUsername(username);
         user.setName(name);
@@ -32,7 +35,8 @@ public class UserService {
     }
 
     boolean checkPassword(User user, String password) {
-        return user.getPassword().compareTo(MD5Tool.encode(password)) == 0;
+        return user.getPassword().compareTo(
+                MD5Tool.encode(salt + password + salt)) == 0;
     }
 
     User getUser(String username) {
