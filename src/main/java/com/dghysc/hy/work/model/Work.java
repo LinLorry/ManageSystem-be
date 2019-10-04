@@ -15,7 +15,7 @@ public class Work {
 
     private String comment;
 
-    private Date updateTime;
+    private Date updateDate;
 
     private Integer updateUser;
 
@@ -46,12 +46,12 @@ public class Work {
         this.comment = comment;
     }
 
-    public Date getUpdateTime() {
-        return updateTime;
+    public Date getUpdateDate() {
+        return updateDate;
     }
 
-    public void setUpdateTime(Date updateTime) {
-        this.updateTime = updateTime;
+    public void setUpdateDate(Date updateDate) {
+        this.updateDate = updateDate;
     }
 
     public Integer getUpdateUser() {
