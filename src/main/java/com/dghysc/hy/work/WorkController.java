@@ -53,19 +53,13 @@ public class WorkController {
 
     @ResponseBody
     @GetMapping("/get")
-    public JSONObject get(
-            @RequestParam(defaultValue = "1") Integer pageNumber,
-            @RequestParam(required = false) String name) {
+    public JSONObject get(@RequestParam(defaultValue = "0") Integer pageNumber) {
         JSONObject result = new JSONObject();
 
-        result.put("data", workService.getWorks(pageNumber, name));
+        result.put("data", workService.getWorks(pageNumber));
         result.put("status", 1);
         result.put("message", "Get Works Success");
 
         return result;
     }
-
-
-
-
 }

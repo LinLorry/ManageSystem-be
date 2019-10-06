@@ -43,17 +43,8 @@ public class WorkService {
         return true;
     }
 
-    List<Work> getWorks(Integer pageNumber, String name) {
-        if (name == null) {
-            return workRepository.findAll(
-                    PageRequest.of(pageNumber - 1, 20)
-            ).getContent();
-        } else {
-            return workRepository.findAllByNameContaining(
-                    PageRequest.of(pageNumber - 1, 20),
-                    name
-            ).getContent();
-        }
+    List<Work> getWorks(Integer pageNumber) {
+        return workRepository.findAll(PageRequest.of(pageNumber, 20)).getContent();
     }
 
 }
