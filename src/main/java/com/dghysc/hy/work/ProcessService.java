@@ -2,10 +2,10 @@ package com.dghysc.hy.work;
 
 import com.dghysc.hy.work.model.Process;
 import com.dghysc.hy.work.repo.ProcessRepository;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.sql.Date;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -42,12 +42,7 @@ public class ProcessService {
         return true;
     }
 
-    List<Process> getProcesses() {
-        List<Process> processes = new ArrayList<>();
-        for (Process process : processRepository.findAll()) {
-            processes.add(process);
-        }
-
-        return processes;
+    List<Process> getProcesses(Integer pageNumber) {
+        return processRepository.findAll(PageRequest.of(pageNumber, 20)).getContent();
     }
 }
