@@ -2,6 +2,7 @@ package com.dghysc.hy.user.model;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.Objects;
 
 @Embeddable
 public class UserKey implements Serializable {
@@ -36,5 +37,10 @@ public class UserKey implements Serializable {
 
         return ((UserKey) obj).getId().equals(id) &&
                 ((UserKey) obj).getUsername().equals(username);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, username);
     }
 }
