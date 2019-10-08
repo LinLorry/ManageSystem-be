@@ -19,12 +19,15 @@ public class WorkProcess implements Serializable {
     @JoinColumn
     private Process process;
 
+    private Integer sequenceNumber;
+
     public WorkProcess() {
     }
 
-    public WorkProcess(Work work, Process process) {
+    public WorkProcess(Work work, Process process, Integer sequenceNumber) {
         this.work = work;
         this.process = process;
+        this.sequenceNumber = sequenceNumber;
     }
 
     @Override
@@ -33,6 +36,7 @@ public class WorkProcess implements Serializable {
         if (!(o instanceof  WorkProcess)) return false;
         WorkProcess that = (WorkProcess) o;
         return Objects.equals(this.work.getId(), that.work.getId()) &&
-                Objects.equals(this.process.getId(), that.process.getId());
+                Objects.equals(this.process.getId(), that.process.getId()) &&
+                Objects.equals(this.sequenceNumber, that.sequenceNumber);
     }
 }
