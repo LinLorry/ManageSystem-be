@@ -30,6 +30,30 @@ public class WorkProcess implements Serializable {
         this.sequenceNumber = sequenceNumber;
     }
 
+    public Work getWork() {
+        return work;
+    }
+
+    public void setWork(Work work) {
+        this.work = work;
+    }
+
+    public Process getProcess() {
+        return process;
+    }
+
+    public void setProcess(Process process) {
+        this.process = process;
+    }
+
+    public Integer getSequenceNumber() {
+        return sequenceNumber;
+    }
+
+    public void setSequenceNumber(Integer sequenceNumber) {
+        this.sequenceNumber = sequenceNumber;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == this) return true;
