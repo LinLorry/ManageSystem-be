@@ -8,5 +8,5 @@ import org.springframework.data.repository.CrudRepository;
 public interface WorkRepository extends CrudRepository<Work, Integer> {
     Page<Work> findAll(Pageable pageable);
 
-    Page<Work> findAllByNameContaining(Pageable pageable, String name);
+    Page<Work> findWorksByNameContains(Pageable pageable, String name);
 }
