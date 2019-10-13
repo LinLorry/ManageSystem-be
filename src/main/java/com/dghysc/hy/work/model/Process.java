@@ -1,5 +1,7 @@
 package com.dghysc.hy.work.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.*;
 import java.sql.Date;
 import java.util.HashSet;
@@ -21,6 +23,7 @@ public class Process {
     private Integer updateUser;
 
     @OneToMany(mappedBy = "process", cascade = CascadeType.ALL)
+    @JsonIgnore
     private Set<WorkProcess> workProcesses = new HashSet<>();
 
     public Integer getId() {
