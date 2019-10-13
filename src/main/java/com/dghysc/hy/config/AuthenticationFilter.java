@@ -36,8 +36,6 @@ public class AuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, FilterChain filterChain) throws ServletException, IOException {
         final String requestTokenHeader = httpServletRequest.getHeader("Authorization");
 
-        System.out.println(AuthenticationName);
-
         String username = null;
         String token = null;
 
