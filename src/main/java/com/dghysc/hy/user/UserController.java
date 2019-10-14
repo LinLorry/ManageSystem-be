@@ -21,10 +21,20 @@ public class UserController {
 
     @ResponseBody
     @PostMapping("/registry")
-    public JSONObject registry(@RequestBody User user) {
+    public JSONObject registry(@RequestBody JSONObject request) {
         JSONObject result = new JSONObject();
 
-        if (userService.checkUsername(user.getUsername())) {
+        String username = request.getString("username");
+        String name = request.getString("name");
+        String password = request.getString("password");
+
+        User user = new User();
+
+        user.setUsername(username);
+        user.setName(name);
+        user.setPassword(password);
+
+        if (userService.checkUsername(username)) {
             result.put("status", 0);
             result.put("message", "Username exist.");
         } else if (userService.addUser(user)) {
