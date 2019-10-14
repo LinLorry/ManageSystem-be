@@ -1,9 +1,9 @@
 package com.dghysc.hy.user;
 
-import com.dghysc.hy.until.MD5Tool;
 import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.user.repo.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -12,6 +12,8 @@ public class UserService {
 
     @Value("${Manage.salt}")
     private String salt;
+
+    private static final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -22,7 +24,7 @@ public class UserService {
         if (user != null) {
             return false;
         }
-        String hash = MD5Tool.encode(salt + password + salt);
+        String hash = encoder.encode(salt + password + salt);
         user = new User();
 
         user.setUsername(username);
@@ -35,8 +37,7 @@ public class UserService {
     }
 
     boolean checkPassword(User user, String password) {
-        return user.getPassword().compareTo(
-                MD5Tool.encode(salt + password + salt)) == 0;
+        return encoder.matches(salt + password + salt, user.getPassword());
     }
 
     User getUser(String username) {
