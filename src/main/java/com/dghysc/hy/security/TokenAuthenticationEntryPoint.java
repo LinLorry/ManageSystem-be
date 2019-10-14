@@ -1,4 +1,4 @@
-package com.dghysc.hy.config;
+package com.dghysc.hy.security;
 
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;

@@ -1,4 +1,4 @@
-package com.dghysc.hy.config;
+package com.dghysc.hy.security;
 
 import com.dghysc.hy.until.TokenUtil;
 import com.dghysc.hy.user.model.User;
