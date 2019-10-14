@@ -1,7 +1,7 @@
 package com.dghysc.hy.user;
 
 import com.alibaba.fastjson.JSONObject;
-import com.dghysc.hy.until.TokenUtil;
+import com.dghysc.hy.until.TokenUntil;
 import com.dghysc.hy.user.model.User;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
@@ -10,13 +10,13 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/user")
 public class UserController {
 
-    private final TokenUtil tokenUtil;
+    private final TokenUntil tokenUntil;
 
     private final UserService userService;
 
-    public UserController(UserService userService, TokenUtil tokenUtil) {
+    public UserController(UserService userService, TokenUntil tokenUntil) {
         this.userService = userService;
-        this.tokenUtil = tokenUtil;
+        this.tokenUntil = tokenUntil;
     }
 
     @ResponseBody
@@ -61,7 +61,7 @@ public class UserController {
             if (userService.checkPassword(user, password)) {
                 result.put("status", 1);
                 result.put("message", "Login success");
-                result.put("token", tokenUtil.generateToken(user));
+                result.put("token", tokenUntil.generateToken(user));
             } else {
                 result.put("status", 0);
                 result.put("message", "Wrong password.");
