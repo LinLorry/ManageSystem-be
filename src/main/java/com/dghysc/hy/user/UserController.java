@@ -3,6 +3,7 @@ package com.dghysc.hy.user;
 import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.until.TokenUtil;
 import com.dghysc.hy.user.model.User;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -23,10 +24,10 @@ public class UserController {
     public JSONObject registry(@RequestBody User user) {
         JSONObject result = new JSONObject();
 
-        if (userService.getUser(user.getUsername()) != null) {
+        if (userService.checkUsername(user.getUsername())) {
             result.put("status", 0);
             result.put("message", "Username exist.");
-        } else if (userService.addUser(user.getUsername(), user.getName(), user.getPassword())) {
+        } else if (userService.addUser(user)) {
             result.put("status", 1);
             result.put("message", "registry success");
         } else {
@@ -45,8 +46,8 @@ public class UserController {
         String username = json.getString("username");
         String password = json.getString("password");
 
-        User user = userService.getUser(username);
-        if (user != null) {
+        try {
+            User user = userService.loadUserByUsername(username);
             if (userService.checkPassword(user, password)) {
                 result.put("status", 1);
                 result.put("message", "Login success");
@@ -55,7 +56,7 @@ public class UserController {
                 result.put("status", 0);
                 result.put("message", "Wrong password.");
             }
-        } else {
+        } catch (UsernameNotFoundException e) {
             result.put("status", 0);
             result.put("message", "The user does not exist.");
         }
