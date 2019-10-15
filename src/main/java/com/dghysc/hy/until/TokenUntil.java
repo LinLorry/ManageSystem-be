@@ -38,35 +38,12 @@ public class TokenUntil {
                 .compact();
     }
 
-    public Authentication getAuthenticationFromToken(String token) {
-        String username = null;
-        String password = null;
-
+    public Authentication getAuthenticationFromToken(String token)
+            throws ExpiredJwtException, SignatureException {
         Claims claims = getAllClaimsFromToken(token);
 
-        if (claims == null) {
-            return null;
-        }
-
-        Date expiration = claims.getExpiration();
-        if (expiration.before(new Date())) {
-            return null;
-        }
-
-        try {
-            username = claims.getSubject();
-            password = (String) claims.get(passwordField);
-        } catch (IllegalArgumentException e) {
-            System.out.println("Unable to get JWT Token");
-        } catch (ExpiredJwtException e) {
-            System.out.println("JWT Token has expired");
-        } catch (SignatureException e) {
-            System.out.println("Signature Exception");
-        }
-
-        if (username == null) {
-            return null;
-        }
+        String username = claims.getSubject();
+        String password = (String) claims.get(passwordField);
 
         return new UsernamePasswordAuthenticationToken(
                 username, password
