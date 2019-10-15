@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Date;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
@@ -45,6 +46,14 @@ public class WorkService {
 
     List<Work> getWorks(Integer pageNumber) {
         return workRepository.findAll(PageRequest.of(pageNumber, 20)).getContent();
+    }
+
+    Work loadWork(Integer id) throws NoSuchElementException {
+        Optional<Work> optionalWork = workRepository.findById(id);
+        if (optionalWork.isPresent()) {
+            return optionalWork.get();
+        }
+        throw new NoSuchElementException("There's no Process with id " + id);
     }
 
 }
