@@ -9,4 +9,6 @@ public interface WorkRepository extends CrudRepository<Work, Integer> {
     Page<Work> findAll(Pageable pageable);
 
     Page<Work> findWorksByNameContains(Pageable pageable, String name);
+
+    boolean existsByName(String name);
 }
