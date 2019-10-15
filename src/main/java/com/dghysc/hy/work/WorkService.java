@@ -33,7 +33,7 @@ public class WorkService {
             throws NoSuchElementException {
         Optional<Work> optionalWork = workRepository.findById(id);
         if (!optionalWork.isPresent()) {
-            throw new NoSuchElementException("There's no Process with id " + id);
+            throw new NoSuchElementException("There's no Work with id " + id);
         }
 
         Work work = optionalWork.get();
