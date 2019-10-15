@@ -93,7 +93,7 @@ public class ProcessController {
         try {
             response.put("data", processService.loadProcess(id));
             response.put("status", 1);
-            response.put("message", "Get Works Success");
+            response.put("message", "Get Process Success");
         } catch (NoSuchElementException e) {
             logger.error(e);
             response.put("status", 0);
