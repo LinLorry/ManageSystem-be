@@ -18,29 +18,30 @@ public class ProcessService {
         this.processRepository = processRepository;
     }
 
-    boolean addProcess(String name, String comment) {
+    Integer addProcess(String name, String comment) {
         Process process = new Process();
+
         process.setName(name);
         process.setComment(comment);
+        process.setUpdateTime(new Date(System.currentTimeMillis()));
 
         processRepository.save(process);
-        return true;
+        return process.getId();
     }
 
-    boolean updateProcess(Integer id, String name, String comment) {
+    void updateProcess(Integer id, String name, String comment)
+            throws NoSuchElementException {
         Optional<Process> optionalProcess = processRepository.findById(id);
         if (!optionalProcess.isPresent()) {
-            return false;
+            throw new NoSuchElementException("There's no Process with id " + id);
         }
 
         Process process = optionalProcess.get();
         process.setName(name);
         process.setComment(comment);
-        process.setUpdateTime(new Date(new java.util.Date().getTime()));
+        process.setUpdateTime(new Date(System.currentTimeMillis()));
 
         processRepository.save(process);
-
-        return true;
     }
 
     List<Process> getProcesses(Integer pageNumber) {
@@ -53,5 +54,9 @@ public class ProcessService {
             return optionalProcess.get();
         }
         throw new NoSuchElementException("There's no Process with id " + id);
+    }
+
+    boolean checkProcessByName(String name) {
+        return processRepository.existsByName(name);
     }
 }

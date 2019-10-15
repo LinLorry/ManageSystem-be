@@ -11,4 +11,6 @@ public interface ProcessRepository extends CrudRepository<Process, Integer> {
     Page<Process> findAll(Pageable pageable);
 
     Page<Process> findProcessesByNameContains(Pageable pageable, String name);
+
+    boolean existsByName(String name);
 }
