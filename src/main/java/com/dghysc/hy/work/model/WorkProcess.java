@@ -1,9 +1,6 @@
 package com.dghysc.hy.work.model;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -62,5 +59,10 @@ public class WorkProcess implements Serializable {
         return Objects.equals(this.work.getId(), that.work.getId()) &&
                 Objects.equals(this.process.getId(), that.process.getId()) &&
                 Objects.equals(this.sequenceNumber, that.sequenceNumber);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(work.getId(), process.getId(), sequenceNumber);
     }
 }
