@@ -1,17 +1,19 @@
 package com.dghysc.hy.security;
 
+import com.dghysc.hy.user.UserService;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.stereotype.Component;
 
+@Component
 public class AuthenticationProvider extends DaoAuthenticationProvider {
 
-    public AuthenticationProvider(UserDetailsService userDetailsService) {
-        setUserDetailsService(userDetailsService);
+    public AuthenticationProvider(UserService userService) {
+        setUserDetailsService(userService);
     }
 
     @Override
