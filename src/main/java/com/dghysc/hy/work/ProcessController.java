@@ -71,7 +71,7 @@ public class ProcessController {
 
     @ResponseBody
     @GetMapping("/getProcess")
-    public JSONObject getProcess(@RequestParam(defaultValue = "0") Integer id) {
+    public JSONObject getProcess(@RequestParam Integer id) {
         JSONObject result = new JSONObject();
 
         try {
