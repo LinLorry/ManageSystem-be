@@ -1,12 +1,10 @@
 package com.dghysc.hy.work;
 
 import com.alibaba.fastjson.JSONObject;
-import com.dghysc.hy.work.model.Work;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.web.bind.annotation.*;
 
-import java.sql.Date;
 import java.util.NoSuchElementException;
 
 @RestController
@@ -25,16 +23,11 @@ public class WorkController {
     public JSONObject add(@RequestBody JSONObject request) {
         JSONObject response = new JSONObject();
 
-        String name = request.getString("name");
-        String comment = request.getString("comment");
-
-        Work work = new Work();
-        work.setName(name);
-        work.setComment(comment);
-        work.setUpdateDate(new Date(System.currentTimeMillis()));
-
         try {
-            response.put("workId", workService.addWork(work));
+            response.put("workId", workService.addWork(
+                    request.getString("name"),
+                    request.getString("comment")
+            ));
             response.put("status", 1);
             response.put("message", "Add Work Success");
         } catch (Exception e) {

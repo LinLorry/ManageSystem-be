@@ -18,7 +18,13 @@ public class WorkService {
         this.workRepository = workRepository;
     }
 
-    Integer addWork(Work work) {
+    Integer addWork(String name, String comment) {
+        Work work = new Work();
+
+        work.setName(name);
+        work.setComment(comment);
+        work.setUpdateDate(new Date(System.currentTimeMillis()));
+
         workRepository.save(work);
         return work.getId();
     }
