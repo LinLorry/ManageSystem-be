@@ -3,6 +3,8 @@ package com.dghysc.hy.work;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.work.model.WorkProcess;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,6 +17,8 @@ import java.util.Map;
 @Controller
 @RequestMapping("/api/workProcess")
 public class WorkProcessController {
+    private final Log logger = LogFactory.getLog(this.getClass());
+
     private final WorkProcessService workProcessService;
 
     public WorkProcessController(WorkProcessService workProcessService) {
