@@ -1,11 +1,17 @@
 package com.dghysc.hy.work;
 
 import com.alibaba.fastjson.JSONObject;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/api/process")
 public class ProcessController {
+    private final Log logger = LogFactory.getLog(this.getClass());
+
     private final ProcessService processService;
 
     public ProcessController(ProcessService processService) {
@@ -52,13 +58,31 @@ public class ProcessController {
     }
 
     @ResponseBody
-    @GetMapping("/get")
-    public JSONObject get(@RequestParam(defaultValue = "0") Integer pageNumber) {
+    @GetMapping("/getProcesses")
+    public JSONObject getProcesses(@RequestParam(defaultValue = "0") Integer pageNumber) {
         JSONObject result = new JSONObject();
 
         result.put("data", processService.getProcesses(pageNumber));
         result.put("status", 1);
         result.put("message", "Get Works Success");
+
+        return result;
+    }
+
+    @ResponseBody
+    @GetMapping("/getProcess")
+    public JSONObject getProcess(@RequestParam(defaultValue = "0") Integer id) {
+        JSONObject result = new JSONObject();
+
+        try {
+            result.put("data", processService.loadProcess(id));
+            result.put("status", 1);
+            result.put("message", "Get Works Success");
+        } catch (NoSuchElementException e) {
+            logger.error(e);
+            result.put("status", 0);
+            result.put("message", "No such Process.");
+        }
 
         return result;
     }
