@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Component
-public class TokenUntil {
+public class TokenUtil {
     private static final long TOKEN_VALIDITY = 5 * 60 * 60;
 
     @Value("${Manage.secret}")
