@@ -6,15 +6,18 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
-@IdClass(UserKey.class)
 public class User implements UserDetails, Serializable {
     @Id
-    private Integer id;
+    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    private BigInteger id;
 
-    @Id
+    @Column(unique = true)
     private String username;
 
     private String name;
@@ -22,17 +25,14 @@ public class User implements UserDetails, Serializable {
     @JsonIgnore
     private String password;
 
-    @Override
-    @JsonIgnore
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
-    }
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private Set<UserRole> userRoleSet = new HashSet<>();
 
-    public Integer getId() {
+    public BigInteger getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(BigInteger id) {
         this.id = id;
     }
 
@@ -58,6 +58,12 @@ public class User implements UserDetails, Serializable {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    @Override
+    @JsonIgnore
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return userRoleSet;
     }
 
     @Override
