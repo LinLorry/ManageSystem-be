@@ -19,19 +19,19 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final TokenAuthenticationEntryPoint authenticationEntryPoint;
 
-    private final AuthenticationProvider authenticationProvider;
+    private final UserService userService;
 
     public WebSecurityConfig(AuthenticationFilter authenticationFilter,
                              TokenAuthenticationEntryPoint authenticationEntryPoint,
-                             AuthenticationProvider authenticationProvider) {
+                             UserService userService) {
         this.authenticationFilter = authenticationFilter;
         this.authenticationEntryPoint = authenticationEntryPoint;
-        this.authenticationProvider = authenticationProvider;
+        this.userService = userService;
     }
 
     @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.authenticationProvider(authenticationProvider);
+    protected void configure(AuthenticationManagerBuilder auth) {
+        auth.authenticationProvider(new AuthenticationProvider(userService));
     }
 
     @Override

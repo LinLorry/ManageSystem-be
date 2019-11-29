@@ -22,7 +22,7 @@ public class UserController {
     @ResponseBody
     @PostMapping("/registry")
     public JSONObject registry(@RequestBody JSONObject request) {
-        JSONObject result = new JSONObject();
+        JSONObject response = new JSONObject();
 
         String username = request.getString("username");
         String name = request.getString("name");
@@ -34,17 +34,19 @@ public class UserController {
         user.setName(name);
         user.setPassword(password);
 
-        if (userService.checkUsername(username)) {
-            result.put("status", 0);
-            result.put("message", "Username exist.");
-        } else if (userService.addUser(user)) {
-            result.put("status", 1);
-            result.put("message", "registry success");
-        } else {
-            result.put("status", 0);
-            result.put("message", "registry failed");
+        try {
+            response.put("data", userService.addUser(user));
+            response.put("status", 1);
+            response.put("message", "Registry Success");
+        } catch (Exception e) {
+            response.put("status", 0);
+            if (userService.checkUsername(request.getString("username"))) {
+                response.put("message", "UserName Exist.");
+            } else {
+                response.put("message", "Registry Failed.");
+            }
         }
-        return result;
+        return response;
     }
 
     @ResponseBody

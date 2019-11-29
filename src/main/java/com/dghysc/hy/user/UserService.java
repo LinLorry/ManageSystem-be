@@ -21,21 +21,11 @@ public class UserService implements UserDetailsService {
         this.userRepository = userRepository;
     }
 
-    boolean addUser(User tmp) {
-        User user = userRepository.findUserByUsername(tmp.getUsername());
-        if (user != null) {
-            return false;
-        }
-        String hash = encoder.encode(salt + tmp.getPassword().trim() + salt);
-        user = new User();
-
-        user.setUsername(tmp.getUsername());
-        user.setName(tmp.getName());
+    User addUser(User user) {
+        String hash = encoder.encode(salt + user.getPassword().trim() + salt);
         user.setPassword(hash);
 
-        userRepository.save(user);
-
-        return true;
+        return userRepository.save(user);
     }
 
     boolean checkPassword(User user, String password) {
@@ -47,11 +37,8 @@ public class UserService implements UserDetailsService {
     }
 
     @Override
-    public User loadUserByUsername(String s) throws UsernameNotFoundException {
-        User user = userRepository.findUserByUsername(s);
-        if (user == null) {
-            throw new UsernameNotFoundException("User doesn't exits.");
-        }
-        return user;
+    public User loadUserByUsername(String username) throws UsernameNotFoundException {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User doesn't exits."));
     }
 }

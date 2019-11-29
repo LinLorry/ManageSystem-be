@@ -4,15 +4,12 @@ import com.dghysc.hy.user.model.User;
 import org.springframework.data.repository.CrudRepository;
 
 import java.math.BigInteger;
-import java.util.List;
+import java.util.Optional;
 
 public interface UserRepository extends CrudRepository<User, BigInteger> {
-    User findUserById(BigInteger id);
+    Optional<User> findById(BigInteger id);
 
-    User findUserByUsername(String username);
+    Optional<User> findByUsername(String username);
 
     boolean existsByUsername(String username);
-
-    List<User> findUsersByName(String name);
-
 }
