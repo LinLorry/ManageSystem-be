@@ -16,7 +16,7 @@ import java.io.IOException;
 
 @Component
 public class AuthenticationFilter extends OncePerRequestFilter {
-    @Value("${Manage.AuthenticationName}")
+    @Value("${manage.authentication.name}")
     private String AuthenticationName;
 
     private final TokenUtil tokenUtil;

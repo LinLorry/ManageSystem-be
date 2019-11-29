@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
 
-    @Value("${Manage.salt}")
+    @Value("${manage.secret.salt}")
     private String salt;
 
     private static final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();

@@ -15,10 +15,10 @@ import java.util.Map;
 public class TokenUtil {
     private static final long TOKEN_VALIDITY = 5 * 60 * 60;
 
-    @Value("${Manage.secret}")
+    @Value("${manage.secret.name}")
     private String secret;
 
-    @Value("${Mange.secret.passwordField}")
+    @Value("${manage.authentication.passwordField}")
     private String passwordField;
 
     public String generateToken(UserDetails userDetails) {

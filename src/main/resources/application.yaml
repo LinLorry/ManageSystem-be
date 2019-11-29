@@ -1,0 +1,25 @@
+spring:
+  profiles:
+    active: development
+---
+spring:
+  profiles: development
+  jpa:
+    database: mysql
+    hibernate:
+      ddl-auto: update
+    open-in-view: true
+  session:
+    store-type: jdbc
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USER}
+    password: ${DATABASE_PWD}
+---
+manage:
+  authentication:
+    name: ${AUTHENTICATION_NAME:manage}
+    passwordField: ${PWD_FIELD:password}
+  secret:
+    name: ${TOKEN_SECRET:secret}
+    salt: ${PWD_SALT:salt}
