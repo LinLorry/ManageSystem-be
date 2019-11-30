@@ -53,8 +53,7 @@ public class UserController {
 
     @ResponseBody
     @PostMapping("/token")
-    public JSONObject login(@RequestBody JSONObject json) {
-
+    public JSONObject token(@RequestBody JSONObject json) {
         JSONObject result = new JSONObject();
 
         String username = json.getString("username");
