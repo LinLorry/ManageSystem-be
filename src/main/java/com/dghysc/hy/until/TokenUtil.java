@@ -15,7 +15,7 @@ import java.util.Map;
 public class TokenUtil {
     private static final long TOKEN_VALIDITY = 5 * 60 * 60;
 
-    @Value("${manage.secret.name}")
+    @Value("${manage.secret.token}")
     private String secret;
 
     @Value("${manage.authentication.passwordField}")
