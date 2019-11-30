@@ -21,10 +21,18 @@ public class UserService implements UserDetailsService {
         this.userRepository = userRepository;
     }
 
-    User addUser(User user) {
+    User add(User user) {
         String hash = encoder.encode(salt + user.getPassword().trim() + salt);
         user.setPassword(hash);
 
+        return userRepository.save(user);
+    }
+
+    boolean checkByUsername(String username) {
+        return userRepository.existsByUsername(username);
+    }
+
+    User update(User user) {
         return userRepository.save(user);
     }
 

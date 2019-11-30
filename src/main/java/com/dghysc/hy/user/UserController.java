@@ -3,6 +3,7 @@ package com.dghysc.hy.user;
 import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.until.TokenUtil;
 import com.dghysc.hy.user.model.User;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,17 +36,18 @@ public class UserController {
         user.setPassword(password);
 
         try {
-            response.put("data", userService.addUser(user));
+            response.put("data", userService.add(user));
             response.put("status", 1);
             response.put("message", "Registry Success");
-        } catch (Exception e) {
-            response.put("status", 0);
-            if (userService.checkUsername(request.getString("username"))) {
-                response.put("message", "UserName Exist.");
+        } catch (DataIntegrityViolationException e) {
+            if (userService.checkByUsername(username)) {
+                response.put("status", 0);
+                response.put("message", "Registry failed: username exits");
             } else {
-                response.put("message", "Registry Failed.");
+                throw e;
             }
         }
+
         return response;
     }
 
