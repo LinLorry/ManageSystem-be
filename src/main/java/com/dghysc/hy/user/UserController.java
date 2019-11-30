@@ -89,4 +89,25 @@ public class UserController {
 
         return response;
     }
+
+    @ResponseBody
+    @PostMapping("/profile")
+    public JSONObject editProfile(@RequestBody JSONObject request) {
+        JSONObject response = new JSONObject();
+
+        String name = request.getString("name");
+        User user = userService.loadById(SecurityUtil.getUserId());
+        user.setName(name);
+
+        try {
+            response.put("data", userService.update(user));
+            response.put("status", 1);
+            response.put("message", "Update profile success.");
+        } catch (Exception e) {
+            response.put("status", 0);
+            response.put("message", "Update profile failed.");
+        }
+
+        return response;
+    }
 }

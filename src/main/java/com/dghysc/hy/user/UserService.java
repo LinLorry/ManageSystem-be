@@ -8,6 +8,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.math.BigInteger;
+import java.util.NoSuchElementException;
+
 @Service
 public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
@@ -40,8 +43,8 @@ public class UserService implements UserDetailsService {
         return encoder.matches(salt + password + salt, user.getPassword());
     }
 
-    boolean checkUsername(String username) {
-        return userRepository.existsByUsername(username);
+    User loadById(BigInteger id) throws NoSuchElementException {
+        return userRepository.findById(id).orElseThrow(NoSuchElementException::new);
     }
 
     @Override
