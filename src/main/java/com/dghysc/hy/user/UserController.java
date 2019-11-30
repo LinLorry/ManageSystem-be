@@ -1,6 +1,7 @@
 package com.dghysc.hy.user;
 
 import com.alibaba.fastjson.JSONObject;
+import com.dghysc.hy.until.SecurityUtil;
 import com.dghysc.hy.until.TokenUtil;
 import com.dghysc.hy.user.model.User;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -77,4 +78,15 @@ public class UserController {
         return result;
     }
 
+    @ResponseBody
+    @GetMapping("/profile")
+    public JSONObject getProfile() {
+        JSONObject response = new JSONObject();
+
+        response.put("status", 1);
+        response.put("message", "Get profile success.");
+        response.put("data", SecurityUtil.getUser());
+
+        return response;
+    }
 }
