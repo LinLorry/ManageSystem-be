@@ -110,4 +110,26 @@ public class UserController {
 
         return response;
     }
+
+    @ResponseBody
+    @PostMapping("/password")
+    public JSONObject editPassword(@RequestBody JSONObject request) {
+        JSONObject response = new JSONObject();
+        String oldPassword = request.getString("oldPassword");
+        String newPassword = request.getString("newPassword");
+
+        User user = userService.loadById(SecurityUtil.getUserId());
+
+        if (userService.checkPassword(user, oldPassword)) {
+            user.setPassword(newPassword);
+            userService.updatePassword(user);
+            response.put("status", 1);
+            response.put("message", "Edit Password Success");
+        } else {
+            response.put("status", 0);
+            response.put("message", "Old Password Wrong");
+        }
+
+        return response;
+    }
 }

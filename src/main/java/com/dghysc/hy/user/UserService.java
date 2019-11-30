@@ -39,6 +39,13 @@ public class UserService implements UserDetailsService {
         return userRepository.save(user);
     }
 
+    void updatePassword(User user) {
+        String hash = encoder.encode(salt + user.getPassword().trim() + salt);
+        user.setPassword(hash);
+
+        userRepository.save(user);
+    }
+
     boolean checkPassword(User user, String password) {
         return encoder.matches(salt + password + salt, user.getPassword());
     }
