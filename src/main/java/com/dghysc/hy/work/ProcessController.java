@@ -144,7 +144,7 @@ public class ProcessController {
      */
     @ResponseBody
     @GetMapping("/find")
-    public JSONObject getProcesses(
+    public JSONObject find(
             @RequestParam(required = false) Integer id,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String comment,
