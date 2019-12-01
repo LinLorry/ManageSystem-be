@@ -1,12 +1,12 @@
 package com.dghysc.hy.work.model;
 
 import com.dghysc.hy.user.model.User;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.*;
 
 import javax.persistence.*;
 import java.io.Serializable;
 import java.sql.Timestamp;
-import java.util.Objects;
+import java.util.HashMap;
 
 /**
  * The Work Process Model
@@ -14,17 +14,14 @@ import java.util.Objects;
  * @author lin864464995@163.com
  */
 @Entity
+@IdClass(WorkProcessKey.class)
+@JsonIgnoreProperties({"work", "process"})
 public class WorkProcess implements Serializable {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
 
-    @ManyToOne
-    @JoinColumn
+    @Id
     private Work work;
 
-    @ManyToOne
-    @JoinColumn
+    @Id
     private Process process;
 
     private Integer sequenceNumber;
@@ -44,13 +41,10 @@ public class WorkProcess implements Serializable {
     public WorkProcess() {
     }
 
-    public WorkProcess(Work work, Process process, Integer sequenceNumber) {
-        this.work = work;
-        this.process = process;
-        this.sequenceNumber = sequenceNumber;
-    }
-
-    public WorkProcess(Work work, Process process, Integer sequenceNumber, User createUser, Timestamp createTime) {
+    public WorkProcess(Work work, Process process,
+                       Integer sequenceNumber,
+                       User createUser,
+                       Timestamp createTime) {
         this.work = work;
         this.process = process;
         this.sequenceNumber = sequenceNumber;
@@ -58,14 +52,6 @@ public class WorkProcess implements Serializable {
         this.createTime = createTime;
         this.updateUser = createUser;
         this.updateTime = createTime;
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
     }
 
     public Work getWork() {
@@ -116,18 +102,15 @@ public class WorkProcess implements Serializable {
         this.updateTime = updateTime;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (o == this) return true;
-        if (!(o instanceof  WorkProcess)) return false;
-        WorkProcess tmp = (WorkProcess) o;
-        return tmp.work.equals(work)
-                && tmp.process.equals(process)
-                && tmp.sequenceNumber.equals(sequenceNumber);
-    }
+    @JsonAnyGetter
+    public HashMap<String, Object> getInfo() {
+        HashMap<String, Object> map = new HashMap<>();
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(work.getId(), process.getId(), sequenceNumber);
+        map.put("workId", work.getId());
+        map.put("workName", work.getName());
+        map.put("processId", process.getId());
+        map.put("processName", process.getName());
+
+        return map;
     }
 }
