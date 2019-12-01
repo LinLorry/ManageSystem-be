@@ -1,7 +1,11 @@
 package com.dghysc.hy.work.model;
 
+import com.dghysc.hy.user.model.User;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.*;
 import java.io.Serializable;
+import java.sql.Timestamp;
 import java.util.Objects;
 
 /**
@@ -12,16 +16,30 @@ import java.util.Objects;
 @Entity
 public class WorkProcess implements Serializable {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
     @ManyToOne
     @JoinColumn
     private Work work;
 
-    @Id
     @ManyToOne
     @JoinColumn
     private Process process;
 
     private Integer sequenceNumber;
+
+    @JsonIgnore
+    @ManyToOne
+    private User createUser;
+
+    private Timestamp createTime;
+
+    @JsonIgnore
+    @ManyToOne
+    private User updateUser;
+
+    private Timestamp updateTime;
 
     public WorkProcess() {
     }
@@ -30,6 +48,24 @@ public class WorkProcess implements Serializable {
         this.work = work;
         this.process = process;
         this.sequenceNumber = sequenceNumber;
+    }
+
+    public WorkProcess(Work work, Process process, Integer sequenceNumber, User createUser, Timestamp createTime) {
+        this.work = work;
+        this.process = process;
+        this.sequenceNumber = sequenceNumber;
+        this.createUser = createUser;
+        this.createTime = createTime;
+        this.updateUser = createUser;
+        this.updateTime = createTime;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
     }
 
     public Work getWork() {
@@ -56,14 +92,38 @@ public class WorkProcess implements Serializable {
         this.sequenceNumber = sequenceNumber;
     }
 
+    public User getCreateUser() {
+        return createUser;
+    }
+
+    public Timestamp getCreateTime() {
+        return createTime;
+    }
+
+    public User getUpdateUser() {
+        return updateUser;
+    }
+
+    public void setUpdateUser(User updateUser) {
+        this.updateUser = updateUser;
+    }
+
+    public Timestamp getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(Timestamp updateTime) {
+        this.updateTime = updateTime;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == this) return true;
         if (!(o instanceof  WorkProcess)) return false;
-        WorkProcess that = (WorkProcess) o;
-        return Objects.equals(this.work.getId(), that.work.getId()) &&
-                Objects.equals(this.process.getId(), that.process.getId()) &&
-                Objects.equals(this.sequenceNumber, that.sequenceNumber);
+        WorkProcess tmp = (WorkProcess) o;
+        return tmp.work.equals(work)
+                && tmp.process.equals(process)
+                && tmp.sequenceNumber.equals(sequenceNumber);
     }
 
     @Override
