@@ -19,7 +19,7 @@ public class SecurityUtil {
         return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 
-    public static BigInteger getUserId() {
+    public static Long getUserId() {
         return ((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId();
     }
 

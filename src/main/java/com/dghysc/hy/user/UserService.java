@@ -8,7 +8,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.math.BigInteger;
 import java.util.NoSuchElementException;
 
 /**
@@ -87,7 +86,7 @@ public class UserService implements UserDetailsService {
      * @return the user.
      * @throws NoSuchElementException if the user is not exits throw this exception.
      */
-    User loadById(BigInteger id) throws NoSuchElementException {
+    User loadById(Long id) throws NoSuchElementException {
         return userRepository.findById(id).orElseThrow(NoSuchElementException::new);
     }
 

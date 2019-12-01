@@ -21,7 +21,7 @@ import java.util.Set;
 public class User implements UserDetails, Serializable {
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
-    private BigInteger id;
+    private Long id;
 
     @Column(unique = true)
     private String username;
@@ -34,11 +34,11 @@ public class User implements UserDetails, Serializable {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<UserRole> userRoleSet = new HashSet<>();
 
-    public BigInteger getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(BigInteger id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
