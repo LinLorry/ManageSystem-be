@@ -1,9 +1,10 @@
 package com.dghysc.hy.work.model;
 
+import com.dghysc.hy.user.model.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
-import java.sql.Date;
+import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -23,13 +24,32 @@ public class Work {
 
     private String comment;
 
-    private Date updateDate;
+    @JsonIgnore
+    @ManyToOne
+    private User createUser;
 
-    private Integer updateUser;
+    private Timestamp createTime;
+
+    @JsonIgnore
+    @ManyToOne
+    private User updateUser;
+
+    private Timestamp updateTime;
 
     @JsonIgnore
     @OneToMany(mappedBy = "work", cascade = CascadeType.ALL)
     private Set<WorkProcess> workProcesses = new HashSet<>();
+
+    public Work() {
+    }
+
+    public Work(String name, User createUser, Timestamp createTime) {
+        this.name = name;
+        this.createUser = createUser;
+        this.createTime = createTime;
+        this.updateUser = createUser;
+        this.updateTime = createTime;
+    }
 
     public Integer getId() {
         return id;
@@ -55,20 +75,28 @@ public class Work {
         this.comment = comment;
     }
 
-    public Date getUpdateDate() {
-        return updateDate;
+    public User getCreateUser() {
+        return createUser;
     }
 
-    public void setUpdateDate(Date updateDate) {
-        this.updateDate = updateDate;
+    public Timestamp getCreateTime() {
+        return createTime;
     }
 
-    public Integer getUpdateUser() {
+    public User getUpdateUser() {
         return updateUser;
     }
 
-    public void setUpdateUser(Integer updateUser) {
+    public void setUpdateUser(User updateUser) {
         this.updateUser = updateUser;
+    }
+
+    public Timestamp getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(Timestamp updateTime) {
+        this.updateTime = updateTime;
     }
 
     public Set<WorkProcess> getWorkProcesses() {
