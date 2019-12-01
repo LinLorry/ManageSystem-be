@@ -30,7 +30,7 @@ public class WorkController {
      *     "name": work name: String[must],
      *     "comment": work comment: String
      * }
-     * @return add work success return {
+     * @return create work success return {
      *     "status": 1,
      *     "message": "Add work success."
      *     "data": {
@@ -43,8 +43,8 @@ public class WorkController {
      * }
      */
     @ResponseBody
-    @PostMapping("/add")
-    public JSONObject add(@RequestBody JSONObject request) {
+    @PostMapping("/create")
+    public JSONObject create(@RequestBody JSONObject request) {
         JSONObject response = new JSONObject();
 
         String name = request.getString("name");

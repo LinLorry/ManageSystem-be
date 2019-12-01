@@ -30,7 +30,7 @@ public class ProcessController {
      *     "name": process name: String[must],
      *     "comment": process comment: String
      * }
-     * @return add process success return {
+     * @return create process success return {
      *     "status": 1,
      *     "message": "Add process success."
      *     "data": {
@@ -43,8 +43,8 @@ public class ProcessController {
      * }
      */
     @ResponseBody
-    @RequestMapping("/add")
-    public JSONObject add(@RequestBody JSONObject request) {
+    @RequestMapping("/create")
+    public JSONObject create(@RequestBody JSONObject request) {
         JSONObject response = new JSONObject();
 
         String name = request.getString("name");
