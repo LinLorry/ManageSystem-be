@@ -11,6 +11,15 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Token Until
+ * use JWT generate token and get authentication from token
+ * @author lorry
+ * @author lin864464995@163.com
+ * @see io.jsonwebtoken.Claims
+ * @see io.jsonwebtoken.Jwts
+ * @see org.springframework.security.core.Authentication
+ */
 @Component
 public class TokenUtil {
     private static final long TOKEN_VALIDITY = 5 * 60 * 60;
@@ -21,6 +30,11 @@ public class TokenUtil {
     @Value("${manage.authentication.passwordField}")
     private String passwordField;
 
+    /**
+     * Generate Token by user
+     * @param userDetails the user.
+     * @return token string.
+     */
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
         claims.put(passwordField, userDetails.getPassword());
@@ -37,6 +51,13 @@ public class TokenUtil {
                 .compact();
     }
 
+    /**
+     * Get Authentication From Token
+     * @param token the token string.
+     * @return the user Authentication get from token but haven't been authenticated.
+     * @throws ExpiredJwtException if token expired.
+     * @throws SignatureException if token invalid.
+     */
     public Authentication getAuthenticationFromToken(String token)
             throws ExpiredJwtException, SignatureException {
         Claims claims = getAllClaimsFromToken(token);

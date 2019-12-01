@@ -8,6 +8,11 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * User Controller
+ * @author lorry
+ * @author lin864464995@163.com
+ */
 @RestController
 @RequestMapping("/api/user")
 public class UserController {
@@ -21,6 +26,26 @@ public class UserController {
         this.tokenUtil = tokenUtil;
     }
 
+    /**
+     * Registry Api
+     * @param request {
+     *      "username": username: String,
+     *      "password": password: String,
+     *      "name": name: String
+     * }
+     * @return if registry success return {
+     *     "status": 1,
+     *     "message": "Registry Success.",
+     *     "data": {
+     *         "id": user id: BigInteger,
+     *         "username": username: String,
+     *         "name": name: String
+     *     }
+     * } else return {
+     *     "status: 0,
+     *     "message": message: String
+     * }
+     */
     @ResponseBody
     @PostMapping("/registry")
     public JSONObject registry(@RequestBody JSONObject request) {
@@ -39,7 +64,7 @@ public class UserController {
         try {
             response.put("data", userService.add(user));
             response.put("status", 1);
-            response.put("message", "Registry Success");
+            response.put("message", "Registry Success.");
         } catch (DataIntegrityViolationException e) {
             if (userService.checkByUsername(username)) {
                 response.put("status", 0);
@@ -52,19 +77,34 @@ public class UserController {
         return response;
     }
 
+    /**
+     * User Login, Get Token Api
+     * @param request {
+     *      "username": username: String,
+     *      "password": password: String,
+     * }
+     * @return if login success return {
+     *     "status": 1,
+     *     "message": "Login success.",
+     *     "token": token: String
+     * } else return {
+     *     "status": 0,
+     *     "message": message: String
+     * }
+     */
     @ResponseBody
     @PostMapping("/token")
-    public JSONObject token(@RequestBody JSONObject json) {
+    public JSONObject token(@RequestBody JSONObject request) {
         JSONObject result = new JSONObject();
 
-        String username = json.getString("username");
-        String password = json.getString("password");
+        String username = request.getString("username");
+        String password = request.getString("password");
 
         try {
             User user = userService.loadUserByUsername(username);
             if (userService.checkPassword(user, password)) {
                 result.put("status", 1);
-                result.put("message", "Login success");
+                result.put("message", "Login success.");
                 result.put("token", tokenUtil.generateToken(user));
             } else {
                 result.put("status", 0);
@@ -78,6 +118,18 @@ public class UserController {
         return result;
     }
 
+    /**
+     * Get User Self Profile Api
+     * @return {
+     *     "status": 1,
+     *     "message": "Get profile success.",
+     *     "data": {
+     *         "id": user id: BigInteger,
+     *         "username": username: String,
+     *         "name": name: String
+     *     }
+     * }
+     */
     @ResponseBody
     @GetMapping("/profile")
     public JSONObject getProfile() {
@@ -90,6 +142,24 @@ public class UserController {
         return response;
     }
 
+    /**
+     * Update User Profile Api
+     * @param request {
+     *      "name": name: String
+     * }
+     * @return if update user profile success return {
+     *     "status": 1,
+     *     "message": "Update profile success.",
+     *     "data": {
+     *         "id": user id: BigInteger
+     *         "username": username: String,
+     *         "name": name: String
+     *     }
+     * } else return {
+     *     "status": 0,
+     *     "message": "Update profile failed."
+     * }
+     */
     @ResponseBody
     @PostMapping("/profile")
     public JSONObject editProfile(@RequestBody JSONObject request) {
@@ -111,6 +181,23 @@ public class UserController {
         return response;
     }
 
+    /**
+     * Edit Password Api
+     * @param request {
+     *      "oldPassword": oldPassword: String,
+     *      "newPassword": newPassword: String
+     * }
+     * @return if edit password success return {
+     *     "status": 1,
+     *     "message": "Edit Password Success"
+     * } else if old password wrong return {
+     *     "status": 0,
+     *     "message": "Old Password Wrong"
+     * } else return {
+     *     "status": 0,
+     *     "message": "Edit Password Failed"
+     * }
+     */
     @ResponseBody
     @PostMapping("/password")
     public JSONObject editPassword(@RequestBody JSONObject request) {

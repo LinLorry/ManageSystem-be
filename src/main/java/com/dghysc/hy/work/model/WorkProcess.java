@@ -4,6 +4,11 @@ import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Objects;
 
+/**
+ * The Work Process Model
+ * @author lorry
+ * @author lin864464995@163.com
+ */
 @Entity
 public class WorkProcess implements Serializable {
     @Id

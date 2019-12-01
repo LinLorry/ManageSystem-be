@@ -15,6 +15,11 @@ import javax.persistence.EntityManagerFactory;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * Work Process Service
+ * @author lorry
+ * @author lin864464995@163.com
+ */
 @Service
 public class WorkProcessService {
     private final WorkRepository workRepository;

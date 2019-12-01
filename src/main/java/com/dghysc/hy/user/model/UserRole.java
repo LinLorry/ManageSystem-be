@@ -9,6 +9,12 @@ import javax.persistence.ManyToOne;
 import java.io.Serializable;
 import java.util.Objects;
 
+/**
+ * The User Role Model
+ * @author lorry
+ * @author lin864464995@163.com
+ * @see org.springframework.security.core.GrantedAuthority
+ */
 @Entity
 public class UserRole implements GrantedAuthority, Serializable {
     @Id

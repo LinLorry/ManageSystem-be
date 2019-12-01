@@ -5,6 +5,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.CrudRepository;
 
+/**
+ * Work Repository
+ * @author lorry
+ * @author lin864464995@163.com
+ * @see org.springframework.data.repository.CrudRepository
+ */
 public interface WorkRepository extends CrudRepository<Work, Integer> {
     Page<Work> findAll(Pageable pageable);
 

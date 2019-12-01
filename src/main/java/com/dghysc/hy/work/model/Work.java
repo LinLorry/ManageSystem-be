@@ -7,6 +7,11 @@ import java.sql.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * The Work Model
+ * @author lorry
+ * @author lin864464995@163.com
+ */
 @Entity
 public class Work {
     @Id
@@ -22,8 +27,8 @@ public class Work {
 
     private Integer updateUser;
 
-    @OneToMany(mappedBy = "work", cascade = CascadeType.ALL)
     @JsonIgnore
+    @OneToMany(mappedBy = "work", cascade = CascadeType.ALL)
     private Set<WorkProcess> workProcesses = new HashSet<>();
 
     public Integer getId() {

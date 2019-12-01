@@ -10,6 +10,11 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
+/**
+ * Work Service
+ * @author lorry
+ * @author lin864464995@163.com
+ */
 @Service
 public class WorkService {
     private final WorkRepository workRepository;

@@ -5,6 +5,11 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * The Role Model
+ * @author lorry
+ * @author lin864464995@163.com
+ */
 @Entity
 public class Role implements Serializable {
     @Id

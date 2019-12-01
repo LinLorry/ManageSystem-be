@@ -11,6 +11,12 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * The User Model
+ * @author lorry
+ * @author lin864464995@163.com
+ * @see org.springframework.security.core.userdetails.UserDetails
+ */
 @Entity
 public class User implements UserDetails, Serializable {
     @Id

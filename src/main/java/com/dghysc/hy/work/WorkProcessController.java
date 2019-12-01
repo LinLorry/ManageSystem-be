@@ -14,6 +14,11 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Work Process Controller
+ * @author lorry
+ * @author lin864464995@163.com
+ */
 @Controller
 @RequestMapping("/api/workProcess")
 public class WorkProcessController {
