@@ -7,6 +7,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.Timestamp;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 /**
@@ -150,7 +152,22 @@ public class WorkController {
             @RequestParam(defaultValue = "0") Integer pageNumber) {
         JSONObject response = new JSONObject();
 
-        response.put("data", workService.load(id, name, comment, pageNumber));
+        Map<String, Object> equalMap = new HashMap<>();
+        Map<String, Object> likeMap = new HashMap<>();
+
+        if (id != null) {
+            equalMap.put("id", id);
+        }
+
+        if (name != null) {
+            likeMap.put("name", name);
+        }
+
+        if (comment != null) {
+            likeMap.put("comment", comment);
+        }
+
+        response.put("data", workService.load(equalMap, likeMap, pageNumber));
         response.put("status", 1);
         response.put("message", "Get work success.");
 
