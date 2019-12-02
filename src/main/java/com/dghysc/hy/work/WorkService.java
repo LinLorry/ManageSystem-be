@@ -21,7 +21,8 @@ public class WorkService {
 
     private final SpecificationUtil<Work> specificationUtil;
 
-    public WorkService(WorkRepository workRepository, SpecificationUtil<Work> specificationUtil) {
+    public WorkService(WorkRepository workRepository,
+                       SpecificationUtil<Work> specificationUtil) {
         this.workRepository = workRepository;
         this.specificationUtil = specificationUtil;
     }
