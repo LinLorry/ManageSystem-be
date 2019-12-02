@@ -1,5 +1,6 @@
 package com.dghysc.hy.work;
 
+import com.dghysc.hy.until.SpecificationUtil;
 import com.dghysc.hy.work.model.Work;
 import com.dghysc.hy.work.repo.WorkRepository;
 import org.springframework.data.domain.PageRequest;
@@ -18,20 +19,12 @@ public class WorkService {
 
     private final WorkRepository workRepository;
 
-    private static Specification<Work> equalId(long id) {
-        return (work, cq, cb) -> cb.equal(work.get("id"), id);
-    }
+    private final SpecificationUtil<Work> specificationUtil;
 
-    private static Specification<Work> containsName(String name) {
-        return (work, cq, cb) -> cb.like(work.get("name"), "%" + name + "%");
-    }
-
-    private static Specification<Work> containsComment(String comment) {
-        return (work, cq, cb) -> cb.like(work.get("comment"), "%" + comment + "%");
-    }
-
-    public WorkService(WorkRepository workRepository) {
+    public WorkService(WorkRepository workRepository,
+                       SpecificationUtil<Work> specificationUtil) {
         this.workRepository = workRepository;
+        this.specificationUtil = specificationUtil;
     }
 
     /**
@@ -54,37 +47,19 @@ public class WorkService {
 
     /**
      * Load Work By Id, Name, Comment
-     * @param id the work id.
-     * @param name the name work contains.
-     * @param comment the comment work contains.
+     * @param equalMap {
+     *     "the work field": value have to equal
+     * }
+     * @param likeMap {
+     *     "the work field": value will be equal by "%value%"
+     * }
      * @param pageNumber page number.
      * @return the list of query result.
      */
-    List<Work> load(Integer id, String name,
-                    String comment, Integer pageNumber) {
-        ArrayList<Specification<Work>> specifications = new ArrayList<>();
-
-        if (id != null) {
-            specifications.add(equalId(id));
-        }
-
-        if (name != null && name.length() != 0) {
-            specifications.add(containsName(name));
-        }
-
-        if (comment != null && comment.length() != 0) {
-            specifications.add(containsComment(comment));
-        }
-
-        if (specifications.size() == 0) {
-            return workRepository.findAll(PageRequest.of(pageNumber, 20)).getContent();
-        }
-
-        Specification<Work> s = specifications.get(0);
-        for (int i = 1; i < specifications.size(); ++i) {
-            s.and(specifications.get(i));
-        }
-        return workRepository.findAll(s, PageRequest.of(pageNumber, 20)).getContent();
+    List<Work> load(Map<String, Object> equalMap,
+                    Map<String, Object> likeMap, Integer pageNumber) {
+        Specification<Work> specification = specificationUtil.getSpecification(equalMap, likeMap);
+        return workRepository.findAll(specification, PageRequest.of(pageNumber, 20)).getContent();
     }
 
     /**

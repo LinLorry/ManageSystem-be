@@ -7,6 +7,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.Timestamp;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 /**
@@ -30,7 +32,7 @@ public class WorkController {
      *     "name": work name: String[must],
      *     "comment": work comment: String
      * }
-     * @return add work success return {
+     * @return create work success return {
      *     "status": 1,
      *     "message": "Add work success."
      *     "data": {
@@ -43,8 +45,8 @@ public class WorkController {
      * }
      */
     @ResponseBody
-    @PostMapping("/add")
-    public JSONObject add(@RequestBody JSONObject request) {
+    @PostMapping("/create")
+    public JSONObject create(@RequestBody JSONObject request) {
         JSONObject response = new JSONObject();
 
         String name = request.getString("name");
@@ -150,7 +152,22 @@ public class WorkController {
             @RequestParam(defaultValue = "0") Integer pageNumber) {
         JSONObject response = new JSONObject();
 
-        response.put("data", workService.load(id, name, comment, pageNumber));
+        Map<String, Object> equalMap = new HashMap<>();
+        Map<String, Object> likeMap = new HashMap<>();
+
+        if (id != null) {
+            equalMap.put("id", id);
+        }
+
+        if (name != null) {
+            likeMap.put("name", name);
+        }
+
+        if (comment != null) {
+            likeMap.put("comment", comment);
+        }
+
+        response.put("data", workService.load(equalMap, likeMap, pageNumber));
         response.put("status", 1);
         response.put("message", "Get work success.");
 

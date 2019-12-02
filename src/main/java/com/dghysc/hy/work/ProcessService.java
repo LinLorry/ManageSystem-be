@@ -1,14 +1,13 @@
 package com.dghysc.hy.work;
 
+import com.dghysc.hy.until.SpecificationUtil;
 import com.dghysc.hy.work.model.Process;
 import com.dghysc.hy.work.repo.ProcessRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 /**
  * Process Service
@@ -17,22 +16,15 @@ import java.util.NoSuchElementException;
  */
 @Service
 public class ProcessService {
+
     private final ProcessRepository processRepository;
 
-    private static Specification<Process> equalId(long id) {
-        return (process, cq, cb) -> cb.equal(process.get("id"), id);
-    }
+    private final SpecificationUtil<Process> specificationUtil;
 
-    private static Specification<Process> containsName(String name) {
-        return (process, cq, cb) -> cb.like(process.get("name"), "%" + name + "%");
-    }
-
-    private static Specification<Process> containsComment(String comment) {
-        return (process, cq, cb) -> cb.like(process.get("comment"), "%" + comment + "%");
-    }
-
-    public ProcessService(ProcessRepository processRepository) {
+    public ProcessService(ProcessRepository processRepository,
+                          SpecificationUtil<Process> specificationUtil) {
         this.processRepository = processRepository;
+        this.specificationUtil = specificationUtil;
     }
 
     /**
@@ -55,37 +47,19 @@ public class ProcessService {
 
     /**
      * Load Process By Id, Name, Comment
-     * @param id the process id.
-     * @param name the name process contains.
-     * @param comment the comment process contains.
+     * @param equalMap {
+     *     "the process field": value have to equal
+     * }
+     * @param likeMap {
+     *     "the process field": value will be equal by "%value%"
+     * }
      * @param pageNumber page number.
      * @return the list of query result.
      */
-    List<Process> load(Integer id, String name, String comment, Integer pageNumber) {
-
-        ArrayList<Specification<Process>> specifications = new ArrayList<>();
-
-        if (id != null) {
-            specifications.add(equalId(id));
-        }
-
-        if (name != null && name.length() != 0) {
-            specifications.add(containsName(name));
-        }
-
-        if (comment != null && comment.length() != 0) {
-            specifications.add(containsComment(comment));
-        }
-
-        if (specifications.size() == 0) {
-            return processRepository.findAll(PageRequest.of(pageNumber, 20)).getContent();
-        }
-
-        Specification<Process> s = specifications.get(0);
-        for (int i = 1; i < specifications.size(); ++i) {
-            s.and(specifications.get(i));
-        }
-        return processRepository.findAll(s, PageRequest.of(pageNumber, 20)).getContent();
+    List<Process> load(Map<String, Object> equalMap,
+                       Map<String, Object> likeMap, Integer pageNumber) {
+        Specification<Process> specification = specificationUtil.getSpecification(equalMap, likeMap);
+        return processRepository.findAll(specification, PageRequest.of(pageNumber, 20)).getContent();
     }
 
     /**
