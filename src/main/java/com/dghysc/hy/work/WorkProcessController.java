@@ -94,4 +94,59 @@ public class WorkProcessController {
 
         return response;
     }
+
+    /**
+     * Find Work Process Api
+     * @param request {
+     *     "sequenceNumber": work process's sequence number equal this value,
+     *     "createTimeBefore": work process's create time before this value,
+     *     "updateTimeBefore": work process's update time before this value,
+     *     "createTimeAfter": work process's create time after this value,
+     *     "createTimeAfter": work process's update time after this value,
+     *     "work": {
+     *         "id": work process's work id equal this value,
+     *         "name": work process's work name contains this value,
+     *         "comment": work process's work comment contains this value,
+     *         "createTimeBefore": work process's work create time before this value,
+     *         "updateTimeBefore": work process's work update time before this value,
+     *         "createTimeAfter": work process's work create time after this value,
+     *         "createTimeAfter": work process's work update time after this value
+     *     },
+     *     "process": {
+     *         "id": work process's process id equal this value,
+     *         "name": work process's process name contains this value,
+     *         "comment": work process's process comment contains this value,
+     *         "createTimeBefore": work process's process create time before this value,
+     *         "updateTimeBefore": work process's process update time before this value,
+     *         "createTimeAfter": work process's process create time after this value,
+     *         "createTimeAfter": work process's process update time after this value
+     *     }
+     * }
+     * @return {
+     *     "status": 1,
+     *     "message": "Get work process success.",
+     *     "data": [
+     *         {
+     *             "workId": the work id: Integer,
+     *             "workName": the work name: String,
+     *             "processId": the process id: Integer,
+     *             "processName": the process name: Integer,
+     *             "sequenceNumber": the work process sequence number: Integer,
+     *             "createTime": the work process create time: Timestamp,
+     *             "updateTime": the work process update time: Timestamp
+     *         }
+     *     ]
+     * }
+     */
+    @ResponseBody
+    @GetMapping("/find")
+    public JSONObject find(@RequestBody(required = false) JSONObject request) {
+        JSONObject response = new JSONObject();
+
+        response.put("status", 1);
+        response.put("message", "Get work process success.");
+        response.put("data", workProcessService.load(request));
+
+        return response;
+    }
 }
