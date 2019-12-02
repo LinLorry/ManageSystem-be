@@ -19,12 +19,8 @@ public class ProcessService {
 
     private final ProcessRepository processRepository;
 
-    private final SpecificationUtil<Process> specificationUtil;
-
-    public ProcessService(ProcessRepository processRepository,
-                          SpecificationUtil<Process> specificationUtil) {
+    public ProcessService(ProcessRepository processRepository) {
         this.processRepository = processRepository;
-        this.specificationUtil = specificationUtil;
     }
 
     /**
@@ -58,7 +54,12 @@ public class ProcessService {
      */
     List<Process> load(Map<String, Object> equalMap,
                        Map<String, Object> likeMap, Integer pageNumber) {
-        Specification<Process> specification = specificationUtil.getSpecification(equalMap, likeMap);
+
+        SpecificationUtil specificationUtil = new SpecificationUtil();
+        specificationUtil.addEqualMap(equalMap);
+        specificationUtil.addLikeMap(likeMap);
+
+        Specification<Process> specification = specificationUtil.getSpecification();
         return processRepository.findAll(specification, PageRequest.of(pageNumber, 20)).getContent();
     }
 

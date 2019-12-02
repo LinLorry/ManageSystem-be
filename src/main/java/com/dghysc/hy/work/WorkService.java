@@ -19,12 +19,9 @@ public class WorkService {
 
     private final WorkRepository workRepository;
 
-    private final SpecificationUtil<Work> specificationUtil;
 
-    public WorkService(WorkRepository workRepository,
-                       SpecificationUtil<Work> specificationUtil) {
+    public WorkService(WorkRepository workRepository) {
         this.workRepository = workRepository;
-        this.specificationUtil = specificationUtil;
     }
 
     /**
@@ -58,7 +55,11 @@ public class WorkService {
      */
     List<Work> load(Map<String, Object> equalMap,
                     Map<String, Object> likeMap, Integer pageNumber) {
-        Specification<Work> specification = specificationUtil.getSpecification(equalMap, likeMap);
+        SpecificationUtil specificationUtil = new SpecificationUtil();
+        specificationUtil.addEqualMap(equalMap);
+        specificationUtil.addLikeMap(likeMap);
+
+        Specification<Work> specification = specificationUtil.getSpecification();
         return workRepository.findAll(specification, PageRequest.of(pageNumber, 20)).getContent();
     }
 
