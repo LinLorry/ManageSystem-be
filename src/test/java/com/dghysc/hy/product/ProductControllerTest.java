@@ -81,4 +81,19 @@ public class ProductControllerTest {
         System.out.println(response.getBody());
         Assert.assertEquals(200, response.getStatusCodeValue());
     }
+
+    @Test
+    public void finish() throws URISyntaxException {
+        final String url = baseUrl + "/finish?id=2";
+
+        URI uri = new URI(url);
+
+        HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
+
+
+        ResponseEntity<JSONObject> response = restTemplate.postForEntity(uri, request, JSONObject.class);
+
+        System.out.println(response.getBody());
+        Assert.assertEquals(200, response.getStatusCodeValue());
+    }
 }
