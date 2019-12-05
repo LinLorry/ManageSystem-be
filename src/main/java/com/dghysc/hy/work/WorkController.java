@@ -27,14 +27,14 @@ public class WorkController {
     }
 
     /**
-     * Add Work Api
+     * Create Work Api
      * @param request {
      *     "name": work name: String[must],
      *     "comment": work comment: String
      * }
      * @return create work success return {
      *     "status": 1,
-     *     "message": "Add work success."
+     *     "message": "Create work success."
      *     "data": {
      *         "id": work id: Integer,
      *         "name": work name: String,
@@ -58,7 +58,7 @@ public class WorkController {
         try {
             response.put("data", workService.addOrUpdate(work));
             response.put("status", 1);
-            response.put("message", "Add work success.");
+            response.put("message", "Create work success.");
         } catch (DataIntegrityViolationException e) {
             if (!workService.checkByName(name)) {
                 throw e;
