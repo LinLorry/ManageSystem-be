@@ -198,6 +198,11 @@ public class WorkProcessController {
     public JSONObject find(@RequestBody(required = false) JSONObject request) {
         JSONObject response = new JSONObject();
 
+        if (request == null) {
+            request = new JSONObject();
+            request.put("pageNumber", 0);
+        }
+
         response.put("status", 1);
         response.put("message", "Get work process success.");
         response.put("data", workProcessService.load(request));
