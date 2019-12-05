@@ -25,20 +25,11 @@ public class WorkService {
     }
 
     /**
-     * Add Work
+     * Add Or Update Work
      * @param work the work will be add.
      * @return the work have be add.
      */
-    Work add(Work work) {
-        return workRepository.save(work);
-    }
-
-    /**
-     * Update Work
-     * @param work the work will be update.
-     * @return the work have be update.
-     */
-    Work update(Work work){
+    Work addOrUpdate(Work work) {
         return workRepository.save(work);
     }
 
@@ -69,7 +60,7 @@ public class WorkService {
      * @return the work.
      * @throws NoSuchElementException if work not exist throw this exception.
      */
-    Work loadById(Integer id) throws NoSuchElementException {
+    public Work loadById(Integer id) throws NoSuchElementException {
         Optional<Work> optionalWork = workRepository.findById(id);
         if (optionalWork.isPresent()) {
             return optionalWork.get();

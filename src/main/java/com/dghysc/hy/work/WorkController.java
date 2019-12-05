@@ -56,7 +56,7 @@ public class WorkController {
                 SecurityUtil.getUser(), new Timestamp(System.currentTimeMillis()));
         work.setComment(comment);
         try {
-            response.put("data", workService.add(work));
+            response.put("data", workService.addOrUpdate(work));
             response.put("status", 1);
             response.put("message", "Add work success.");
         } catch (DataIntegrityViolationException e) {
@@ -105,7 +105,7 @@ public class WorkController {
             work.setUpdateUser(SecurityUtil.getUser());
             work.setUpdateTime(new Timestamp(System.currentTimeMillis()));
 
-            response.put("data", workService.update(work));
+            response.put("data", workService.addOrUpdate(work));
             response.put("status", 1);
             response.put("message", "Update work success.");
         } catch (NoSuchElementException e) {

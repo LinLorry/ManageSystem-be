@@ -57,7 +57,7 @@ public class ProcessController {
         process.setComment(comment);
 
         try {
-            response.put("data", processService.add(process));
+            response.put("data", processService.addOrUpdate(process));
             response.put("status", 1);
             response.put("message", "Add process success.");
         } catch (DataIntegrityViolationException e) {
@@ -106,7 +106,7 @@ public class ProcessController {
             process.setUpdateUser(SecurityUtil.getUser());
             process.setUpdateTime(new Timestamp(System.currentTimeMillis()));
 
-            response.put("data", processService.update(process));
+            response.put("data", processService.addOrUpdate(process));
             response.put("status", 1);
             response.put("message", "Update process success.");
         } catch (NoSuchElementException e) {

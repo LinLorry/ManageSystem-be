@@ -24,20 +24,11 @@ public class ProcessService {
     }
 
     /**
-     * Add Process
+     * Add Or Update Process
      * @param process the process will be add.
      * @return the process have be add.
      */
-    Process add(Process process) {
-        return processRepository.save(process);
-    }
-
-    /**
-     * Update Process
-     * @param process the process will be update.
-     * @return the process have be update.
-     */
-    Process update(Process process) {
+    Process addOrUpdate(Process process) {
         return processRepository.save(process);
     }
 
