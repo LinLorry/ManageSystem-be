@@ -4,15 +4,13 @@ import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.work.model.WorkProcess;
 import com.dghysc.hy.work.model.WorkProcessKey;
 import com.dghysc.hy.work.repo.WorkProcessRepository;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
@@ -29,34 +27,24 @@ import java.util.List;
 public class WorkProcessService {
     private final WorkProcessRepository workProcessRepository;
 
-    private final SessionFactory sessionFactory;
+    private EntityManager entityManager;
 
     @Autowired
-    public WorkProcessService(WorkProcessRepository workProcessRepository,
-                              EntityManagerFactory factory) {
+    public WorkProcessService(WorkProcessRepository workProcessRepository) {
         this.workProcessRepository = workProcessRepository;
-        if(factory.unwrap(SessionFactory.class) == null){
-            throw new NullPointerException("factory is not a hibernate factory");
-        }
-        this.sessionFactory = factory.unwrap(SessionFactory.class);
+    }
+
+    @PersistenceContext
+    public void setEntityManager(EntityManager entityManager) {
+        this.entityManager = entityManager;
     }
 
     /**
      * Add WorkProcess Service
      * @param workProcess the work process will be add.
-     * @return the work process have been add.
      */
-    WorkProcess add(WorkProcess workProcess) {
-        Session session = sessionFactory.openSession();
-        Transaction tx = session.beginTransaction();
-
-        workProcess = (WorkProcess) session.merge(workProcess);
-
-        tx.commit();
-
-        session.close();
-
-        return workProcess;
+    void add(WorkProcess workProcess) {
+        entityManager.persist(workProcess);
     }
 
     /**

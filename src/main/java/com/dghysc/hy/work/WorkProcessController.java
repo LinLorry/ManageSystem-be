@@ -10,6 +10,7 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import javax.transaction.Transactional;
 import java.sql.Timestamp;
 import java.util.NoSuchElementException;
 
@@ -59,6 +60,7 @@ public class WorkProcessController {
      */
     @ResponseBody
     @PostMapping("/create")
+    @Transactional
     public JSONObject create(@RequestBody JSONObject request) {
         JSONObject response = new JSONObject();
 
@@ -81,7 +83,8 @@ public class WorkProcessController {
                     SecurityUtil.getUser(),
                     new Timestamp(System.currentTimeMillis())
             );
-            response.put("data", workProcessService.add(workProcess));
+            workProcessService.add(workProcess);
+            response.put("data", workProcess);
             response.put("status", 1);
             response.put("message", "Add process in work success.");
         } catch (NoSuchElementException e) {
