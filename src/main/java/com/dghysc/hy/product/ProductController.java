@@ -231,4 +231,34 @@ public class ProductController {
 
         return response;
     }
+
+    /**
+     * Finish Product Api
+     * @param id the product id.
+     * @return if product exist and finish success return {
+     *     "status": 1,
+     *     "message": "Finish product success."
+     * } else return {
+     *     "status": 0,
+     *     "message": "message"
+     * }
+     */
+    @ResponseBody
+    @PostMapping("/finish")
+    public JSONObject finish(@RequestParam Long id) {
+        JSONObject response = new JSONObject();
+
+        try {
+            Product product = productService.loadById(id);
+            product.setStatus(ProductStatus.FINISH);
+            productService.addOrUpdate(product);
+            response.put("status", 1);
+            response.put("message", "Finish product success,");
+        } catch (NoSuchElementException e) {
+            response.put("status", 0);
+            response.put("message", "This product isn't exist.");
+        }
+
+        return response;
+    }
 }
