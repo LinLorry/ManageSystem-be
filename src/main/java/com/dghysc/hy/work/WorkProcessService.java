@@ -17,6 +17,7 @@ import javax.persistence.criteria.Predicate;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 /**
  * Work Process Service
@@ -43,7 +44,7 @@ public class WorkProcessService {
      * Add WorkProcess Service
      * @param workProcess the work process will be add.
      */
-    void add(WorkProcess workProcess) {
+    void addOrUpdate(WorkProcess workProcess) {
         entityManager.persist(workProcess);
     }
 
@@ -153,6 +154,10 @@ public class WorkProcessService {
             predicates.add(criteriaBuilder.greaterThan(path.get("createTime"), updateTimeAfter));
 
         return predicates;
+    }
+
+    WorkProcess loadById(WorkProcessKey key) throws NoSuchElementException {
+        return workProcessRepository.findById(key).orElseThrow(NoSuchElementException::new);
     }
 
     /**

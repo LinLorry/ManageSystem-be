@@ -22,6 +22,14 @@ public class WorkProcessKey implements Serializable {
     public WorkProcessKey() {
     }
 
+    public WorkProcessKey(Integer workId, Integer processId) {
+        this.work = new Work();
+        this.process = new Process();
+
+        this.work.setId(workId);
+        this.process.setId(processId);
+    }
+
     public WorkProcessKey(Work work, Process process) {
         this.work = work;
         this.process = process;

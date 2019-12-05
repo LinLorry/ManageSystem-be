@@ -83,7 +83,7 @@ public class WorkProcessController {
                     SecurityUtil.getUser(),
                     new Timestamp(System.currentTimeMillis())
             );
-            workProcessService.add(workProcess);
+            workProcessService.addOrUpdate(workProcess);
             response.put("data", workProcess);
             response.put("status", 1);
             response.put("message", "Add process in work success.");
@@ -93,6 +93,58 @@ public class WorkProcessController {
         } catch (InvalidDataAccessApiUsageException e) {
             response.put("status", 0);
             response.put("message", "Need processId and workId.");
+        }
+
+        return response;
+    }
+
+    /**
+     * Update Work Process Api.
+     * @param request {
+     *     "workId": the work id: Integer,
+     *     "processId": the process id: Integer,
+     *     "sequenceNumber": the sequence number: Integer
+     * }
+     * @return if update success return {
+     *     "status": 1,
+     *     "message": "Update process in work success.",
+     *     "data": {
+     *         "workId": the work id: Integer,
+     *         "workName": the work name: String,
+     *         "processId": the process id: Integer,
+     *         "processName": the process name: String,
+     *         "sequenceNumber": the sequence number,
+     *         "createTime": create time: Timestamp,
+     *         "updateTime": update time: Timestamp
+     *     }
+     * }
+     */
+    @ResponseBody
+    @PostMapping("/update")
+    @Transactional
+    public JSONObject update(@RequestBody JSONObject request) {
+        JSONObject response = new JSONObject();
+
+        Integer workId = request.getInteger("workId");
+        Integer processId = request.getInteger("processId");
+        WorkProcessKey key = new WorkProcessKey(workId, processId);
+        Integer sequenceNumber = request.getInteger("sequenceNumber");
+
+        try {
+            WorkProcess workProcess = workProcessService.loadById(key);
+            workProcess.setSequenceNumber(sequenceNumber);
+            workProcess.setUpdateTime(new Timestamp(System.currentTimeMillis()));
+            workProcess.setUpdateUser(SecurityUtil.getUser());
+
+            workProcessService.addOrUpdate(workProcess);
+
+            response.put("status", 1);
+            response.put("message", "Update process in work success.");
+            response.put("data", workProcess);
+
+        } catch (NoSuchElementException e) {
+            response.put("status", 0);
+            response.put("message", "This work process isn't exist.");
         }
 
         return response;
