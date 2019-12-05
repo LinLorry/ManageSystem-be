@@ -122,6 +122,7 @@ public class Product implements Serializable {
                 break;
             case FINISH:
                 map.put("status", "finish");
+                break;
             default:
                 map.put("status", "unknown");
         }
