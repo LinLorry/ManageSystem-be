@@ -23,7 +23,7 @@ public class Product implements Serializable {
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     private String serial;
 
     private Timestamp createTime;
