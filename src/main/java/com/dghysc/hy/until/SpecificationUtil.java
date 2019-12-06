@@ -3,16 +3,13 @@ package com.dghysc.hy.until;
 import org.springframework.data.jpa.domain.Specification;
 
 import javax.persistence.criteria.Predicate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class SpecificationUtil {
     private Map<String, Object> equalMap = new HashMap<>();
     private Map<String, Object> likeMap = new HashMap<>();
-    private Map<String, Object> greaterMap = new HashMap<>();
-    private Map<String, Object> lessMap = new HashMap<>();
+    private Map<String, Date> greaterDateMap = new HashMap<>();
+    private Map<String, Date> lessDateMap = new HashMap<>();
 
     public void addEqualMap(String key, Object value) {
         equalMap.put(key, value);
@@ -30,21 +27,22 @@ public class SpecificationUtil {
         likeMap.putAll(map);
     }
 
-    public <T extends Comparable<T>> void addGreaterMap(String key, T value) {
-        greaterMap.put(key, value);
+    public void addGreaterDateMap(String key, Date date) {
+        greaterDateMap.put(key, date);
     }
 
-    public void addGreaterMap(Map<String, Object> map) {
-        greaterMap.putAll(map);
+    public void addGreaterDateMap(Map<String, Date> dateMap) {
+        greaterDateMap.putAll(dateMap);
     }
 
-    public <T extends Comparable<T>> void addLessMap(String key, T value) {
-        lessMap.put(key, value);
+    public void addLessDateMap(String key, Date date) {
+        lessDateMap.put(key, date);
     }
 
-    public void addLessMap(Map<String, Object> map) {
-        greaterMap.putAll(map);
+    public void addLessDateMap(Map<String, Date> dateMap) {
+        greaterDateMap.putAll(dateMap);
     }
+
 
     public <E> Specification<E> getSpecification() {
         return ((root, query, criteriaBuilder) -> {
@@ -65,18 +63,18 @@ public class SpecificationUtil {
                 });
             }
 
-            if (greaterMap.size() != 0) {
-                greaterMap.forEach((key, value) -> {
+            if (greaterDateMap.size() != 0) {
+                greaterDateMap.forEach((key, value) -> {
                     if (key.length() != 0) {
-                        predicates.add(criteriaBuilder.greaterThan(root.get(key), value.toString()));
+                        predicates.add(criteriaBuilder.greaterThan(root.get(key), value));
                     }
                 });
             }
 
-            if (lessMap.size() != 0) {
-                lessMap.forEach((key, value) -> {
+            if (lessDateMap.size() != 0) {
+                lessDateMap.forEach((key, value) -> {
                     if (key.length() != 0) {
-                        predicates.add(criteriaBuilder.lessThan(root.get(key), value.toString()));
+                        predicates.add(criteriaBuilder.lessThan(root.get(key), value));
                     }
                 });
             }
