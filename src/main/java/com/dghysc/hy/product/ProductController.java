@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -266,6 +267,89 @@ public class ProductController {
             response.put("status", 0);
             response.put("message", "This product isn't exist.");
         }
+
+        return response;
+    }
+
+    /**
+     * Get Today Create Product Api
+     * @param pageNumber the page number.
+     * @return {
+     *     "status": 1,
+     *     "message": "Get today create product success.",
+     *     "data": [
+     *         {
+     *             "id": product id: Integer,
+     *             "serial": product serial: String,
+     *             "workId": product product id: Integer,
+     *             "workName": product product name: String,
+     *             "status": product status: String,
+     *             "createUser": create user name: String,
+     *             "createTime": product create time: Timestamp,
+     *             "endTime": product end time: Timestamp
+     *         },
+     *         ...
+     *     ]
+     * }
+     */
+    @ResponseBody
+    @GetMapping("/todayCreate")
+    public JSONObject todayCreate(@RequestParam(defaultValue = "0") Integer pageNumber) {
+        JSONObject response = new JSONObject();
+
+        LocalDate today = LocalDate.now();
+        LocalDate tomorrow = today.plusDays(1);
+
+        Timestamp todayTimestamp = Timestamp.valueOf(today.atStartOfDay());
+        Timestamp tomorrowTimestamp = Timestamp.valueOf(tomorrow.atStartOfDay());
+
+        response.put("data", productService.loadByCreateTimeInterval(
+                todayTimestamp, tomorrowTimestamp, pageNumber));
+        response.put("status", 1);
+        response.put("message", "Get today create product success.");
+
+        return response;
+    }
+
+    /**
+     * Get According End Time Product Api
+     * @param accord the according day number.
+     * @param pageNumber the page number.
+     * @return {
+     *     "status": 1,
+     *     "message": "Get products success.",
+     *     "data": [
+     *         {
+     *             "id": product id: Integer,
+     *             "serial": product serial: String,
+     *             "workId": product product id: Integer,
+     *             "workName": product product name: String,
+     *             "status": product status: String,
+     *             "createUser": create user name: String,
+     *             "createTime": product create time: Timestamp,
+     *             "endTime": product end time: Timestamp
+     *         },
+     *         ...
+     *     ]
+     * }
+     */
+    @ResponseBody
+    @GetMapping("/accordEnd")
+    public JSONObject accordEnd(
+            @RequestParam(defaultValue = "0") Integer accord,
+            @RequestParam(defaultValue = "0") Integer pageNumber) {
+        JSONObject response = new JSONObject();
+
+        LocalDate today = LocalDate.now().plusDays(accord);
+        LocalDate tomorrow = today.plusDays(1);
+
+        Timestamp todayTimestamp = Timestamp.valueOf(today.atStartOfDay());
+        Timestamp tomorrowTimestamp = Timestamp.valueOf(tomorrow.atStartOfDay());
+
+        response.put("data", productService.loadByEndTimeInterval(
+                todayTimestamp, tomorrowTimestamp, pageNumber));
+        response.put("status", 1);
+        response.put("message", "Get products success.");
 
         return response;
     }
