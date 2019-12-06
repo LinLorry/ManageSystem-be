@@ -5,6 +5,7 @@ import com.dghysc.hy.work.model.WorkProcess;
 import com.dghysc.hy.work.model.WorkProcessKey;
 import com.dghysc.hy.work.repo.WorkProcessRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -77,7 +78,7 @@ public class WorkProcessService {
      * }
      * @return the load result.
      */
-    List<WorkProcess> load(JSONObject json) {
+    Page<WorkProcess> load(JSONObject json) {
 
         Integer pageNumber = json.getInteger("pageNumber");
         if (pageNumber == null) {
@@ -103,7 +104,7 @@ public class WorkProcessService {
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[]{}));
         });
-        return workProcessRepository.findAll(specification, PageRequest.of(pageNumber, 20)).getContent();
+        return workProcessRepository.findAll(specification, PageRequest.of(pageNumber, 20));
     }
 
     /**

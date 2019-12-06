@@ -7,6 +7,7 @@ import com.dghysc.hy.work.model.Work;
 import com.dghysc.hy.work.model.WorkProcess;
 import com.dghysc.hy.work.model.WorkProcessKey;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -180,17 +181,19 @@ public class WorkProcessController {
      * @return {
      *     "status": 1,
      *     "message": "Get work process success.",
-     *     "data": [
-     *         {
-     *             "workId": the work id: Integer,
-     *             "workName": the work name: String,
-     *             "processId": the process id: Integer,
-     *             "processName": the process name: Integer,
-     *             "sequenceNumber": the work process sequence number: Integer,
-     *             "createTime": the work process create time: Timestamp,
-     *             "updateTime": the work process update time: Timestamp
-     *         }
-     *     ]
+     *     "data": {
+     *         "total": page total number: Integer,
+     *         "data": [
+     *             {
+     *                 "workId": the work id: Integer,
+     *                 "workName": the work name: String,
+     *                 "processId": the process id: Integer,
+     *                 "processName": the process name: Integer,
+     *                 "sequenceNumber": the work process sequence number: Integer,
+     *                 "createTime": the work process create time: Timestamp,
+     *                 "updateTime": the work process update time: Timestamp
+     *             }
+     *         ]
      * }
      */
     @ResponseBody
@@ -203,9 +206,14 @@ public class WorkProcessController {
             request.put("pageNumber", 0);
         }
 
+        JSONObject data = new JSONObject();
+        Page<WorkProcess> page = workProcessService.load(request);
+        data.put("total", page.getTotalPages());
+        data.put("workProcesses", page.getContent());
+
         response.put("status", 1);
         response.put("message", "Get work process success.");
-        response.put("data", workProcessService.load(request));
+        response.put("data", data);
 
         return response;
     }

@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.until.SecurityUtil;
 import com.dghysc.hy.work.model.Work;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -133,16 +134,18 @@ public class WorkController {
      * @return {
      *     "status": 1,
      *     "message": "Get work success.",
-     *     "data": [
-     *         {
-     *             "id": work id: Integer,
-     *             "name": work name: String,
-     *             "comment": work comment: String,
-     *             "createTime": work create time: Timestamp,
-     *             "updateTime": work update time: Timestamp
-     *         },
-     *         ...
-     *     ]
+     *     "data": {
+     *         "total": page total number: Integer,
+     *         "works": [
+     *             {
+     *                 "id": work id: Integer,
+     *                 "name": work name: String,
+     *                 "comment": work comment: String,
+     *                 "createTime": work create time: Timestamp,
+     *                 "updateTime": work update time: Timestamp
+     *             },
+     *             ...
+     *         ]
      * }
      */
     @ResponseBody
@@ -169,7 +172,12 @@ public class WorkController {
             likeMap.put("comment", comment);
         }
 
-        response.put("data", workService.load(equalMap, likeMap, pageNumber));
+        JSONObject data = new JSONObject();
+        Page<Work> page = workService.load(equalMap, likeMap, pageNumber);
+        data.put("total", page.getTotalPages());
+        data.put("works", page.getContent());
+
+        response.put("data", data);
         response.put("status", 1);
         response.put("message", "Get work success.");
 

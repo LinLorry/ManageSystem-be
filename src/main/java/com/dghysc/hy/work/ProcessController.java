@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.until.SecurityUtil;
 import com.dghysc.hy.work.model.Process;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -134,16 +135,18 @@ public class ProcessController {
      * @return {
      *     "status": 1,
      *     "message": "Get process success.",
-     *     "data": [
-     *         {
-     *             "id": process id: Integer,
-     *             "name": process name: String,
-     *             "comment": process comment: String,
-     *             "createTime": process create time: Timestamp,
-     *             "updateTime": process update time: Timestamp
-     *         },
-     *         ...
-     *     ]
+     *     "data": {
+     *         "total": page total number: Integer,
+     *         "processes": [
+     *             {
+     *                 "id": process id: Integer,
+     *                 "name": process name: String,
+     *                 "comment": process comment: String,
+     *                 "createTime": process create time: Timestamp,
+     *                 "updateTime": process update time: Timestamp
+     *             },
+     *             ...
+     *         ]
      * }
      */
     @ResponseBody
@@ -170,7 +173,12 @@ public class ProcessController {
             likeMap.put("comment", comment);
         }
 
-        response.put("data", processService.load(equalMap, likeMap, pageNumber));
+        JSONObject data = new JSONObject();
+        Page<Process> page = processService.load(equalMap, likeMap, pageNumber);
+        data.put("total", page.getTotalPages());
+        data.put("processes", page.getContent());
+
+        response.put("data", data);
         response.put("status", 1);
         response.put("message", "Get process success.");
 

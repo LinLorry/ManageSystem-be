@@ -3,6 +3,7 @@ package com.dghysc.hy.work;
 import com.dghysc.hy.until.SpecificationUtil;
 import com.dghysc.hy.work.model.Process;
 import com.dghysc.hy.work.repo.ProcessRepository;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -41,9 +42,9 @@ public class ProcessService {
      *     "the process field": value will be equal by "%value%"
      * }
      * @param pageNumber page number.
-     * @return the list of query result.
+     * @return the page of query result.
      */
-    List<Process> load(Map<String, Object> equalMap,
+    Page<Process> load(Map<String, Object> equalMap,
                        Map<String, Object> likeMap, Integer pageNumber) {
 
         SpecificationUtil specificationUtil = new SpecificationUtil();
@@ -51,7 +52,7 @@ public class ProcessService {
         specificationUtil.addLikeMap(likeMap);
 
         Specification<Process> specification = specificationUtil.getSpecification();
-        return processRepository.findAll(specification, PageRequest.of(pageNumber, 20)).getContent();
+        return processRepository.findAll(specification, PageRequest.of(pageNumber, 20));
     }
 
     /**
