@@ -3,6 +3,7 @@ package com.dghysc.hy.product;
 import com.dghysc.hy.product.model.Product;
 import com.dghysc.hy.product.rep.ProductRepository;
 import com.dghysc.hy.until.SpecificationUtil;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -42,9 +43,9 @@ public class ProductService {
      *     "the product field": value will be equal by "%value%"
      * }
      * @param pageNumber page number.
-     * @return the list of query result.
+     * @return the page of query result.
      */
-    List<Product> load(Map<String, Object> equalMap,
+    Page<Product> load(Map<String, Object> equalMap,
                        Map<String, Object> likeMap, Integer pageNumber) {
 
         SpecificationUtil specificationUtil = new SpecificationUtil();
@@ -54,7 +55,7 @@ public class ProductService {
 
         Specification<Product> specification = specificationUtil.getSpecification();
 
-        return productRepository.findAll(specification, PageRequest.of(pageNumber, 20)).getContent();
+        return productRepository.findAll(specification, PageRequest.of(pageNumber, 20));
     }
 
     /**
@@ -72,9 +73,9 @@ public class ProductService {
      * @param after the product's end time after this.
      * @param before the product's end time before this.
      * @param pageNumber the page number.
-     * @return the list of the result.
+     * @return the page of the result.
      */
-    List<Product> loadByEndTimeInterval(Timestamp after, Timestamp before, Integer pageNumber) {
+    Page<Product> loadByEndTimeInterval(Timestamp after, Timestamp before, Integer pageNumber) {
         SpecificationUtil specificationUtil = new SpecificationUtil();
 
         if (after != null) {
@@ -87,8 +88,7 @@ public class ProductService {
 
         return productRepository.findAll(
                 specificationUtil.getSpecification(),
-                PageRequest.of(pageNumber, 20))
-                .getContent();
+                PageRequest.of(pageNumber, 20));
     }
 
     /**
@@ -96,9 +96,9 @@ public class ProductService {
      * @param after the product's create time after this.
      * @param before the product's create time before this.
      * @param pageNumber the page number.
-     * @return the list of the result.
+     * @return the page of the result.
      */
-    List<Product> loadByCreateTimeInterval(Timestamp after, Timestamp before, Integer pageNumber) {
+    Page<Product> loadByCreateTimeInterval(Timestamp after, Timestamp before, Integer pageNumber) {
         SpecificationUtil specificationUtil = new SpecificationUtil();
 
         if (after != null) {
@@ -111,8 +111,7 @@ public class ProductService {
 
         return productRepository.findAll(
                 specificationUtil.getSpecification(),
-                PageRequest.of(pageNumber, 20))
-                .getContent();
+                PageRequest.of(pageNumber, 20));
     }
 
     /**

@@ -7,6 +7,7 @@ import com.dghysc.hy.until.SecurityUtil;
 import com.dghysc.hy.work.WorkService;
 import com.dghysc.hy.work.model.Work;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -184,19 +185,22 @@ public class ProductController {
      * @return {
      *     "status": 1,
      *     "message": "Get product success.",
-     *     "data": [
-     *         {
-     *             "id": product id: Integer,
-     *             "serial": product serial: String,
-     *             "workId": product product id: Integer,
-     *             "workName": product product name: String,
-     *             "status": product status: String,
-     *             "createUser": create user name: String,
-     *             "createTime": product create time: Timestamp,
-     *             "endTime": product end time: Timestamp
-     *         },
-     *         ...
-     *     ]
+     *     "data":{
+     *         "total": page total number: Integer,
+     *         "products": [
+     *             {
+     *                 "id": product id: Integer,
+     *                 "serial": product serial: String,
+     *                 "workId": product product id: Integer,
+     *                 "workName": product product name: String,
+     *                 "status": product status: String,
+     *                 "createUser": create user name: String,
+     *                 "createTime": product create time: Timestamp,
+     *                 "endTime": product end time: Timestamp
+     *             },
+     *             ...
+     *         ]
+     *     }
      * }
      */
     @ResponseBody
@@ -228,7 +232,12 @@ public class ProductController {
             }
         }
 
-        response.put("data", productService.load(equalMap, likeMap, pageNumber));
+        JSONObject data = new JSONObject();
+        Page<Product> page = productService.load(equalMap, likeMap, pageNumber);
+        data.put("total", page.getTotalPages());
+        data.put("products", page.getContent());
+
+        response.put("data", data);
         response.put("status", 1);
         response.put("message", "Get product success.");
 
@@ -277,19 +286,22 @@ public class ProductController {
      * @return {
      *     "status": 1,
      *     "message": "Get today create product success.",
-     *     "data": [
-     *         {
-     *             "id": product id: Integer,
-     *             "serial": product serial: String,
-     *             "workId": product product id: Integer,
-     *             "workName": product product name: String,
-     *             "status": product status: String,
-     *             "createUser": create user name: String,
-     *             "createTime": product create time: Timestamp,
-     *             "endTime": product end time: Timestamp
-     *         },
-     *         ...
-     *     ]
+     *     "data":{
+     *         "total": page total number: Integer,
+     *         "products": [
+     *             {
+     *                 "id": product id: Integer,
+     *                 "serial": product serial: String,
+     *                 "workId": product product id: Integer,
+     *                 "workName": product product name: String,
+     *                 "status": product status: String,
+     *                 "createUser": create user name: String,
+     *                 "createTime": product create time: Timestamp,
+     *                 "endTime": product end time: Timestamp
+     *             },
+     *             ...
+     *         ]
+     *     }
      * }
      */
     @ResponseBody
@@ -303,8 +315,13 @@ public class ProductController {
         Timestamp todayTimestamp = Timestamp.valueOf(today.atStartOfDay());
         Timestamp tomorrowTimestamp = Timestamp.valueOf(tomorrow.atStartOfDay());
 
-        response.put("data", productService.loadByCreateTimeInterval(
-                todayTimestamp, tomorrowTimestamp, pageNumber));
+        JSONObject data = new JSONObject();
+        Page<Product> page = productService.loadByCreateTimeInterval(
+                todayTimestamp, tomorrowTimestamp, pageNumber);
+        data.put("total", page.getTotalPages());
+        data.put("products", page.getContent());
+
+        response.put("data", data);
         response.put("status", 1);
         response.put("message", "Get today create product success.");
 
@@ -318,19 +335,22 @@ public class ProductController {
      * @return {
      *     "status": 1,
      *     "message": "Get products success.",
-     *     "data": [
-     *         {
-     *             "id": product id: Integer,
-     *             "serial": product serial: String,
-     *             "workId": product product id: Integer,
-     *             "workName": product product name: String,
-     *             "status": product status: String,
-     *             "createUser": create user name: String,
-     *             "createTime": product create time: Timestamp,
-     *             "endTime": product end time: Timestamp
-     *         },
-     *         ...
-     *     ]
+     *     "data":{
+     *         "total": page total number: Integer,
+     *         "products": [
+     *             {
+     *                 "id": product id: Integer,
+     *                 "serial": product serial: String,
+     *                 "workId": product product id: Integer,
+     *                 "workName": product product name: String,
+     *                 "status": product status: String,
+     *                 "createUser": create user name: String,
+     *                 "createTime": product create time: Timestamp,
+     *                 "endTime": product end time: Timestamp
+     *             },
+     *             ...
+     *         ]
+     *     }
      * }
      */
     @ResponseBody
@@ -346,8 +366,13 @@ public class ProductController {
         Timestamp todayTimestamp = Timestamp.valueOf(today.atStartOfDay());
         Timestamp tomorrowTimestamp = Timestamp.valueOf(tomorrow.atStartOfDay());
 
-        response.put("data", productService.loadByEndTimeInterval(
-                todayTimestamp, tomorrowTimestamp, pageNumber));
+        JSONObject data = new JSONObject();
+        Page<Product> page = productService.loadByEndTimeInterval(
+                todayTimestamp, tomorrowTimestamp, pageNumber);
+        data.put("total", page.getTotalPages());
+        data.put("products", page.getContent());
+
+        response.put("data", data);
         response.put("status", 1);
         response.put("message", "Get products success.");
 
