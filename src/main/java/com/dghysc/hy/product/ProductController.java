@@ -41,7 +41,7 @@ public class ProductController {
      * @param request {
      *     "serial": product serial: String[must],
      *     "workId": product product id: Integer[must],
-     *     "endTime": product end time: Timestamp,
+     *     "endTime": product end time: Timestamp[must],
      * }
      * @return create product success return {
      *     "status": 1,
@@ -74,6 +74,10 @@ public class ProductController {
         } else if (workId == null) {
             response.put("status", 0);
             response.put("message", "Must have work id.");
+            return response;
+        } else if (endTime == null) {
+            response.put("status", 0);
+            response.put("message", "Must have end time.");
             return response;
         }
 
