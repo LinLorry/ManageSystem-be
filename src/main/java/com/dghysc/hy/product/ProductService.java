@@ -92,6 +92,30 @@ public class ProductService {
     }
 
     /**
+     * Load Products By End Time Interval
+     * @param after the product's create time after this.
+     * @param before the product's create time before this.
+     * @param pageNumber the page number.
+     * @return the list of the result.
+     */
+    List<Product> loadByCreateTimeInterval(Timestamp after, Timestamp before, Integer pageNumber) {
+        SpecificationUtil specificationUtil = new SpecificationUtil();
+
+        if (after != null) {
+            specificationUtil.addGreaterDateMap("createTime", after);
+        }
+
+        if (before != null) {
+            specificationUtil.addLessDateMap("createTime", before);
+        }
+
+        return productRepository.findAll(
+                specificationUtil.getSpecification(),
+                PageRequest.of(pageNumber, 20))
+                .getContent();
+    }
+
+    /**
      * Check Product By Name
      * @param serial the product serial.
      * @return if name is exist return true else return false.
