@@ -253,7 +253,12 @@ public class ProductController {
 
         try {
             Product product = productService.loadById(id);
-            product.setStatus(ProductStatus.FINISH);
+
+            if (product.getStatus() != ProductStatus.FINISH) {
+                product.setStatus(ProductStatus.FINISH);
+                product.setFinishTime(new Timestamp(System.currentTimeMillis()));
+            }
+
             productService.addOrUpdate(product);
             response.put("status", 1);
             response.put("message", "Finish product success,");
