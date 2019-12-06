@@ -4,8 +4,10 @@ import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.until.SecurityUtil;
 import com.dghysc.hy.work.model.Work;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
+import javax.transaction.Transactional;
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,14 +29,14 @@ public class WorkController {
     }
 
     /**
-     * Add Work Api
+     * Create Work Api
      * @param request {
      *     "name": work name: String[must],
      *     "comment": work comment: String
      * }
      * @return create work success return {
      *     "status": 1,
-     *     "message": "Add work success."
+     *     "message": "Create work success."
      *     "data": {
      *         "id": work id: Integer,
      *         "name": work name: String,
@@ -58,7 +60,7 @@ public class WorkController {
         try {
             response.put("data", workService.addOrUpdate(work));
             response.put("status", 1);
-            response.put("message", "Add work success.");
+            response.put("message", "Create work success.");
         } catch (DataIntegrityViolationException e) {
             if (!workService.checkByName(name)) {
                 throw e;
@@ -92,6 +94,7 @@ public class WorkController {
      */
     @ResponseBody
     @PostMapping("/update")
+    @Transactional
     public JSONObject update(@RequestBody JSONObject request) {
         JSONObject response = new JSONObject();
         String name = request.getString("name");
@@ -131,16 +134,18 @@ public class WorkController {
      * @return {
      *     "status": 1,
      *     "message": "Get work success.",
-     *     "data": [
-     *         {
-     *             "id": work id: Integer,
-     *             "name": work name: String,
-     *             "comment": work comment: String,
-     *             "createTime": work create time: Timestamp,
-     *             "updateTime": work update time: Timestamp
-     *         },
-     *         ...
-     *     ]
+     *     "data": {
+     *         "total": page total number: Integer,
+     *         "works": [
+     *             {
+     *                 "id": work id: Integer,
+     *                 "name": work name: String,
+     *                 "comment": work comment: String,
+     *                 "createTime": work create time: Timestamp,
+     *                 "updateTime": work update time: Timestamp
+     *             },
+     *             ...
+     *         ]
      * }
      */
     @ResponseBody
@@ -167,7 +172,12 @@ public class WorkController {
             likeMap.put("comment", comment);
         }
 
-        response.put("data", workService.load(equalMap, likeMap, pageNumber));
+        JSONObject data = new JSONObject();
+        Page<Work> page = workService.load(equalMap, likeMap, pageNumber);
+        data.put("total", page.getTotalPages());
+        data.put("works", page.getContent());
+
+        response.put("data", data);
         response.put("status", 1);
         response.put("message", "Get work success.");
 

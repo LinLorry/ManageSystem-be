@@ -3,6 +3,7 @@ package com.dghysc.hy.work;
 import com.dghysc.hy.until.SpecificationUtil;
 import com.dghysc.hy.work.model.Work;
 import com.dghysc.hy.work.repo.WorkRepository;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -42,16 +43,16 @@ public class WorkService {
      *     "the work field": value will be equal by "%value%"
      * }
      * @param pageNumber page number.
-     * @return the list of query result.
+     * @return the page of query result.
      */
-    List<Work> load(Map<String, Object> equalMap,
+    Page<Work> load(Map<String, Object> equalMap,
                     Map<String, Object> likeMap, Integer pageNumber) {
         SpecificationUtil specificationUtil = new SpecificationUtil();
         specificationUtil.addEqualMap(equalMap);
         specificationUtil.addLikeMap(likeMap);
 
         Specification<Work> specification = specificationUtil.getSpecification();
-        return workRepository.findAll(specification, PageRequest.of(pageNumber, 20)).getContent();
+        return workRepository.findAll(specification, PageRequest.of(pageNumber, 20));
     }
 
     /**

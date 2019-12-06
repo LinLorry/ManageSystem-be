@@ -4,8 +4,10 @@ import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.until.SecurityUtil;
 import com.dghysc.hy.work.model.Process;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
+import javax.transaction.Transactional;
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,14 +29,14 @@ public class ProcessController {
     }
 
     /**
-     * Add Process Api
+     * Create Process Api
      * @param request {
      *     "name": process name: String[must],
      *     "comment": process comment: String
      * }
      * @return create process success return {
      *     "status": 1,
-     *     "message": "Add process success."
+     *     "message": "Create process success."
      *     "data": {
      *         "id": process id: Integer,
      *         "name": process name: String,
@@ -59,7 +61,7 @@ public class ProcessController {
         try {
             response.put("data", processService.addOrUpdate(process));
             response.put("status", 1);
-            response.put("message", "Add process success.");
+            response.put("message", "Create process success.");
         } catch (DataIntegrityViolationException e) {
             if (!processService.checkByName(name)) {
                 throw e;
@@ -93,6 +95,7 @@ public class ProcessController {
      */
     @ResponseBody
     @RequestMapping("/update")
+    @Transactional
     public JSONObject update(@RequestBody JSONObject request) {
         JSONObject response = new JSONObject();
         String name = request.getString("name");
@@ -132,16 +135,18 @@ public class ProcessController {
      * @return {
      *     "status": 1,
      *     "message": "Get process success.",
-     *     "data": [
-     *         {
-     *             "id": process id: Integer,
-     *             "name": process name: String,
-     *             "comment": process comment: String,
-     *             "createTime": process create time: Timestamp,
-     *             "updateTime": process update time: Timestamp
-     *         },
-     *         ...
-     *     ]
+     *     "data": {
+     *         "total": page total number: Integer,
+     *         "processes": [
+     *             {
+     *                 "id": process id: Integer,
+     *                 "name": process name: String,
+     *                 "comment": process comment: String,
+     *                 "createTime": process create time: Timestamp,
+     *                 "updateTime": process update time: Timestamp
+     *             },
+     *             ...
+     *         ]
      * }
      */
     @ResponseBody
@@ -168,7 +173,12 @@ public class ProcessController {
             likeMap.put("comment", comment);
         }
 
-        response.put("data", processService.load(equalMap, likeMap, pageNumber));
+        JSONObject data = new JSONObject();
+        Page<Process> page = processService.load(equalMap, likeMap, pageNumber);
+        data.put("total", page.getTotalPages());
+        data.put("processes", page.getContent());
+
+        response.put("data", data);
         response.put("status", 1);
         response.put("message", "Get process success.");
 
