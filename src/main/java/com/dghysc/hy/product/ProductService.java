@@ -7,9 +7,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
+import java.sql.Timestamp;
+import java.util.*;
 
 /**
  * Product Service
@@ -58,8 +57,38 @@ public class ProductService {
         return productRepository.findAll(specification, PageRequest.of(pageNumber, 20)).getContent();
     }
 
+    /**
+     * Load Product By Id Service
+     * @param id the product id.
+     * @return the product.
+     * @throws NoSuchElementException if the product isn't exist throw this exception.
+     */
     Product loadById(Long id) throws NoSuchElementException {
         return productRepository.findById(id).orElseThrow(NoSuchElementException::new);
+    }
+
+    /**
+     * Load Products By End Time Interval
+     * @param after the product's end time after this.
+     * @param before the product's end time before this.
+     * @param pageNumber the page number.
+     * @return the list of the result.
+     */
+    List<Product> loadByEndTimeInterval(Timestamp after, Timestamp before, Integer pageNumber) {
+        SpecificationUtil specificationUtil = new SpecificationUtil();
+
+        if (after != null) {
+            specificationUtil.addGreaterDateMap("endTime", after);
+        }
+
+        if (before != null) {
+            specificationUtil.addLessDateMap("endTime", before);
+        }
+
+        return productRepository.findAll(
+                specificationUtil.getSpecification(),
+                PageRequest.of(pageNumber, 20))
+                .getContent();
     }
 
     /**
