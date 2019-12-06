@@ -6,6 +6,7 @@ import com.dghysc.hy.work.model.Process;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.annotation.*;
 
+import javax.transaction.Transactional;
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
@@ -93,6 +94,7 @@ public class ProcessController {
      */
     @ResponseBody
     @RequestMapping("/update")
+    @Transactional
     public JSONObject update(@RequestBody JSONObject request) {
         JSONObject response = new JSONObject();
         String name = request.getString("name");
