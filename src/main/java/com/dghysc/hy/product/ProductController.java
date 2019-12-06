@@ -10,6 +10,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import javax.transaction.Transactional;
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
@@ -127,6 +128,7 @@ public class ProductController {
      */
     @ResponseBody
     @PostMapping("/update")
+    @Transactional
     public JSONObject update(@RequestBody JSONObject request) {
         JSONObject response = new JSONObject();
 
@@ -245,6 +247,7 @@ public class ProductController {
      */
     @ResponseBody
     @PostMapping("/finish")
+    @Transactional
     public JSONObject finish(@RequestParam Long id) {
         JSONObject response = new JSONObject();
 
