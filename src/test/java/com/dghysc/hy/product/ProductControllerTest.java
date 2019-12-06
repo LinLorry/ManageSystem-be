@@ -140,26 +140,30 @@ public class ProductControllerTest {
         ResponseEntity<JSONObject> dayAfterTomorrowResponse = restTemplate
                 .exchange(dayAfterTomorrow, HttpMethod.GET, dayAfterTomorrowRequest, JSONObject.class);
 
+        Assert.assertEquals(200, todayResponse.getStatusCodeValue());
+        Assert.assertEquals(200, tomorrowResponse.getStatusCodeValue());
+        Assert.assertEquals(200, dayAfterTomorrowResponse.getStatusCodeValue());
+        System.out.println(todayResponse.getBody());
+
         System.out.println("today:");
-        for (Object obj : Objects.requireNonNull(todayResponse.getBody()).getJSONArray("data")) {
+        for (Object obj : Objects.requireNonNull(todayResponse.getBody())
+                .getJSONObject("data").getJSONArray("products")) {
             JSONObject json = (JSONObject) obj;
             System.out.println(json.getInteger("id") + ": " + json.getTimestamp("endTime"));
         }
 
         System.out.println("tomorrow:");
-        for (Object obj : Objects.requireNonNull(tomorrowResponse.getBody()).getJSONArray("data")) {
+        for (Object obj : Objects.requireNonNull(tomorrowResponse.getBody())
+                .getJSONObject("data").getJSONArray("products")) {
             JSONObject json = (JSONObject) obj;
             System.out.println(json.getInteger("id") + ": " + json.getTimestamp("endTime"));
         }
 
         System.out.println("dayAfterTomorrow:");
-        for (Object obj : Objects.requireNonNull(dayAfterTomorrowResponse.getBody()).getJSONArray("data")) {
+        for (Object obj : Objects.requireNonNull(dayAfterTomorrowResponse.getBody())
+                .getJSONObject("data").getJSONArray("products")) {
             JSONObject json = (JSONObject) obj;
             System.out.println(json.getInteger("id") + ": " + json.getTimestamp("endTime"));
         }
-
-        Assert.assertEquals(200, todayResponse.getStatusCodeValue());
-        Assert.assertEquals(200, tomorrowResponse.getStatusCodeValue());
-        Assert.assertEquals(200, dayAfterTomorrowResponse.getStatusCodeValue());
     }
 }

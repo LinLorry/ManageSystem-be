@@ -5,6 +5,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.sql.Timestamp;
@@ -23,7 +24,7 @@ public class ProductServiceTest {
         LocalDate today = LocalDate.now();
         LocalDate tomorrow = today.plusDays(1);
 
-        List<Product> result = productService.loadByEndTimeInterval(
+        Page<Product> result = productService.loadByEndTimeInterval(
                 Timestamp.valueOf(today.atStartOfDay()),
                 Timestamp.valueOf(tomorrow.atStartOfDay()),
                 0);
@@ -38,7 +39,7 @@ public class ProductServiceTest {
         LocalDate today = LocalDate.now();
         LocalDate tomorrow = today.plusDays(1);
 
-        List<Product> result = productService.loadByCreateTimeInterval(
+        Page<Product> result = productService.loadByCreateTimeInterval(
                 Timestamp.valueOf(today.atStartOfDay()),
                 Timestamp.valueOf(tomorrow.atStartOfDay()),
                 0);
