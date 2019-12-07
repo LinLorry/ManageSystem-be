@@ -2,9 +2,8 @@ package com.dghysc.hy.security;
 
 import com.alibaba.fastjson.JSONObject;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ControllerAdvice;
-import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * Global Controller Advice
@@ -14,16 +13,27 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
  * @see org.springframework.web.bind.annotation.ControllerAdvice
  * @see org.springframework.web.bind.annotation.ExceptionHandler
  */
-@ControllerAdvice
+@RestControllerAdvice
 public class GlobalControllerAdvice {
+
+    @ExceptionHandler(AccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public JSONObject accessDeniedHandler() {
+        JSONObject json = new JSONObject();
+        json.put("status", 0);
+        json.put("message", "Forbidden");
+        return json;
+    }
+
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<JSONObject> globalExceptionHandler(Exception exception) {
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public JSONObject globalExceptionHandler(Exception exception) {
         exception.printStackTrace();
 
         JSONObject json = new JSONObject();
         json.put("status", 0);
         json.put("message", "Error!");
 
-        return new ResponseEntity<>(json, HttpStatus.INTERNAL_SERVER_ERROR);
+        return json;
     }
 }
