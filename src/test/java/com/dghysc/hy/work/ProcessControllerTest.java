@@ -2,6 +2,7 @@ package com.dghysc.hy.work;
 
 import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.util.TestUtil;
+import com.dghysc.hy.work.repo.ProcessRepository;
 import net.bytebuddy.utility.RandomString;
 import org.junit.Assert;
 import org.junit.Test;
@@ -16,6 +17,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Random;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -23,11 +25,16 @@ public class ProcessControllerTest {
 
     private static final String baseUrl = "/api/process";
 
+    private static final Random random = new Random();
+
     @Autowired
     private TestRestTemplate restTemplate;
 
     @Autowired
     private TestUtil testUtil;
+
+    @Autowired
+    private ProcessRepository processRepository;
 
     @Test
     public void create() throws URISyntaxException {
@@ -49,10 +56,12 @@ public class ProcessControllerTest {
     @Test
     public void update() throws URISyntaxException {
         final String url = baseUrl + "/update";
+        final int number = (int) processRepository.count();
+
         URI uri = new URI(url);
 
         JSONObject requestBody = new JSONObject();
-        requestBody.put("id", 1);
+        requestBody.put("id", random.nextInt(number));
         requestBody.put("name", RandomString.make());
         requestBody.put("comment", RandomString.make());
 
@@ -74,6 +83,24 @@ public class ProcessControllerTest {
 
         ResponseEntity<JSONObject> response = restTemplate
                 .exchange(uri, HttpMethod.GET, request, JSONObject.class);
+
+        System.out.println(response.getBody());
+        Assert.assertEquals(200, response.getStatusCodeValue());
+    }
+
+    @Test
+    public void delete() throws URISyntaxException {
+        final String url = baseUrl + "/delete";
+        final int number = (int) processRepository.count();
+        URI uri = new URI(url);
+
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("id", random.nextInt(number));
+
+        HttpEntity<JSONObject> request = new HttpEntity<>(requestBody, testUtil.getTokenHeader());
+
+        ResponseEntity<JSONObject> response = restTemplate
+                .exchange(uri, HttpMethod.DELETE, request, JSONObject.class);
 
         System.out.println(response.getBody());
         Assert.assertEquals(200, response.getStatusCodeValue());

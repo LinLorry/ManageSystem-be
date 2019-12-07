@@ -5,6 +5,7 @@ import com.dghysc.hy.until.SecurityUtil;
 import com.dghysc.hy.work.model.Process;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -12,6 +13,7 @@ import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 /**
  * Process Controller
@@ -181,6 +183,31 @@ public class ProcessController {
         response.put("data", data);
         response.put("status", 1);
         response.put("message", "Get process success.");
+
+        return response;
+    }
+
+    /**
+     * Delete Process Api.
+     * @param request {
+     *     "id": the process id: Long
+     * }
+     * @return {
+     *     "status": 1,
+     *     "message": "Delete process success."
+     * }
+     */
+    @ResponseBody
+    @DeleteMapping("/delete")
+    @PreAuthorize("hasRole('ADMIN')")
+    public JSONObject delete(@RequestBody JSONObject request) {
+        JSONObject response = new JSONObject();
+
+        Integer id = Objects.requireNonNull(request.getInteger("id"));
+        processService.removeById(id);
+
+        response.put("status", 1);
+        response.put("message", "Delete process success.");
 
         return response;
     }

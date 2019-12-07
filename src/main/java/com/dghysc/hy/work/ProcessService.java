@@ -3,6 +3,7 @@ package com.dghysc.hy.work;
 import com.dghysc.hy.until.SpecificationUtil;
 import com.dghysc.hy.work.model.Process;
 import com.dghysc.hy.work.repo.ProcessRepository;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
@@ -73,5 +74,15 @@ public class ProcessService {
      */
     boolean checkByName(String name) {
         return processRepository.existsByName(name);
+    }
+
+    /**
+     * Remove Process By Id
+     * @param id the process id.
+     * @throws org.springframework.dao.EmptyResultDataAccessException
+     *      if the process didn't exists throw this exception.
+     */
+    void removeById(Integer id) throws EmptyResultDataAccessException {
+        processRepository.deleteById(id);
     }
 }

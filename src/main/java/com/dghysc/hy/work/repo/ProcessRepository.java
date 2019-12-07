@@ -15,7 +15,7 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface ProcessRepository extends CrudRepository<Process, Integer>, JpaSpecificationExecutor<Process> {
-    Page<Process> findAll(Pageable pageable);
-
     boolean existsByName(String name);
+
+    void deleteById(Integer id);
 }
