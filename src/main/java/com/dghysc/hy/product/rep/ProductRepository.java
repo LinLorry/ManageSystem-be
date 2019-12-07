@@ -15,4 +15,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ProductRepository extends CrudRepository<Product, Long>, JpaSpecificationExecutor<Product> {
     boolean existsBySerial(String serial);
+
+    void deleteById(Long id);
 }
