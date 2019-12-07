@@ -157,7 +157,7 @@ public class WorkProcessService {
         return predicates;
     }
 
-    WorkProcess loadById(WorkProcessKey key) throws NoSuchElementException {
+    WorkProcess loadByKey(WorkProcessKey key) throws NoSuchElementException {
         return workProcessRepository.findById(key).orElseThrow(NoSuchElementException::new);
     }
 
@@ -168,5 +168,13 @@ public class WorkProcessService {
      */
     boolean checkByKey(WorkProcessKey workProcessKey) {
         return workProcessRepository.existsById(workProcessKey);
+    }
+
+    /**
+     * Remove Work Process
+     * @param workProcess the work process will be remove.
+     */
+    void remove(WorkProcess workProcess) {
+        entityManager.remove(workProcess);
     }
 }

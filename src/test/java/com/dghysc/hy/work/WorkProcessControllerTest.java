@@ -2,6 +2,8 @@ package com.dghysc.hy.work;
 
 import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.util.TestUtil;
+import com.dghysc.hy.work.repo.ProcessRepository;
+import com.dghysc.hy.work.repo.WorkRepository;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -23,22 +25,31 @@ public class WorkProcessControllerTest {
 
     private static final String baseUrl = "/api/workProcess";
 
+    private static final Random random = new Random();
+
     @Autowired
     private TestRestTemplate restTemplate;
 
     @Autowired
     private TestUtil testUtil;
 
-    private Random random = new Random();
+    @Autowired
+    private WorkRepository workRepository;
+
+    @Autowired
+    private ProcessRepository processRepository;
 
     @Test
     public void create() throws URISyntaxException {
         final String url = baseUrl + "/create";
+        final int workNumber = (int) workRepository.count();
+        final int processNumber = (int) processRepository.count();
         URI uri = new URI(url);
 
         JSONObject requestBody = new JSONObject();
-        requestBody.put("workId", 1);
-        requestBody.put("processId", 1);
+        requestBody.put("workId", random.nextInt(workNumber));
+        requestBody.put("processId", random.nextInt(processNumber));
+
         requestBody.put("sequenceNumber", random.nextInt(10));
 
         HttpEntity<JSONObject> request = new HttpEntity<>(requestBody, testUtil.getTokenHeader());
@@ -52,11 +63,13 @@ public class WorkProcessControllerTest {
     @Test
     public void update() throws URISyntaxException {
         final String url = baseUrl + "/update";
+        final int workNumber = (int) workRepository.count();
+        final int processNumber = (int) processRepository.count();
         URI uri = new URI(url);
 
         JSONObject requestBody = new JSONObject();
-        requestBody.put("workId", 1);
-        requestBody.put("processId", 1);
+        requestBody.put("workId", random.nextInt(workNumber));
+        requestBody.put("processId", random.nextInt(processNumber));
         requestBody.put("sequenceNumber", random.nextInt(10));
 
         HttpEntity<JSONObject> request = new HttpEntity<>(requestBody, testUtil.getTokenHeader());
@@ -77,6 +90,24 @@ public class WorkProcessControllerTest {
 
         ResponseEntity<JSONObject> response = restTemplate
                 .exchange(uri, HttpMethod.GET, request, JSONObject.class);
+
+        System.out.println(response.getBody());
+        Assert.assertEquals(200, response.getStatusCodeValue());
+    }
+
+    @Test
+    public void delete() throws URISyntaxException {
+        final String url = baseUrl + "/delete";
+        URI uri = new URI(url);
+
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("workId", 1);
+        requestBody.put("processId", 6);
+
+        HttpEntity<JSONObject> request = new HttpEntity<>(requestBody, testUtil.getTokenHeader());
+
+        ResponseEntity<JSONObject> response = restTemplate
+                .exchange(uri, HttpMethod.DELETE, request, JSONObject.class);
 
         System.out.println(response.getBody());
         Assert.assertEquals(200, response.getStatusCodeValue());
