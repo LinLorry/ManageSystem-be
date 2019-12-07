@@ -15,6 +15,8 @@ spring:
     url: ${DATABASE_URL}
     username: ${DATABASE_USER}
     password: ${DATABASE_PWD}
+  resources:
+    static-locations: classpath:/static/order
 ---
 manage:
   authentication:
