@@ -3,6 +3,7 @@ package com.dghysc.hy.product;
 import com.dghysc.hy.product.model.Product;
 import com.dghysc.hy.product.rep.ProductRepository;
 import com.dghysc.hy.until.SpecificationUtil;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
@@ -121,5 +122,15 @@ public class ProductService {
      */
     boolean checkBySerial(String serial) {
         return productRepository.existsBySerial(serial);
+    }
+
+    /**
+     * Remove Product By Id
+     * @param id the product id.
+     * @throws org.springframework.dao.EmptyResultDataAccessException
+     *      if the product didn't exists throw this exception.
+     */
+    void removeById(Long id) throws EmptyResultDataAccessException {
+        productRepository.deleteById(id);
     }
 }

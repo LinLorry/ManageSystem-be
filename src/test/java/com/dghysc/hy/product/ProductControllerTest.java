@@ -166,4 +166,23 @@ public class ProductControllerTest {
             System.out.println(json.getInteger("id") + ": " + json.getTimestamp("endTime"));
         }
     }
+
+    @Test
+    public void delete() throws URISyntaxException {
+        final String url = baseUrl + "/delete";
+        int number = (int)productRepository.count();
+
+        URI uri = new URI(url);
+
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("id", random.nextInt(number));
+
+        HttpEntity<JSONObject> request = new HttpEntity<>(requestBody, testUtil.getTokenHeader());
+
+        ResponseEntity<JSONObject> response = restTemplate
+                .exchange(uri, HttpMethod.DELETE, request, JSONObject.class);
+
+        System.out.println(response.getBody());
+        Assert.assertEquals(200, response.getStatusCodeValue());
+    }
 }

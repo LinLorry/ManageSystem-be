@@ -8,15 +8,14 @@ import com.dghysc.hy.work.WorkService;
 import com.dghysc.hy.work.model.Work;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import java.sql.Timestamp;
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 /**
  * Product Controller
@@ -132,6 +131,7 @@ public class ProductController {
      *     }
      * }
      */
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @ResponseBody
     @PostMapping("/update")
     @Transactional
@@ -379,6 +379,31 @@ public class ProductController {
         response.put("data", data);
         response.put("status", 1);
         response.put("message", "Get products success.");
+
+        return response;
+    }
+
+    /**
+     * Delete Product Api.
+     * @param request {
+     *     "id": the product id: Long
+     * }
+     * @return {
+     *     "status": 1,
+     *     "message": "Delete product success."
+     * }
+     */
+    @PreAuthorize("hasRole('ADMIN')")
+    @ResponseBody
+    @DeleteMapping("/delete")
+    public JSONObject delete(@RequestBody JSONObject request) {
+        JSONObject response = new JSONObject();
+
+        Long id = Objects.requireNonNull(request.getLong("id"));
+        productService.removeById(id);
+
+        response.put("status", 1);
+        response.put("message", "Delete product success.");
 
         return response;
     }

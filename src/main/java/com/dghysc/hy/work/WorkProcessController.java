@@ -8,12 +8,14 @@ import com.dghysc.hy.work.model.WorkProcess;
 import com.dghysc.hy.work.model.WorkProcessKey;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import java.sql.Timestamp;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 /**
  * Work Process Controller
@@ -122,6 +124,7 @@ public class WorkProcessController {
      */
     @ResponseBody
     @PostMapping("/update")
+    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public JSONObject update(@RequestBody JSONObject request) {
         JSONObject response = new JSONObject();
@@ -132,7 +135,7 @@ public class WorkProcessController {
         Integer sequenceNumber = request.getInteger("sequenceNumber");
 
         try {
-            WorkProcess workProcess = workProcessService.loadById(key);
+            WorkProcess workProcess = workProcessService.loadByKey(key);
             workProcess.setSequenceNumber(sequenceNumber);
             workProcess.setUpdateTime(new Timestamp(System.currentTimeMillis()));
             workProcess.setUpdateUser(SecurityUtil.getUser());
@@ -214,6 +217,37 @@ public class WorkProcessController {
         response.put("status", 1);
         response.put("message", "Get work process success.");
         response.put("data", data);
+
+        return response;
+    }
+
+    /**
+     * Delete Work Process Api.
+     * @param request {
+     *     "workId": the work id: Long,
+     *     "processId": the process id: Long
+     * }
+     * @return {
+     *     "status": 1,
+     *     "message": "Delete work process success."
+     * }
+     */
+    @ResponseBody
+    @DeleteMapping("/delete")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    public JSONObject delete(@RequestBody JSONObject request) {
+        JSONObject response = new JSONObject();
+
+        Integer workId = Objects.requireNonNull(request.getInteger("workId"));
+        Integer processId = Objects.requireNonNull(request.getInteger("processId"));
+        WorkProcessKey key = new WorkProcessKey(workId, processId);
+        WorkProcess workProcess = workProcessService.loadByKey(key);
+
+        workProcessService.remove(workProcess);
+
+        response.put("status", 1);
+        response.put("message", "Delete work process success.");
 
         return response;
     }

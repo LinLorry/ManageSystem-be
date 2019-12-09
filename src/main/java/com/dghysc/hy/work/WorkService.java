@@ -3,6 +3,7 @@ package com.dghysc.hy.work;
 import com.dghysc.hy.until.SpecificationUtil;
 import com.dghysc.hy.work.model.Work;
 import com.dghysc.hy.work.repo.WorkRepository;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
@@ -76,5 +77,15 @@ public class WorkService {
      */
     boolean checkByName(String name) {
         return workRepository.existsByName(name);
+    }
+
+    /**
+     * Remove Work By Id
+     * @param id the work id.
+     * @throws org.springframework.dao.EmptyResultDataAccessException
+     *      if the work didn't exists throw this exception.
+     */
+    void removeById(Integer id) throws EmptyResultDataAccessException {
+        workRepository.deleteById(id);
     }
 }
