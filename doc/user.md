@@ -1,8 +1,9 @@
 ## User Api
 
-- [Registry Api:](#registry-api)
-- [Token Api:](#token-api)
-- [Profile Api:](#profile-api)
+- [Registry Api](#registry-api)
+- [Token Api](#token-api)
+- [Profile Api](#profile-api)
+- [Jude Admin Api](#jude-admin-api)
 
 
 ### Registry Api:
@@ -121,3 +122,28 @@ Authentication: [ `User`, `Admin` ]
       }
     }
     ```
+
+### Jude Admin Api:
+
+ `URL: /api/user/isAdmin`
+ 
+ Authentication: [ `User`, `Admin` ]
+ - method: `GET`
+ 
+   response:
+   - user is admin:
+     ```json
+     {
+       "status": 1,
+       "message": "Get success.",
+       "data": true
+     }
+     ```
+   - user isn't admin:
+     ```json
+     {
+       "status": 1,
+       "message": "Get success.",
+       "data": false
+     }
+     ```

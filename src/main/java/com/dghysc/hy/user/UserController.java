@@ -219,4 +219,33 @@ public class UserController {
 
         return response;
     }
+
+    /**
+     * Judge Admin Api.
+     * @return if user is admin return {
+     *     "status": 1,
+     *     "message": "Get success.",
+     *     "data": true
+     * } else return {
+     *     "status": 1,
+     *     "message": "Get success.",
+     *     "data": false
+     * }
+     */
+    @ResponseBody
+    @GetMapping("/isAdmin")
+    public JSONObject isAdmin() {
+        JSONObject response = new JSONObject();
+
+        if (SecurityUtil.getUser().getAuthorities().size() == 0) {
+            response.put("data", false);
+        } else {
+            response.put("data", true);
+        }
+
+        response.put("status", 1);
+        response.put("message", "Get success.");
+
+        return response;
+    }
 }
