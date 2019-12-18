@@ -200,7 +200,7 @@ public class WorkProcessController {
      * }
      */
     @ResponseBody
-    @GetMapping("/find")
+    @PostMapping("/find")
     public JSONObject find(@RequestBody(required = false) JSONObject request) {
         JSONObject response = new JSONObject();
 
