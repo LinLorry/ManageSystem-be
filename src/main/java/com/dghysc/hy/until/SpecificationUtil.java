@@ -5,6 +5,11 @@ import org.springframework.data.jpa.domain.Specification;
 import javax.persistence.criteria.Predicate;
 import java.util.*;
 
+/**
+ * The Specification Util
+ * @author lorry
+ * @author lin864464995@163.com
+ */
 public class SpecificationUtil {
     private Map<String, Object> equalMap = new HashMap<>();
     private Map<String, Object> likeMap = new HashMap<>();
@@ -66,7 +71,7 @@ public class SpecificationUtil {
             if (greaterDateMap.size() != 0) {
                 greaterDateMap.forEach((key, value) -> {
                     if (key.length() != 0) {
-                        predicates.add(criteriaBuilder.greaterThan(root.get(key), value));
+                        predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get(key), value));
                     }
                 });
             }
@@ -74,7 +79,7 @@ public class SpecificationUtil {
             if (lessDateMap.size() != 0) {
                 lessDateMap.forEach((key, value) -> {
                     if (key.length() != 0) {
-                        predicates.add(criteriaBuilder.lessThan(root.get(key), value));
+                        predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get(key), value));
                     }
                 });
             }
