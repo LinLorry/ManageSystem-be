@@ -66,7 +66,7 @@ public class ProductController {
         Integer workId = request.getInteger("workId");
         Timestamp endTime = request.getTimestamp("endTime");
 
-        if (serial == null ) {
+        if (serial == null || serial.length() == 0 ) {
             response.put("status", 0);
             response.put("message", "Must have serial.");
             return response;
