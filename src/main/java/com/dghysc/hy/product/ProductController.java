@@ -385,9 +385,7 @@ public class ProductController {
 
     /**
      * Delete Product Api.
-     * @param request {
-     *     "id": the product id: Long
-     * }
+     * @param id the product id.
      * @return {
      *     "status": 1,
      *     "message": "Delete product success."
@@ -396,10 +394,9 @@ public class ProductController {
     @PreAuthorize("hasRole('ADMIN')")
     @ResponseBody
     @DeleteMapping("/delete")
-    public JSONObject delete(@RequestBody JSONObject request) {
+    public JSONObject delete(@RequestParam Long id) {
         JSONObject response = new JSONObject();
 
-        Long id = Objects.requireNonNull(request.getLong("id"));
         productService.removeById(id);
 
         response.put("status", 1);
