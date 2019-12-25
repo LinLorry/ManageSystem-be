@@ -1,5 +1,6 @@
 package com.dghysc.hy.work.model;
 
+import com.dghysc.hy.product.model.Product;
 import com.dghysc.hy.user.model.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -39,6 +40,10 @@ public class Work {
     @JsonIgnore
     @OneToMany(mappedBy = "work", cascade = CascadeType.ALL)
     private Set<WorkProcess> workProcesses = new HashSet<>();
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "work", cascade = CascadeType.REMOVE)
+    private Set<Product> productSet = new HashSet<>();
 
     public Work() {
     }
