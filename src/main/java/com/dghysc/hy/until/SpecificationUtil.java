@@ -79,7 +79,7 @@ public class SpecificationUtil {
             if (lessDateMap.size() != 0) {
                 lessDateMap.forEach((key, value) -> {
                     if (key.length() != 0) {
-                        predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get(key), value));
+                        predicates.add(criteriaBuilder.lessThan(root.get(key), value));
                     }
                 });
             }
