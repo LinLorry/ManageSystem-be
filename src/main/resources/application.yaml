@@ -25,3 +25,8 @@ manage:
   secret:
     token: ${TOKEN_SECRET:secret}
     password: ${PWD_SALT:salt}
+  wechat:
+    appId: ${WECHAT_APPID:appid}
+    secret: ${WECHAT_SECRET:secret}
+    grantType: client_credential
+    accessTokenURL: https://api.weixin.qq.com/cgi-bin/token
