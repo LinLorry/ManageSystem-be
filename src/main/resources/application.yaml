@@ -21,7 +21,6 @@ spring:
 manage:
   authentication:
     name: ${AUTHENTICATION_NAME:manage}
-    passwordField: ${PWD_FIELD:password}
   secret:
     token: ${TOKEN_SECRET:secret}
     password: ${PWD_SALT:salt}

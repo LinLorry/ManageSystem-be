@@ -1,9 +1,12 @@
 package com.dghysc.hy.security;
 
 import com.dghysc.hy.until.TokenUtil;
+import com.dghysc.hy.user.UserService;
+import com.dghysc.hy.user.model.User;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.SignatureException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -13,6 +16,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.NoSuchElementException;
 
 /**
  * The Authentication Filter
@@ -27,8 +31,11 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
     private final TokenUtil tokenUtil;
 
-    public AuthenticationFilter(TokenUtil tokenUtil) {
+    private final UserService userService;
+
+    public AuthenticationFilter(TokenUtil tokenUtil, UserService userService) {
         this.tokenUtil = tokenUtil;
+        this.userService = userService;
     }
 
     @Override
@@ -43,13 +50,18 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
                 try {
+                    User user = userService.loadById(tokenUtil.getUserIdFromToken(token));
                     SecurityContextHolder.getContext().setAuthentication(
-                            tokenUtil.getAuthenticationFromToken(token)
+                            new UsernamePasswordAuthenticationToken(
+                                    user, null, user.getAuthorities()
+                            )
                     );
                 } catch (ExpiredJwtException e) {
                     logger.warn("JWT Token has expired");
                 } catch (SignatureException e) {
                     logger.error("Signature Exception");
+                } catch (NoSuchElementException e) {
+                    logger.warn("User " + tokenUtil.getUserIdFromToken(token) + " no exist.");
                 } catch (Exception e) {
                     logger.error(e);
                 }
