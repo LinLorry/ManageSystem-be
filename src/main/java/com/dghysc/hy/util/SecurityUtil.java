@@ -1,4 +1,4 @@
-package com.dghysc.hy.until;
+package com.dghysc.hy.util;
 
 import com.dghysc.hy.user.model.User;
 import org.springframework.security.core.GrantedAuthority;

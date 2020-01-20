@@ -1,6 +1,6 @@
 package com.dghysc.hy.security;
 
-import com.dghysc.hy.until.TokenUtil;
+import com.dghysc.hy.util.TokenUtil;
 import com.dghysc.hy.user.UserService;
 import com.dghysc.hy.user.model.User;
 import io.jsonwebtoken.ExpiredJwtException;

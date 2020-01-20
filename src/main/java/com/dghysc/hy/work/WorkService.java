@@ -1,6 +1,6 @@
 package com.dghysc.hy.work;
 
-import com.dghysc.hy.until.SpecificationUtil;
+import com.dghysc.hy.util.SpecificationUtil;
 import com.dghysc.hy.work.model.Work;
 import com.dghysc.hy.work.repo.WorkRepository;
 import org.springframework.dao.EmptyResultDataAccessException;

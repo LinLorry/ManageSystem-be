@@ -2,7 +2,7 @@ package com.dghysc.hy.product;
 
 import com.dghysc.hy.product.model.Product;
 import com.dghysc.hy.product.rep.ProductRepository;
-import com.dghysc.hy.until.SpecificationUtil;
+import com.dghysc.hy.util.SpecificationUtil;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

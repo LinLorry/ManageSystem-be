@@ -1,8 +1,8 @@
 package com.dghysc.hy.user;
 
 import com.alibaba.fastjson.JSONObject;
-import com.dghysc.hy.until.SecurityUtil;
-import com.dghysc.hy.until.TokenUtil;
+import com.dghysc.hy.util.SecurityUtil;
+import com.dghysc.hy.util.TokenUtil;
 import com.dghysc.hy.user.model.User;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.annotation.*;
