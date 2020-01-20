@@ -1,18 +1,19 @@
 package com.dghysc.hy.user.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
 /**
- * The Role Model
+ * The Child Menu Model
  * @author lorry
  * @author lin864464995@163.com
  */
 @Entity
-public class Role implements Serializable {
-
+public class ChildMenu implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
@@ -20,16 +21,19 @@ public class Role implements Serializable {
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(unique = true, length = 32)
-    private String role;
-
-    @Column(unique = true, length = 64)
+    @Column(unique = true, length = 32, nullable = false)
     private String name;
 
-    @OneToMany(mappedBy = "role", cascade = CascadeType.ALL)
-    private Set<UserRole> userRoleSet = new HashSet<>();
+    @Column(unique = true, length = 64, nullable = false)
+    private String url;
 
-    @OneToMany(mappedBy = "role", cascade = {CascadeType.REMOVE, CascadeType.MERGE, CascadeType.REFRESH})
+    @JsonIgnore
+    @ManyToOne(optional = false)
+    private ParentMenu parent;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "menu", orphanRemoval = true,
+            cascade = {CascadeType.REMOVE, CascadeType.PERSIST, CascadeType.MERGE})
     private Set<RoleMenu> roleMenuSet = new HashSet<>();
 
     public Integer getId() {
@@ -40,14 +44,6 @@ public class Role implements Serializable {
         this.id = id;
     }
 
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
-    }
-
     public String getName() {
         return name;
     }
@@ -56,8 +52,20 @@ public class Role implements Serializable {
         this.name = name;
     }
 
-    public Set<UserRole> getUserRoleSet() {
-        return userRoleSet;
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public ParentMenu getParent() {
+        return parent;
+    }
+
+    public void setParent(ParentMenu parent) {
+        this.parent = parent;
     }
 
     public Set<RoleMenu> getRoleMenuSet() {
