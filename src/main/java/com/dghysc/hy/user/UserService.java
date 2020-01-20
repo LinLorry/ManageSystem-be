@@ -3,8 +3,6 @@ package com.dghysc.hy.user;
 import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.user.repo.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -14,10 +12,9 @@ import java.util.NoSuchElementException;
  * User Service
  * @author lorry
  * @author lin864464995@163.com
- * @see org.springframework.security.core.userdetails.UserDetailsService
  */
 @Service
-public class UserService implements UserDetailsService {
+public class UserService {
 
     @Value("${manage.secret.password}")
     private String salt;
@@ -86,7 +83,7 @@ public class UserService implements UserDetailsService {
      * @return the user.
      * @throws NoSuchElementException if the user is not exits throw this exception.
      */
-    User loadById(Long id) throws NoSuchElementException {
+    public User loadById(Long id) throws NoSuchElementException {
         return userRepository.findById(id).orElseThrow(NoSuchElementException::new);
     }
 
@@ -94,11 +91,10 @@ public class UserService implements UserDetailsService {
      * Load User By Username.
      * @param username the username.
      * @return the user.
-     * @throws UsernameNotFoundException if user is not exits throw UsernameNotFoundException.
+     * @throws NoSuchElementException if the user is not exits throw this exception.
      */
-    @Override
-    public User loadUserByUsername(String username) throws UsernameNotFoundException {
+    User loadByUsername(String username) throws NoSuchElementException {
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User doesn't exits."));
+                .orElseThrow(NoSuchElementException::new);
     }
 }
