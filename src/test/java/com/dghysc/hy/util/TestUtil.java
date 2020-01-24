@@ -20,8 +20,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.http.HttpHeaders;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+import javax.persistence.EntityNotFoundException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -38,6 +42,10 @@ public class TestUtil extends Random {
     private final UserRepository userRepository;
 
     private Map<Class, CrudRepository> map;
+
+    private User user;
+
+    private Iterator<User> userIterator;
 
     public TestUtil(UserRepository userRepository,
                     RoleRepository roleRepository,
@@ -62,18 +70,18 @@ public class TestUtil extends Random {
     }
 
     public HttpHeaders getTokenHeader() {
+        if (user == null) setAuthorities();
+
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization",
-                authenticationName + " " + tokenUtil.generateToken(
-                        userRepository.findById(1L).orElseThrow(NoSuchElementException::new)
-                )
+                authenticationName + " " +
+                        tokenUtil.generateToken(user)
         );
 
         return headers;
     }
 
     public<T> T nextId(Class aClass) throws
-            NoRepositoryException, NoElementException,
             NoSuchMethodException, IllegalAccessException,
             InvocationTargetException {
         if (!map.containsKey(aClass)) {
@@ -98,5 +106,45 @@ public class TestUtil extends Random {
         Method method = obj.getClass().getMethod("getId");
 
         return (T) method.invoke(obj);
+    }
+
+    public void setAuthorities(Long userId, String... authorities) {
+        user = userRepository.findById(userId).orElseThrow(EntityNotFoundException::new);
+
+        List<GrantedAuthority> authorityList = new ArrayList<>();
+
+        for (String authority : authorities) {
+            authorityList.add((GrantedAuthority) () -> authority);
+        }
+
+        authorityList.addAll(user.getAuthorities());
+
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        user, null, authorityList));
+    }
+
+    public void setAuthorities(String... authorities) {
+        if (userRepository.count() == 0) {
+            throw new EntityNotFoundException();
+        } else if (userIterator == null || !userIterator.hasNext()) {
+            userIterator = userRepository.findAll().iterator();
+        }
+
+        user = userIterator.next();
+
+        List<GrantedAuthority> authorityList = new ArrayList<>();
+
+        for (String authority : authorities) {
+            authorityList.add((GrantedAuthority) () -> authority);
+        }
+
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        user, null, authorityList));
+    }
+
+    public User getUser() {
+        return user;
     }
 }
