@@ -4,6 +4,8 @@ import com.dghysc.hy.user.model.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 /**
  * The Role Repository
  * @author lorry
@@ -12,4 +14,5 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface RoleRepository extends JpaRepository<Role, Integer> {
+    List<Role> findAllByIsDeleteFalse();
 }
