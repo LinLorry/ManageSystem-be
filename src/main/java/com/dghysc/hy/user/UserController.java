@@ -1,12 +1,13 @@
 package com.dghysc.hy.user;
 
 import com.alibaba.fastjson.JSONObject;
-import com.dghysc.hy.until.SecurityUtil;
-import com.dghysc.hy.until.TokenUtil;
+import com.dghysc.hy.util.SecurityUtil;
+import com.dghysc.hy.util.TokenUtil;
 import com.dghysc.hy.user.model.User;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.NoSuchElementException;
 
 /**
  * User Controller
@@ -101,7 +102,7 @@ public class UserController {
         String password = request.getString("password");
 
         try {
-            User user = userService.loadUserByUsername(username);
+            User user = userService.loadByUsername(username);
             if (userService.checkPassword(user, password)) {
                 result.put("status", 1);
                 result.put("message", "Login success.");
@@ -110,7 +111,7 @@ public class UserController {
                 result.put("status", 0);
                 result.put("message", "Wrong password.");
             }
-        } catch (UsernameNotFoundException e) {
+        } catch (NoSuchElementException e) {
             result.put("status", 0);
             result.put("message", "The user does not exist.");
         }

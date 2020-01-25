@@ -6,7 +6,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.math.BigInteger;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -19,13 +18,18 @@ import java.util.Set;
  */
 @Entity
 public class User implements UserDetails, Serializable {
+
+    private static final long serialVersionUID = 1L;
+
     @Id
+    @Column(updatable = false)
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true)
+    @Column(unique = true, columnDefinition = "CHAR(64)")
     private String username;
 
+    @Column(length = 128)
     private String name;
 
     @JsonIgnore

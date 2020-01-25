@@ -1,7 +1,7 @@
 package com.dghysc.hy.work;
 
 import com.alibaba.fastjson.JSONObject;
-import com.dghysc.hy.until.SecurityUtil;
+import com.dghysc.hy.util.SecurityUtil;
 import com.dghysc.hy.work.model.Process;
 import com.dghysc.hy.work.model.Work;
 import com.dghysc.hy.work.model.WorkProcess;

@@ -1,11 +1,8 @@
 package com.dghysc.hy.config;
 
 import com.dghysc.hy.security.AuthenticationFilter;
-import com.dghysc.hy.security.AuthenticationProvider;
 import com.dghysc.hy.security.TokenAuthenticationEntryPoint;
-import com.dghysc.hy.user.UserService;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -27,19 +24,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final TokenAuthenticationEntryPoint authenticationEntryPoint;
 
-    private final UserService userService;
-
     public WebSecurityConfig(AuthenticationFilter authenticationFilter,
-                             TokenAuthenticationEntryPoint authenticationEntryPoint,
-                             UserService userService) {
+                             TokenAuthenticationEntryPoint authenticationEntryPoint) {
         this.authenticationFilter = authenticationFilter;
         this.authenticationEntryPoint = authenticationEntryPoint;
-        this.userService = userService;
-    }
-
-    @Override
-    protected void configure(AuthenticationManagerBuilder auth) {
-        auth.authenticationProvider(new AuthenticationProvider(userService));
     }
 
     @Override

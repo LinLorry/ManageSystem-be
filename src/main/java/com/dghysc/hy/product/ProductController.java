@@ -3,7 +3,7 @@ package com.dghysc.hy.product;
 import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.product.model.Product;
 import com.dghysc.hy.product.model.ProductStatus;
-import com.dghysc.hy.until.SecurityUtil;
+import com.dghysc.hy.util.SecurityUtil;
 import com.dghysc.hy.work.WorkService;
 import com.dghysc.hy.work.model.Work;
 import org.springframework.dao.DataIntegrityViolationException;

@@ -1,4 +1,4 @@
-package com.dghysc.hy.until;
+package com.dghysc.hy.util;
 
 import org.springframework.data.jpa.domain.Specification;
 
