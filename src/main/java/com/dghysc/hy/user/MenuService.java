@@ -1,18 +1,17 @@
 package com.dghysc.hy.user;
 
-import com.dghysc.hy.user.model.ChildMenu;
-import com.dghysc.hy.user.model.ParentMenu;
-import com.dghysc.hy.user.model.Role;
-import com.dghysc.hy.user.model.RoleMenu;
+import com.dghysc.hy.user.model.*;
 import com.dghysc.hy.user.repo.ChildMenuRepository;
 import com.dghysc.hy.user.repo.ParentMenuRepository;
 import com.dghysc.hy.user.repo.RoleRepository;
+import com.dghysc.hy.util.SecurityUtil;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
 import javax.validation.constraints.NotNull;
+import java.sql.Timestamp;
 import java.util.*;
 
 /**
@@ -39,18 +38,32 @@ public class MenuService {
     }
 
     ParentMenu addParent(@NotNull String name) {
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        User creator = SecurityUtil.getUser();
+
         ParentMenu parentMenu = new ParentMenu();
         Optional.of(name).ifPresent(parentMenu::setName);
+
+        parentMenu.setCreateTime(now);
+        parentMenu.setCreateUser(creator);
+        parentMenu.setUpdateTime(now);
+        parentMenu.setUpdateUser(creator);
 
         return parentMenuRepository.save(parentMenu);
     }
 
     ParentMenu updateParent(@NotNull Integer id, @NotNull String name) {
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        User creator = SecurityUtil.getUser();
+
         if (id == null) throw new NullPointerException();
 
         ParentMenu parentMenu = parentMenuRepository.findById(id)
                 .orElseThrow(EntityNotFoundException::new);
         Optional.of(name).ifPresent(parentMenu::setName);
+
+        parentMenu.setUpdateTime(now);
+        parentMenu.setUpdateUser(creator);
 
         return parentMenuRepository.save(parentMenu);
     }

@@ -3,6 +3,7 @@ package com.dghysc.hy.user;
 import com.dghysc.hy.user.model.ChildMenu;
 import com.dghysc.hy.user.model.ParentMenu;
 import com.dghysc.hy.user.model.Role;
+import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.user.repo.ChildMenuRepository;
 import com.dghysc.hy.user.repo.ParentMenuRepository;
 import com.dghysc.hy.user.repo.RoleRepository;
@@ -13,6 +14,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.HashSet;
@@ -45,6 +48,15 @@ public class MenuServiceTest {
 
     @Before
     public  void initTest() throws Exception {
+        User user = new User();
+        user.setId(testUtil.nextId(User.class));
+
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        user, null, null
+                )
+        );
+
         if (parentMenuRepository.count() == 0) {
             addParent();
         }
