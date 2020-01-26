@@ -20,8 +20,8 @@ import java.util.Set;
 
 import static org.junit.Assert.*;
 
+@SpringBootTest
 @RunWith(SpringRunner.class)
-@SpringBootTest()
 public class MenuServiceTest {
 
     private int parentId;
@@ -120,10 +120,6 @@ public class MenuServiceTest {
         ParentMenu parentMenu = menuService.loadParentMenuById(id);
         assertNotNull(parentMenu);
         assertEquals(id, parentMenu.getId());
-
-        id = (int)parentMenuRepository.count() + 1;
-        parentMenu = menuService.loadParentMenuById(id);
-        assertNull(parentMenu);
     }
 
     @Test
@@ -249,10 +245,6 @@ public class MenuServiceTest {
         ChildMenu childMenu = menuService.loadChildMenuById(id);
         assertNotNull(childMenu);
         assertEquals(id, childMenu.getId());
-
-        id = (int)childMenuRepository.count() + 1;
-        childMenu = menuService.loadChildMenuById(id);
-        assertNull(childMenu);
     }
 
     @Test
