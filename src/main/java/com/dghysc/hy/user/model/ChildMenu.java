@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -26,6 +27,20 @@ public class ChildMenu implements Serializable {
 
     @Column(unique = true, length = 64, nullable = false)
     private String url;
+
+    @Column(nullable = false, updatable = false)
+    private Timestamp createTime;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(nullable = false, updatable = false)
+    private User createUser;
+
+    @Column(nullable = false)
+    private Timestamp updateTime;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(nullable = false)
+    private User updateUser;
 
     @JsonIgnore
     @ManyToOne(optional = false)
@@ -58,6 +73,38 @@ public class ChildMenu implements Serializable {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    public Timestamp getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(Timestamp createTime) {
+        this.createTime = createTime;
+    }
+
+    public User getCreateUser() {
+        return createUser;
+    }
+
+    public void setCreateUser(User createUser) {
+        this.createUser = createUser;
+    }
+
+    public Timestamp getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(Timestamp updateTime) {
+        this.updateTime = updateTime;
+    }
+
+    public User getUpdateUser() {
+        return updateUser;
+    }
+
+    public void setUpdateUser(User updateUser) {
+        this.updateUser = updateUser;
     }
 
     public ParentMenu getParent() {

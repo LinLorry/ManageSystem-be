@@ -87,7 +87,14 @@ public class MenuService {
             throw new NullPointerException();
         }
 
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        User user = SecurityUtil.getUser();
+
         ChildMenu childMenu = new ChildMenu();
+        childMenu.setCreateTime(now);
+        childMenu.setCreateUser(user);
+        childMenu.setUpdateTime(now);
+        childMenu.setUpdateUser(user);
 
         return addOrUpdate(childMenu, name, url, parentId, roleIds);
     }
@@ -97,8 +104,14 @@ public class MenuService {
             Integer id, @Nullable String name,
             @Nullable String url, @Nullable Integer parentId,
             @Nullable Iterable<Integer> roleIds) {
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        User user = SecurityUtil.getUser();
+
         ChildMenu childMenu = childMenuRepository.findById(id)
                 .orElseThrow(EntityNotFoundException::new);
+
+        childMenu.setUpdateTime(now);
+        childMenu.setUpdateUser(user);
 
         return addOrUpdate(childMenu, name, url, parentId, roleIds);
     }
