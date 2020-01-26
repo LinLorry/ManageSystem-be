@@ -39,23 +39,18 @@ public class MenuService {
     }
 
     ParentMenu addParent(@NotNull String name) {
-        if (name == null) {
-            throw new NullPointerException();
-        }
         ParentMenu parentMenu = new ParentMenu();
-        parentMenu.setName(name);
+        Optional.of(name).ifPresent(parentMenu::setName);
 
         return parentMenuRepository.save(parentMenu);
     }
 
     ParentMenu updateParent(@NotNull Integer id, @NotNull String name) {
-        if (id == null || name == null) {
-            throw new NullPointerException();
-        }
+        if (id == null) throw new NullPointerException();
 
         ParentMenu parentMenu = parentMenuRepository.findById(id)
                 .orElseThrow(EntityNotFoundException::new);
-        parentMenu.setName(name);
+        Optional.of(name).ifPresent(parentMenu::setName);
 
         return parentMenuRepository.save(parentMenu);
     }
@@ -74,7 +69,7 @@ public class MenuService {
 
     @Transactional
     public ChildMenu addChild(@NotNull String name, @NotNull String url,
-                       @NotNull Integer parentId, Iterable<Integer> roleIds) {
+                       @NotNull Integer parentId, @Nullable Iterable<Integer> roleIds) {
         if (name == null || url == null || parentId == null) {
             throw new NullPointerException();
         }
