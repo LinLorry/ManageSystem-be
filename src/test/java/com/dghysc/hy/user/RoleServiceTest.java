@@ -1,6 +1,8 @@
 package com.dghysc.hy.user;
 
+import com.dghysc.hy.user.model.ChildMenu;
 import com.dghysc.hy.user.model.Role;
+import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.user.repo.RoleRepository;
 import com.dghysc.hy.user.repo.UserRepository;
 import com.dghysc.hy.util.TestUtil;
@@ -14,12 +16,13 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.persistence.EntityNotFoundException;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.*;
 
+@SpringBootTest
 @RunWith(SpringRunner.class)
-@SpringBootTest()
 public class RoleServiceTest {
 
     @Autowired
@@ -60,14 +63,19 @@ public class RoleServiceTest {
         Integer id = testUtil.nextId(Role.class);
         String roleStr = RandomString.make();
         String name = RandomString.make();
+        List<Long> userId = new ArrayList<>();
+        List<Integer> menuId = new ArrayList<>();
 
-        Role role = roleService.update(id, roleStr, name);
+        userId.add(testUtil.nextId(User.class));
+        menuId.add(testUtil.nextId(ChildMenu.class));
+
+        Role role = roleService.update(id, roleStr, name, userId, menuId);
         assertEquals(id, role.getId());
         assertEquals(roleStr, role.getRole());
         assertEquals(name, role.getName());
         assertEquals(testUtil.getUser().getId(), role.getUpdateUser().getId());
         assertTrue(System.currentTimeMillis() >= role.getUpdateTime().getTime());
-        assertTrue(System.currentTimeMillis() > role.getCreateTime().getTime());
+        assertTrue(System.currentTimeMillis() >= role.getCreateTime().getTime());
     }
 
     @Test
