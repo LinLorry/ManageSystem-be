@@ -2,10 +2,7 @@ package com.dghysc.hy.user.model;
 
 import org.springframework.security.core.GrantedAuthority;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -21,14 +18,21 @@ public class UserRole implements GrantedAuthority, Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @ManyToOne
-    @JoinColumn
+    @ManyToOne(cascade = CascadeType.REFRESH, fetch = FetchType.EAGER)
+    @PrimaryKeyJoinColumn
     private User user;
 
     @Id
-    @ManyToOne
-    @JoinColumn
+    @ManyToOne(cascade = CascadeType.REFRESH, fetch = FetchType.EAGER)
+    @PrimaryKeyJoinColumn
     private Role role;
+
+    public UserRole() { }
+
+    public UserRole(User user, Role role) {
+        this.user = user;
+        this.role = role;
+    }
 
     public User getUser() {
         return user;
@@ -52,15 +56,16 @@ public class UserRole implements GrantedAuthority, Serializable {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj == this) return true;
-        else if (!(obj instanceof UserRole)) return false;
-        UserRole tmp = (UserRole) obj;
-        return tmp.user.equals(user) && tmp.role.equals(role);
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof UserRole)) return false;
+        UserRole userRole = (UserRole) o;
+        return Objects.equals(user, userRole.user) &&
+                Objects.equals(role, userRole.role);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(user.getId(), role.getId());
+        return Objects.hash(user, role);
     }
 }
