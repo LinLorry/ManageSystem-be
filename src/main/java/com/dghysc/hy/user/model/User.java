@@ -35,7 +35,8 @@ public class User implements UserDetails, Serializable {
     @JsonIgnore
     private String password;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, orphanRemoval = true,
+            cascade = { CascadeType.REMOVE, CascadeType.MERGE, CascadeType.PERSIST })
     private Set<UserRole> userRoleSet = new HashSet<>();
 
     public Long getId() {
@@ -68,6 +69,10 @@ public class User implements UserDetails, Serializable {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public Set<UserRole> getUserRoleSet() {
+        return userRoleSet;
     }
 
     @Override
