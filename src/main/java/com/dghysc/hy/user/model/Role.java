@@ -54,11 +54,13 @@ public class Role implements Serializable {
     private User updateUser;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "role")
+    @OneToMany(mappedBy = "role", orphanRemoval = true,
+            cascade = { CascadeType.REFRESH, CascadeType.REMOVE, CascadeType.MERGE, CascadeType.PERSIST })
     private Set<UserRole> userRoleSet = new HashSet<>();
 
     @JsonIgnore
-    @OneToMany(mappedBy = "role")
+    @OneToMany(mappedBy = "role", orphanRemoval = true,
+            cascade = { CascadeType.REFRESH, CascadeType.REMOVE, CascadeType.MERGE, CascadeType.PERSIST })
     private Set<RoleMenu> roleMenuSet = new HashSet<>();
 
     public Integer getId() {
