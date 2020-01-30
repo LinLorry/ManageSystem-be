@@ -1,18 +1,22 @@
 package com.dghysc.hy.user;
 
-import com.dghysc.hy.user.model.Role;
-import com.dghysc.hy.user.model.User;
+import com.dghysc.hy.user.model.*;
+import com.dghysc.hy.user.repo.ChildMenuRepository;
 import com.dghysc.hy.user.repo.RoleRepository;
+import com.dghysc.hy.user.repo.UserRepository;
 import com.dghysc.hy.util.SecurityUtil;
 import org.springframework.lang.Nullable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
 import javax.validation.constraints.NotNull;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Role Server
@@ -23,10 +27,16 @@ import java.util.Optional;
 @PreAuthorize("hasRole('ADMIN')")
 public class RoleService {
 
+    private final UserRepository userRepository;
+
     private final RoleRepository roleRepository;
 
-    public RoleService(RoleRepository roleRepository) {
+    private final ChildMenuRepository childMenuRepository;
+
+    public RoleService(UserRepository userRepository, RoleRepository roleRepository, ChildMenuRepository childMenuRepository) {
+        this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.childMenuRepository = childMenuRepository;
     }
 
     Role add(@NotNull String roleStr, @NotNull String name) {
@@ -47,16 +57,46 @@ public class RoleService {
         return roleRepository.save(role);
     }
 
-    Role update(@NotNull Integer id, @Nullable String roleStr,
-                @Nullable String name) {
+    @Transactional
+    public Role update(@NotNull Integer id, @Nullable String roleStr,
+                       @Nullable String name, @Nullable Iterable<Long> userId,
+                       @Nullable Iterable<Integer> menuId) {
 
         Timestamp now = new Timestamp(System.currentTimeMillis());
         User creator = SecurityUtil.getUser();
 
-        Role role = roleRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+        Role role = roleRepository.findById(id)
+                .orElseThrow(EntityNotFoundException::new);
 
         Optional.ofNullable(roleStr).ifPresent(role::setRole);
         Optional.ofNullable(name).ifPresent(role::setName);
+        Optional.ofNullable(userId).ifPresent(ids -> {
+            List<User> userList = userRepository.findAllById(ids);
+            List<UserRole> tmp = new ArrayList<>();
+            Set<UserRole> userRoles = role.getUserRoleSet();
+
+            userRoles.forEach(userRole -> {
+                if (!userList.remove(userRole.getUser())) {
+                    tmp.add(userRole);
+                    userRole.getUser().getUserRoleSet().remove(userRole);
+                }
+            });
+
+            userRoles.removeAll(tmp);
+
+            userRoles.removeIf(userRole -> !userList.remove(userRole.getUser()));
+            userList.forEach(user -> userRoles.add(new UserRole(user, role)));
+            userRepository.flush();
+        });
+
+        Optional.ofNullable(menuId).ifPresent(ids -> {
+            List<ChildMenu> childMenuList = childMenuRepository.findAllById(ids);
+            Set<RoleMenu> roleMenus = role.getRoleMenuSet();
+
+            roleMenus.removeIf(roleMenu -> !childMenuList.remove(roleMenu.getMenu()));
+            childMenuList.forEach(childMenu -> roleMenus.add(new RoleMenu(role, childMenu)));
+            childMenuRepository.flush();
+        });
 
         role.setUpdateTime(now);
         role.setUpdateUser(creator);
@@ -72,7 +112,8 @@ public class RoleService {
         return roleRepository.findAllByIsDeleteFalse();
     }
 
-    boolean delete(@NotNull Integer id) {
+    @Transactional
+    public boolean delete(@NotNull Integer id) {
         Timestamp now = new Timestamp(System.currentTimeMillis());
         User deleter = SecurityUtil.getUser();
 
