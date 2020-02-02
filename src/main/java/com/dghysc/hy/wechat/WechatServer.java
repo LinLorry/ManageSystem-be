@@ -25,6 +25,10 @@ public class WechatServer {
     // TODO perfect exception.
     private WechatAccessToken token;
 
+    private final String appId;
+
+    private final String secret;
+
     private final Log logger;
 
     private final URI accessTokenUri;
@@ -40,6 +44,8 @@ public class WechatServer {
             @Value("${manage.wechat.secret}") String secret
     ) throws Exception {
         this.accessTokenRepository = accessTokenRepository;
+        this.appId = appId;
+        this.secret = secret;
 
         logger = LogFactory.getLog(this.getClass());
         restTemplate = new RestTemplate();
@@ -98,5 +104,13 @@ public class WechatServer {
         token.setExpiresTime(new Timestamp(now + expiresIn));
 
         accessTokenRepository.save(token);
+    }
+
+    String getAppId() {
+        return appId;
+    }
+
+    String getSecret() {
+        return secret;
     }
 }
