@@ -4,6 +4,7 @@ import com.dghysc.hy.user.model.User;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.sql.Timestamp;
 
 /**
  * The Wechat User Model
@@ -20,6 +21,10 @@ public class WechatUser implements Serializable {
 
     @Column(length = 32)
     private String name;
+
+    private String accessToken;
+
+    private Timestamp tokenExpiresTime;
 
     @OneToOne
     @JoinColumn
@@ -41,11 +46,27 @@ public class WechatUser implements Serializable {
         this.name = name;
     }
 
+    public String getAccessToken() {
+        return accessToken;
+    }
+
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
+    }
+
     public User getUser() {
         return user;
     }
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public Timestamp getTokenExpiresTime() {
+        return tokenExpiresTime;
+    }
+
+    public void setTokenExpiresTime(Timestamp tokenFailureTime) {
+        this.tokenExpiresTime = tokenFailureTime;
     }
 }
