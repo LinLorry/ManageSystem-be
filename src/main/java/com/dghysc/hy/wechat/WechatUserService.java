@@ -1,18 +1,24 @@
 package com.dghysc.hy.wechat;
 
+import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.exception.DuplicateUserException;
 import com.dghysc.hy.exception.UserNoFoundException;
 import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.user.repo.UserRepository;
 import com.dghysc.hy.wechat.model.WechatUser;
 import com.dghysc.hy.wechat.repo.WechatUserRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import javax.persistence.EntityNotFoundException;
 import javax.validation.constraints.NotNull;
+import java.sql.Timestamp;
 import java.util.Optional;
 
 /**
@@ -22,14 +28,27 @@ import java.util.Optional;
  */
 @Service
 public class WechatUserService {
+    // TODO perfect exception.
+    private final String urlBase;
+
+    private final RestTemplate restTemplate = new RestTemplate();
 
     private final UserRepository userRepository;
 
     private final WechatUserRepository wechatUserRepository;
 
-    public WechatUserService(UserRepository userRepository, WechatUserRepository wechatUserRepository) {
+    public WechatUserService(
+            @Value("${manage.wechat.userAccessTokenURL}") String url,
+            UserRepository userRepository,
+            WechatUserRepository wechatUserRepository,
+            WechatServer wechatServer) {
         this.userRepository = userRepository;
         this.wechatUserRepository = wechatUserRepository;
+
+        urlBase = url +
+                "?appid=" + wechatServer.getAppId() +
+                "&secret=" + wechatServer.getSecret() +
+                "&grant_type=authorization_code&code=";
     }
 
     WechatUser add(@NotNull String id, @Nullable String name) {
@@ -64,6 +83,41 @@ public class WechatUserService {
         } else throw new UserNoFoundException();
 
         return wechatUserRepository.save(wechatUser);
+    }
+
+    WechatUser loadByCode(String code) throws Exception {
+        final String url = urlBase + code;
+        ResponseEntity<JSONObject> responseEntity = restTemplate.exchange(
+                url, HttpMethod.GET, null, JSONObject.class);
+        long now = System.currentTimeMillis();
+
+        if (!responseEntity.getStatusCode().is2xxSuccessful()) {
+            throw new Exception();
+        }
+
+        JSONObject response = Optional.ofNullable(responseEntity.getBody())
+                .orElseThrow(Exception::new);
+
+        String id = Optional.ofNullable(response.getString("openid"))
+                .orElseThrow(Exception::new);
+        String accessToken = response.getString("access_token");
+        long expiresIn = response.getLongValue("expires_in");
+
+        WechatUser wechatUser;
+        if (wechatUserRepository.existsById(id)) {
+            wechatUser = wechatUserRepository.findById(id)
+                    .orElseThrow(EntityNotFoundException::new);
+        } else {
+            wechatUser = new WechatUser();
+            wechatUser.setId(id);
+        }
+
+        wechatUser.setAccessToken(accessToken);
+        wechatUser.setTokenExpiresTime(new Timestamp(now + expiresIn));
+
+        wechatUserRepository.save(wechatUser);
+
+        return wechatUser;
     }
 
     WechatUser loadById(String id) {
