@@ -33,17 +33,19 @@ public class WechatServer {
 
     private final WechatAccessTokenRepository accessTokenRepository;
 
-    public WechatServer(WechatAccessTokenRepository accessTokenRepository,
-                        @Value("${manage.wechat.appId}") String appId,
-                        @Value("${manage.wechat.accessTokenURL}") String url,
-                        @Value("${manage.wechat.grantType}") String grantType,
-                        @Value("${manage.wechat.secret}") String secret) throws Exception {
+    public WechatServer(
+            WechatAccessTokenRepository accessTokenRepository,
+            @Value("${manage.wechat.appId}") String appId,
+            @Value("${manage.wechat.accessTokenURL}") String url,
+            @Value("${manage.wechat.secret}") String secret
+    ) throws Exception {
         this.accessTokenRepository = accessTokenRepository;
 
         logger = LogFactory.getLog(this.getClass());
         restTemplate = new RestTemplate();
-        accessTokenUri = URI.create(url +
-                "?grant_type=" + grantType +
+        accessTokenUri = URI.create(
+                url +
+                "?grant_type=client_credential" +
                 "&appid=" + appId +
                 "&secret=" + secret
         );

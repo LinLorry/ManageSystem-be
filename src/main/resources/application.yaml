@@ -27,5 +27,4 @@ manage:
   wechat:
     appId: ${WECHAT_APPID:appid}
     secret: ${WECHAT_SECRET:secret}
-    grantType: client_credential
-    accessTokenURL: https://api.weixin.qq.com/cgi-bin/token
+    accessTokenURL: ${WECHAT_ACCESS_TOKEN_URL:https://api.weixin.qq.com/cgi-bin/token}
