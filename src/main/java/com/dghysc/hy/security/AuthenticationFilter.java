@@ -2,11 +2,9 @@ package com.dghysc.hy.security;
 
 import com.dghysc.hy.util.TokenUtil;
 import com.dghysc.hy.user.UserService;
-import com.dghysc.hy.user.model.User;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.SignatureException;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -50,11 +48,8 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
                 try {
-                    User user = userService.loadById(tokenUtil.getUserIdFromToken(token));
                     SecurityContextHolder.getContext().setAuthentication(
-                            new UsernamePasswordAuthenticationToken(
-                                    user, null, user.getAuthorities()
-                            )
+                            userService.getAuthentication(tokenUtil.getUserIdFromToken(token))
                     );
                 } catch (ExpiredJwtException e) {
                     logger.warn("JWT Token has expired");

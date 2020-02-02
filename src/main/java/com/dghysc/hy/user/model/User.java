@@ -35,9 +35,14 @@ public class User implements UserDetails, Serializable {
     @JsonIgnore
     private String password;
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, orphanRemoval = true,
-            cascade = { CascadeType.REMOVE, CascadeType.MERGE, CascadeType.PERSIST })
-    private Set<UserRole> userRoleSet = new HashSet<>();
+    @JsonIgnore
+    @ManyToMany(cascade = {CascadeType.REMOVE, CascadeType.MERGE, CascadeType.PERSIST})
+    @JoinTable(
+            name = "user_role",
+            joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id")
+    )
+    private Set<Role> roles = new HashSet<>();
 
     public Long getId() {
         return id;
@@ -71,14 +76,10 @@ public class User implements UserDetails, Serializable {
         this.password = password;
     }
 
-    public Set<UserRole> getUserRoleSet() {
-        return userRoleSet;
-    }
-
     @Override
     @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return userRoleSet;
+        return roles;
     }
 
     @Override

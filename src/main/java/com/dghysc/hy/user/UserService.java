@@ -3,9 +3,12 @@ package com.dghysc.hy.user;
 import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.user.repo.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityNotFoundException;
 import java.util.NoSuchElementException;
 
 /**
@@ -96,5 +99,11 @@ public class UserService {
     User loadByUsername(String username) throws NoSuchElementException {
         return userRepository.findByUsername(username)
                 .orElseThrow(NoSuchElementException::new);
+    }
+
+    @Transactional(readOnly = true)
+    public UsernamePasswordAuthenticationToken getAuthentication(long id) {
+        User user = userRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+        return new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
     }
 }

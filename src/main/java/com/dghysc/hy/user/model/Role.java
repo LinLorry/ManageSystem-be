@@ -3,6 +3,7 @@ package com.dghysc.hy.user.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
+import org.springframework.security.core.GrantedAuthority;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -16,7 +17,7 @@ import java.util.Set;
  * @author lin864464995@163.com
  */
 @Entity
-public class Role implements Serializable {
+public class Role implements GrantedAuthority, Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -54,9 +55,13 @@ public class Role implements Serializable {
     private User updateUser;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "role", orphanRemoval = true,
-            cascade = { CascadeType.REFRESH, CascadeType.REMOVE, CascadeType.MERGE, CascadeType.PERSIST })
-    private Set<UserRole> userRoleSet = new HashSet<>();
+    @ManyToMany(cascade = {CascadeType.REMOVE, CascadeType.MERGE, CascadeType.PERSIST})
+    @JoinTable(
+            name = "user_role",
+            joinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id")
+    )
+    private Set<User> users = new HashSet<>();
 
     @JsonIgnore
     @OneToMany(mappedBy = "role", orphanRemoval = true,
@@ -127,11 +132,16 @@ public class Role implements Serializable {
         this.updateUser = updateUser;
     }
 
-    public Set<UserRole> getUserRoleSet() {
-        return userRoleSet;
+    public Set<User> getUsers() {
+        return users;
     }
 
     public Set<RoleMenu> getRoleMenuSet() {
         return roleMenuSet;
+    }
+
+    @Override
+    public String getAuthority() {
+        return role;
     }
 }

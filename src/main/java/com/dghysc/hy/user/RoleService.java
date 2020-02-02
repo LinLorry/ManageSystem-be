@@ -72,20 +72,11 @@ public class RoleService {
         Optional.ofNullable(name).ifPresent(role::setName);
         Optional.ofNullable(userId).ifPresent(ids -> {
             List<User> userList = userRepository.findAllById(ids);
-            List<UserRole> tmp = new ArrayList<>();
-            Set<UserRole> userRoles = role.getUserRoleSet();
+            Set<User> users = role.getUsers();
 
-            userRoles.forEach(userRole -> {
-                if (!userList.remove(userRole.getUser())) {
-                    tmp.add(userRole);
-                    userRole.getUser().getUserRoleSet().remove(userRole);
-                }
-            });
+            users.removeIf(user -> !userList.contains(user));
+            users.addAll(userList);
 
-            userRoles.removeAll(tmp);
-
-            userRoles.removeIf(userRole -> !userList.remove(userRole.getUser()));
-            userList.forEach(user -> userRoles.add(new UserRole(user, role)));
             userRepository.flush();
         });
 
