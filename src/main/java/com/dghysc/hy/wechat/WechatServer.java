@@ -53,15 +53,15 @@ public class WechatServer {
                 .orElse(new WechatAccessToken(appId));
 
         if (
-                token.getFailureTime() == null ||
-                token.getFailureTime().getTime() < System.currentTimeMillis()
+                token.getExpiresTime() == null ||
+                token.getExpiresTime().getTime() < System.currentTimeMillis()
         ) {
             refreshToken();
         }
     }
 
     public String loadToken() throws Exception {
-        if (token.getFailureTime().getTime() < System.currentTimeMillis()) {
+        if (token.getExpiresTime().getTime() < System.currentTimeMillis()) {
             refreshToken();
         }
 
@@ -78,7 +78,7 @@ public class WechatServer {
 
         if (accessToken != null) {
             token.setAccessToken(accessToken);
-            token.setFailureTime(new Timestamp(System.currentTimeMillis() + expiresIn));
+            token.setExpiresTime(new Timestamp(System.currentTimeMillis() + expiresIn));
 
             accessTokenRepository.save(token);
         } else {

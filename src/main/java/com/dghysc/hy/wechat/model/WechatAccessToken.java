@@ -19,7 +19,7 @@ public class WechatAccessToken implements Serializable {
     @Column(length = 512)
     private String accessToken;
 
-    private Timestamp failureTime;
+    private Timestamp expiresTime;
 
     public WechatAccessToken() {
     }
@@ -44,11 +44,11 @@ public class WechatAccessToken implements Serializable {
         this.accessToken = accessToken;
     }
 
-    public Timestamp getFailureTime() {
-        return failureTime;
+    public Timestamp getExpiresTime() {
+        return expiresTime;
     }
 
-    public void setFailureTime(Timestamp failureTime) {
-        this.failureTime = failureTime;
+    public void setExpiresTime(Timestamp failureTime) {
+        this.expiresTime = failureTime;
     }
 }
