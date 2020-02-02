@@ -37,12 +37,13 @@ public class MenuService {
         this.childMenuRepository = childMenuRepository;
     }
 
-    ParentMenu addParent(@NotNull String name) {
+    ParentMenu addParent(@NotNull String name, @NotNull Integer location) {
         Timestamp now = new Timestamp(System.currentTimeMillis());
         User creator = SecurityUtil.getUser();
 
         ParentMenu parentMenu = new ParentMenu();
         Optional.of(name).ifPresent(parentMenu::setName);
+        Optional.of(location).ifPresent(parentMenu::setLocation);
 
         parentMenu.setCreateTime(now);
         parentMenu.setCreateUser(creator);
@@ -52,7 +53,7 @@ public class MenuService {
         return parentMenuRepository.save(parentMenu);
     }
 
-    ParentMenu updateParent(@NotNull Integer id, @NotNull String name) {
+    ParentMenu updateParent(@NotNull Integer id, @Nullable String name, @Nullable Integer location) {
         Timestamp now = new Timestamp(System.currentTimeMillis());
         User creator = SecurityUtil.getUser();
 
@@ -60,7 +61,8 @@ public class MenuService {
 
         ParentMenu parentMenu = parentMenuRepository.findById(id)
                 .orElseThrow(EntityNotFoundException::new);
-        Optional.of(name).ifPresent(parentMenu::setName);
+        Optional.ofNullable(name).ifPresent(parentMenu::setName);
+        Optional.ofNullable(location).ifPresent(parentMenu::setLocation);
 
         parentMenu.setUpdateTime(now);
         parentMenu.setUpdateUser(creator);
@@ -77,7 +79,7 @@ public class MenuService {
     }
 
     List<ParentMenu> loadAllParentMenus() {
-        return parentMenuRepository.findAll();
+        return parentMenuRepository.findAllByOrderByLocationAsc();
     }
 
     @Transactional

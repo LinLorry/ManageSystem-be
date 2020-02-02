@@ -30,15 +30,16 @@ public class MenuController {
 
         Integer id = request.getInteger("id");
         String name = request.getString("name");
+        Integer location = request.getInteger("location");
 
         try {
             ParentMenu parentMenu;
 
             if (id == null) {
-                parentMenu = menuService.addParent(name);
+                parentMenu = menuService.addParent(name, location);
                 response.put("message", "创建父菜单成功");
             } else {
-                parentMenu = menuService.updateParent(id, name);
+                parentMenu = menuService.updateParent(id, name, location);
                 response.put("message", "更新父菜单成功");
             }
 
@@ -50,7 +51,11 @@ public class MenuController {
             response.put("message", "Id为： " + id + "的父菜单不存在");
         } catch (NullPointerException e) {
             response.put("status", 0);
-            response.put("message", "缺少父菜单名字");
+            if (name == null) {
+                response.put("message", "缺少父菜单名字");
+            } else if (location == null) {
+                response.put("message", "缺少父菜单位置信息");
+            }
         }
 
         return response;

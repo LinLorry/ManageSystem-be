@@ -27,6 +27,9 @@ public class ParentMenu implements Serializable {
     @Column(unique = true, length = 16)
     private String name;
 
+    @Column(nullable = false)
+    private Integer location;
+
     @Column(nullable = false, updatable = false)
     private Timestamp createTime;
 
@@ -61,6 +64,14 @@ public class ParentMenu implements Serializable {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Integer getLocation() {
+        return location;
+    }
+
+    public void setLocation(Integer location) {
+        this.location = location;
     }
 
     public Timestamp getCreateTime() {

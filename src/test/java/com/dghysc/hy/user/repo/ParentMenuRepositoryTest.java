@@ -54,12 +54,14 @@ public class ParentMenuRepositoryTest {
     @Test
     public void save() {
         String name = RandomString.make();
+        Integer location = testUtil.nextInt();
         Timestamp now = new Timestamp(System.currentTimeMillis());
         User user = this.user;
 
         ParentMenu parentMenu = new ParentMenu();
 
         parentMenu.setName(name);
+        parentMenu.setLocation(location);
         parentMenu.setCreateTime(now);
         parentMenu.setCreateUser(user);
         parentMenu.setUpdateTime(now);
@@ -77,12 +79,14 @@ public class ParentMenuRepositoryTest {
     public void update() {
         Integer id = this.id;
         String name = RandomString.make();
+        Integer location = testUtil.nextInt();
         Timestamp now = new Timestamp(System.currentTimeMillis());
         User user = this.user;
 
         ParentMenu parentMenu = parentMenuRepository.getOne(id);
 
         parentMenu.setName(name);
+        parentMenu.setLocation(location);
         parentMenu.setUpdateUser(user);
         parentMenu.setUpdateTime(now);
 
