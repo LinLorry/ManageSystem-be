@@ -70,20 +70,31 @@ public class WechatServer {
 
     void refreshToken() throws Exception {
         ResponseEntity<JSONObject> responseEntity = restTemplate.exchange(accessTokenUri, HttpMethod.GET, null, JSONObject.class);
+        long now = System.currentTimeMillis();
 
-        JSONObject response = Optional.ofNullable(responseEntity.getBody()).orElseThrow(Exception::new);
-
-        String accessToken = response.getString("access_token");
-        long expiresIn = response.getLongValue("expires_in") * 1000L;
-
-        if (accessToken != null) {
-            token.setAccessToken(accessToken);
-            token.setExpiresTime(new Timestamp(System.currentTimeMillis() + expiresIn));
-
-            accessTokenRepository.save(token);
-        } else {
-            logger.error(response);
+        if (!responseEntity.getStatusCode().is2xxSuccessful()) {
+            logger.error("Request wechat access token failed.\n" +
+                    "Return status: " + responseEntity.getStatusCode());
             throw new Exception();
         }
+
+        JSONObject response = Optional.ofNullable(responseEntity.getBody())
+                .orElseThrow(() -> {
+                    logger.error("Get access token response body null.");
+                    return new Exception();
+                });
+
+        String accessToken = Optional.ofNullable(response.getString("access_token"))
+                .orElseThrow(() -> {
+                    logger.error("Get access token failed.\n" +
+                            "Response: " + response);
+                    return new Exception();
+                });
+        long expiresIn = response.getLongValue("expires_in") * 1000L;
+
+        token.setAccessToken(accessToken);
+        token.setExpiresTime(new Timestamp(now + expiresIn));
+
+        accessTokenRepository.save(token);
     }
 }
