@@ -28,6 +28,9 @@ public class ChildMenu implements Serializable {
     @Column(unique = true, length = 64, nullable = false)
     private String url;
 
+    @Column(nullable = false)
+    private Integer location;
+
     @Column(nullable = false, updatable = false)
     private Timestamp createTime;
 
@@ -73,6 +76,14 @@ public class ChildMenu implements Serializable {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    public Integer getLocation() {
+        return location;
+    }
+
+    public void setLocation(Integer location) {
+        this.location = location;
     }
 
     public Timestamp getCreateTime() {

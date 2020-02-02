@@ -66,6 +66,7 @@ public class MenuControllerTest {
 
         JSONObject body = new JSONObject();
         body.put("name", RandomString.make());
+        body.put("location", testUtil.nextInt());
 
         HttpEntity<JSONObject> request = new HttpEntity<>(body, testUtil.getTokenHeader());
 
@@ -87,6 +88,7 @@ public class MenuControllerTest {
         JSONObject body = new JSONObject();
         body.put("id", testUtil.nextId(ParentMenu.class));
         body.put("name", RandomString.make());
+        body.put("location", testUtil.nextInt());
 
         HttpEntity<JSONObject> request = new HttpEntity<>(body, testUtil.getTokenHeader());
 
@@ -181,6 +183,7 @@ public class MenuControllerTest {
         JSONObject body = new JSONObject();
         body.put("name", RandomString.make());
         body.put("url", RandomString.make());
+        body.put("location", testUtil.nextInt());
         body.put("parentId", testUtil.nextId(ParentMenu.class));
 
         final long roleCount = roleRepository.count();
@@ -213,6 +216,7 @@ public class MenuControllerTest {
         body.put("id", testUtil.nextId(ChildMenu.class));
         body.put("name", RandomString.make());
         body.put("url", RandomString.make());
+        body.put("location", testUtil.nextInt());
         body.put("parentId", testUtil.nextId(ParentMenu.class));
 
         final long roleCount = roleRepository.count();

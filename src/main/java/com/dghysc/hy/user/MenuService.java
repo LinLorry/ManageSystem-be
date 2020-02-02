@@ -84,8 +84,9 @@ public class MenuService {
 
     @Transactional
     public ChildMenu addChild(@NotNull String name, @NotNull String url,
-                       @NotNull Integer parentId, @Nullable Iterable<Integer> roleIds) {
-        if (name == null || url == null || parentId == null) {
+                              @NotNull Integer location, @NotNull Integer parentId,
+                              @Nullable Iterable<Integer> roleIds) {
+        if (name == null || url == null || parentId == null || location == null) {
             throw new NullPointerException();
         }
 
@@ -98,14 +99,14 @@ public class MenuService {
         childMenu.setUpdateTime(now);
         childMenu.setUpdateUser(user);
 
-        return addOrUpdate(childMenu, name, url, parentId, roleIds);
+        return addOrUpdate(childMenu, name, url, location, parentId, roleIds);
     }
 
     @Transactional
     public ChildMenu updateChild(
             Integer id, @Nullable String name,
-            @Nullable String url, @Nullable Integer parentId,
-            @Nullable Iterable<Integer> roleIds) {
+            @Nullable String url, @Nullable Integer location,
+            @Nullable Integer parentId, @Nullable Iterable<Integer> roleIds) {
         Timestamp now = new Timestamp(System.currentTimeMillis());
         User user = SecurityUtil.getUser();
 
@@ -115,16 +116,17 @@ public class MenuService {
         childMenu.setUpdateTime(now);
         childMenu.setUpdateUser(user);
 
-        return addOrUpdate(childMenu, name, url, parentId, roleIds);
+        return addOrUpdate(childMenu, name, url, location, parentId, roleIds);
     }
 
     private ChildMenu addOrUpdate(
             ChildMenu childMenu, String name,
-            String url, Integer parentId,
-            Iterable<Integer> roleIds) {
+            String url, Integer location,
+            Integer parentId, Iterable<Integer> roleIds) {
 
         Optional.ofNullable(name).ifPresent(childMenu::setName);
         Optional.ofNullable(url).ifPresent(childMenu::setUrl);
+        Optional.ofNullable(location).ifPresent(childMenu::setLocation);
 
         Optional.ofNullable(parentId).ifPresent(id -> childMenu
                 .setParent(parentMenuRepository.findById(id)

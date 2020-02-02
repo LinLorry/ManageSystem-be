@@ -72,12 +72,14 @@ public class ChildMenuRepositoryTest {
     public void save() throws Exception {
         String name = RandomString.make();
         String url = "/" + RandomString.make();
+        Integer location = testUtil.nextInt();
         Timestamp now = new Timestamp(System.currentTimeMillis());
         User user = this.user;
         ChildMenu childMenu = new ChildMenu();
 
         childMenu.setName(name);
         childMenu.setUrl(url);
+        childMenu.setLocation(location);
         childMenu.setCreateTime(now);
         childMenu.setCreateUser(user);
         childMenu.setUpdateTime(now);
@@ -112,6 +114,7 @@ public class ChildMenuRepositoryTest {
         Integer id = this.id;
         String name = RandomString.make();
         String url = "/" + RandomString.make();
+        Integer location = testUtil.nextInt();
         Timestamp now = new Timestamp(System.currentTimeMillis());
         User user = this.user;
 
@@ -119,6 +122,7 @@ public class ChildMenuRepositoryTest {
 
         childMenu.setName(name);
         childMenu.setUrl(url);
+        childMenu.setLocation(location);
         childMenu.setUpdateTime(now);
         childMenu.setUpdateUser(user);
 

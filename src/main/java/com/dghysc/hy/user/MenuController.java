@@ -108,6 +108,7 @@ public class MenuController {
         Integer id = request.getInteger("id");
         String name = request.getString("name");
         String url = request.getString("url");
+        Integer location = request.getInteger("location");
         Integer parentId = request.getInteger("parentId");
         List<Integer> roleIds = request.getJSONArray("roles").toJavaList(Integer.TYPE);
 
@@ -115,10 +116,10 @@ public class MenuController {
             ChildMenu childMenu;
 
             if (id == null) {
-                childMenu = menuService.addChild(name, url, parentId, roleIds);
+                childMenu = menuService.addChild(name, url, location, parentId, roleIds);
                 response.put("message", "创建子菜单成功");
             } else {
-                childMenu = menuService.updateChild(id, name, url, parentId, roleIds);
+                childMenu = menuService.updateChild(id, name, url, location, parentId, roleIds);
                 response.put("message", "更新子菜单成功");
             }
 
@@ -134,6 +135,8 @@ public class MenuController {
                 response.put("message", "缺少名字");
             } else if (url == null) {
                 response.put("message", "缺少Url");
+            } else if (location == null) {
+                response.put("message", "缺少位置");
             } else if (parentId == null) {
                 response.put("message", "缺少父菜单");
             }

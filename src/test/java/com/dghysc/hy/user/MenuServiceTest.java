@@ -109,15 +109,6 @@ public class MenuServiceTest {
         }
 
         assertTrue(mark);
-        mark = false;
-
-        try {
-            menuService.updateParent(id, null, null);
-        } catch (NullPointerException e) {
-            mark = true;
-        }
-
-        assertTrue(mark);
     }
 
     @Test
@@ -145,9 +136,10 @@ public class MenuServiceTest {
     public void addChild() throws Exception {
         String name = RandomString.make();
         String url = "/" + RandomString.make();
+        Integer location = testUtil.nextInt();
         Integer parentId = this.parentId;
 
-        ChildMenu childMenu = menuService.addChild(name, url, parentId, null);
+        ChildMenu childMenu = menuService.addChild(name, url, location, parentId, null);
 
         assertNotNull(childMenu.getId());
         assertEquals(childMenu.getName(), name);
@@ -165,15 +157,14 @@ public class MenuServiceTest {
                 roleIdSet.add(testUtil.nextId(Role.class));
             }
 
-            childMenu = menuService.addChild(name, url, parentId, roleIdSet);
-
+            childMenu = menuService.addChild(name, url, location, parentId, roleIdSet);
             assertEquals(roleIdSet.size(), childMenu.getRoleMenuSet().size());
         }
 
         boolean mark = false;
 
         try {
-            menuService.addChild(null, url, parentId, null);
+            menuService.addChild(null, url, location, parentId, null);
         } catch (NullPointerException e) {
             mark = true;
         }
@@ -182,7 +173,7 @@ public class MenuServiceTest {
         mark = false;
 
         try {
-            menuService.addChild(name, null, parentId, null);
+            menuService.addChild(name, null, location, parentId, null);
         } catch (NullPointerException e) {
             mark = true;
         }
@@ -191,7 +182,16 @@ public class MenuServiceTest {
         mark = false;
 
         try {
-            menuService.addChild(name, url, null, null);
+            menuService.addChild(name, url, null, parentId, null);
+        } catch (NullPointerException e) {
+            mark = true;
+        }
+
+        assertTrue(mark);
+        mark = false;
+
+        try {
+            menuService.addChild(name, url, location, null, null);
         } catch (NullPointerException e) {
             mark = true;
         }
@@ -203,9 +203,10 @@ public class MenuServiceTest {
     public void updateChildField() {
         Integer id = childId;
         String name = RandomString.make();
+        Integer location = testUtil.nextInt();
         String url = "/" + RandomString.make();
 
-        ChildMenu childMenu = menuService.updateChild(id, name, url, null, null);
+        ChildMenu childMenu = menuService.updateChild(id, name, url, location, null, null);
 
         assertEquals(id, childMenu.getId());
         assertEquals(name, childMenu.getName());
@@ -217,7 +218,7 @@ public class MenuServiceTest {
         Integer id = childId;
         Integer parentId = this.parentId;
 
-        ChildMenu childMenu = menuService.updateChild(id, null, null, parentId, null);
+        ChildMenu childMenu = menuService.updateChild(id, null, null, null, parentId, null);
 
         assertEquals(id, childMenu.getId());
         assertEquals(parentId, childMenu.getParent().getId());
@@ -236,7 +237,7 @@ public class MenuServiceTest {
                 roleIdSet.add(testUtil.nextId(Role.class));
             }
 
-            ChildMenu childMenu = menuService.updateChild(id, null, null, null, roleIdSet);
+            ChildMenu childMenu = menuService.updateChild(id, null, null, null, null, roleIdSet);
 
             assertEquals(roleIdSet.size(), childMenu.getRoleMenuSet().size());
             childMenu.getRoleMenuSet().forEach(
