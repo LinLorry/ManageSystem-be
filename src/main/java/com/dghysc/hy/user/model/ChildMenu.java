@@ -1,11 +1,14 @@
 package com.dghysc.hy.user.model;
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -34,6 +37,7 @@ public class ChildMenu implements Serializable {
     @Column(nullable = false, updatable = false)
     private Timestamp createTime;
 
+    @JsonIgnore
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false, updatable = false)
     private User createUser;
@@ -41,12 +45,14 @@ public class ChildMenu implements Serializable {
     @Column(nullable = false)
     private Timestamp updateTime;
 
+    @JsonIgnore
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false)
     private User updateUser;
 
     @JsonIgnore
     @ManyToOne(optional = false)
+    @JoinColumn(nullable = false)
     private ParentMenu parent;
 
     @JsonIgnore
@@ -132,5 +138,17 @@ public class ChildMenu implements Serializable {
 
     public Set<Role> getRoles() {
         return roles;
+    }
+
+    @JsonAnyGetter
+    public Map<String, Object> getInfo() {
+        Map<String, Object> map = new HashMap<>();
+
+        map.put("creatorName", createUser.getName());
+        map.put("creatorId", createUser.getId());
+        map.put("updaterName", updateUser.getName());
+        map.put("updaterId", updateUser.getId());
+
+        return map;
     }
 }
