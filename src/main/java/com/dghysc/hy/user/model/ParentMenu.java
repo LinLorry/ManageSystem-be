@@ -114,10 +114,10 @@ public class ParentMenu implements Serializable {
     public Map<String, Object> getInfo() {
         Map<String, Object> map = new HashMap<>();
 
-        map.put("createUserName", createUser.getName());
-        map.put("createUserId", createUser.getId());
-        map.put("updateUserName", updateUser.getName());
-        map.put("updateUserId", updateUser.getId());
+        map.put("creatorName", createUser.getName());
+        map.put("creatorId", createUser.getId());
+        map.put("updaterName", updateUser.getName());
+        map.put("updaterId", updateUser.getId());
 
         return map;
     }
