@@ -23,6 +23,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -145,6 +147,31 @@ public class MenuControllerTest {
     }
 
     @Test
+    public void updateParentLocation() {
+        String url = baseUrl + "/parent/location";
+
+        List<JSONObject> body = new ArrayList<>();
+        List<ParentMenu> parentMenus = parentMenuRepository.findAll();
+
+        parentMenus.forEach(parentMenu -> {
+            JSONObject one = new JSONObject();
+            one.put("id", parentMenu.getId());
+            one.put("location", testUtil.nextInt());
+            body.add(one);
+        });
+
+        System.out.println(body);
+
+        HttpEntity<List<JSONObject>> request = new HttpEntity<>(body, testUtil.getTokenHeader());
+
+        ResponseEntity<JSONObject> response = restTemplate
+                .exchange(url, HttpMethod.POST, request, JSONObject.class);
+
+        System.out.println(response.getBody());
+        assertEquals(200, response.getStatusCodeValue());
+    }
+
+    @Test
     public void getAllChild() throws URISyntaxException {
         String url = baseUrl + "/child";
 
@@ -249,6 +276,31 @@ public class MenuControllerTest {
 
         ResponseEntity<JSONObject> response = restTemplate
                 .exchange(uri, HttpMethod.DELETE, request, JSONObject.class);
+
+        System.out.println(response.getBody());
+        assertEquals(200, response.getStatusCodeValue());
+    }
+
+    @Test
+    public void updateChildLocation() {
+        String url = baseUrl + "/child/location";
+
+        List<JSONObject> body = new ArrayList<>();
+        List<ChildMenu> childMenus = childMenuRepository.findAll();
+
+        childMenus.forEach(childMenu -> {
+            JSONObject one = new JSONObject();
+            one.put("id", childMenu.getId());
+            one.put("location", testUtil.nextInt());
+            body.add(one);
+        });
+
+        System.out.println(body);
+
+        HttpEntity<List<JSONObject>> request = new HttpEntity<>(body, testUtil.getTokenHeader());
+
+        ResponseEntity<JSONObject> response = restTemplate
+                .exchange(url, HttpMethod.POST, request, JSONObject.class);
 
         System.out.println(response.getBody());
         assertEquals(200, response.getStatusCodeValue());
