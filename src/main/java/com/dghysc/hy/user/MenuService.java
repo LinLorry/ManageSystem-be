@@ -1,11 +1,15 @@
 package com.dghysc.hy.user;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.user.model.*;
 import com.dghysc.hy.user.repo.ChildMenuRepository;
 import com.dghysc.hy.user.repo.ParentMenuRepository;
 import com.dghysc.hy.user.repo.RoleRepository;
 import com.dghysc.hy.util.SecurityUtil;
+import org.springframework.data.util.Pair;
 import org.springframework.lang.Nullable;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +31,11 @@ public class MenuService {
     private final ParentMenuRepository parentMenuRepository;
 
     private final ChildMenuRepository childMenuRepository;
+
+    private static Map<ChildMenu, JSONObject> childData = new HashMap<>();
+
+    private static Map<String, Map<ParentMenu,
+            Pair<JSONObject, Set<ChildMenu>>>> menus = new HashMap<>();
 
     public MenuService(
             RoleRepository roleRepository,
@@ -206,5 +215,65 @@ public class MenuService {
 
     List<ChildMenu> loadAllChildMenus() {
         return childMenuRepository.findAllByOrderByLocationAsc();
+    }
+
+    public Collection<JSONObject> getMenus(Collection<? extends GrantedAuthority> roles) {
+        Map<ParentMenu, Set<ChildMenu>> parentTmp = new HashMap<>();
+
+        Map<ParentMenu, JSONObject> parentMenuJSONObjectMap = new HashMap<>();
+
+        roles.forEach(role -> {
+            Map<ParentMenu, Pair<JSONObject, Set<ChildMenu>>> map = menus.get(role.getAuthority());
+            map.forEach((key, value) -> {
+                parentMenuJSONObjectMap.putIfAbsent(key, (JSONObject) value.getFirst().clone());
+                parentTmp.putIfAbsent(key, new HashSet<>());
+                parentTmp.get(key).addAll(value.getSecond());
+            });
+        });
+
+        parentTmp.forEach((key, value) -> {
+            JSONArray children = new JSONArray();
+
+            value.forEach(childMenu ->
+                    children.add(childData.get(childMenu))
+            );
+            parentMenuJSONObjectMap.get(key).put("children", children);
+        });
+
+
+        return parentMenuJSONObjectMap.values();
+    }
+
+    @Transactional(readOnly = true)
+    public void refreshMenuMap() {
+        menus.clear();
+        childData.clear();
+
+        roleRepository.findAll().forEach(role -> {
+            Map<ParentMenu, Pair<JSONObject, Set<ChildMenu>>> parentTmp = new HashMap<>();
+
+            role.getMenus().forEach(childMenu -> {
+                childData.computeIfAbsent(childMenu, key -> {
+                    JSONObject tmp = new JSONObject();
+                    tmp.put("name", key.getName());
+                    tmp.put("url", key.getUrl());
+                    tmp.put("location", key.getLocation());
+
+                    return tmp;
+                });
+
+                parentTmp.computeIfAbsent(childMenu.getParent(), parentMenu -> {
+                    JSONObject tmp = new JSONObject();
+                    tmp.put("name", parentMenu.getName());
+                    tmp.put("location", parentMenu.getLocation());
+
+                    return Pair.of(tmp, new HashSet<>());
+                });
+
+                parentTmp.get(childMenu.getParent()).getSecond().add(childMenu);
+            });
+
+            menus.put(role.getAuthority(), parentTmp);
+        });
     }
 }
