@@ -101,6 +101,26 @@ public class MenuController {
         return response;
     }
 
+    @PostMapping("/parent/location")
+    public JSONObject updateParentLocation(@RequestBody List<JSONObject> request) {
+        JSONObject response = new JSONObject();
+        Map<Integer, Integer> map = new HashMap<>();
+
+        request.forEach(data ->
+                map.put(data.getInteger("id"), data.getInteger("location"))
+        );
+
+        try {
+            response.put("data", menuService.updateParentsLocation(map));
+            response.put("status", 1);
+            response.put("message", "更新父菜单位置成功");
+        } catch (NullPointerException e) {
+            response.put("status", 0);
+            response.put("message", "更新父菜单位置失败");
+        }
+        return response;
+    }
+
     @PostMapping("/child")
     public JSONObject createOrUpdateChild(@RequestBody JSONObject request) {
         JSONObject response = new JSONObject();
@@ -181,6 +201,26 @@ public class MenuController {
         } catch (EmptyResultDataAccessException e) {
             response.put("status", 0);
             response.put("message", "Id为" + id + "的子菜单不存在");
+        }
+        return response;
+    }
+
+    @PostMapping("/child/location")
+    public JSONObject updateChildLocation(@RequestBody List<JSONObject> request) {
+        JSONObject response = new JSONObject();
+        Map<Integer, Integer> map = new HashMap<>();
+
+        request.forEach(data ->
+                map.put(data.getInteger("id"), data.getInteger("location"))
+        );
+
+        try {
+            response.put("data", menuService.updateChildrenLocation(map));
+            response.put("status", 1);
+            response.put("message", "更新子菜单位置成功");
+        } catch (NullPointerException e) {
+            response.put("status", 0);
+            response.put("message", "更新子菜单位置失败");
         }
         return response;
     }
