@@ -18,8 +18,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -109,6 +108,20 @@ public class MenuServiceTest {
         }
 
         assertTrue(mark);
+    }
+
+    @Test
+    public void updateParentsLocation() {
+        List<ParentMenu> parentMenus = parentMenuRepository.findAll();
+        Map<Integer, Integer> map = new HashMap<>();
+
+        parentMenus.forEach(parentMenu -> map.put(parentMenu.getId(), testUtil.nextInt()));
+
+        List<ParentMenu> results = menuService.updateParentsLocation(map);
+
+        results.forEach(parentMenu -> assertEquals(
+                map.get(parentMenu.getId()), parentMenu.getLocation()
+        ));
     }
 
     @Test
@@ -247,6 +260,20 @@ public class MenuServiceTest {
     }
 
     @Test
+    public void updateChildrenLocation() {
+        List<ChildMenu> childMenus = childMenuRepository.findAll();
+        Map<Integer, Integer> map = new HashMap<>();
+
+        childMenus.forEach(childMenu -> map.put(childMenu.getId(), testUtil.nextInt()));
+
+        List<ChildMenu> results = menuService.updateChildrenLocation(map);
+
+        results.forEach(childMenu -> assertEquals(
+                map.get(childMenu.getId()), childMenu.getLocation()
+        ));
+    }
+
+    @Test
     public void removeChildById() {
         Integer id = childId;
         menuService.removeChildById(id);
@@ -266,5 +293,4 @@ public class MenuServiceTest {
     public void loadAllChildMenus() {
         assertEquals(childMenuRepository.count(), menuService.loadAllChildMenus().size());
     }
-
 }
