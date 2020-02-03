@@ -53,7 +53,10 @@ public class MenuService {
         return parentMenuRepository.save(parentMenu);
     }
 
-    ParentMenu updateParent(@NotNull Integer id, @Nullable String name, @Nullable Integer location) {
+    ParentMenu updateParent(
+            @NotNull Integer id, @Nullable String name,
+            @Nullable Integer location
+    ) {
         Timestamp now = new Timestamp(System.currentTimeMillis());
         User creator = SecurityUtil.getUser();
 
@@ -70,7 +73,7 @@ public class MenuService {
         return parentMenuRepository.save(parentMenu);
     }
 
-    List<ParentMenu> updateParentsLocation(Map<Integer, Integer> data) {
+    List<ParentMenu> updateParentsLocation(@NotNull Map<Integer, Integer> data) {
         Timestamp now = new Timestamp(System.currentTimeMillis());
         User user = SecurityUtil.getUser();
         data.forEach((id, location) -> {
@@ -92,12 +95,12 @@ public class MenuService {
         return parentMenus;
     }
 
-    void removeParentById(Integer id) {
-        parentMenuRepository.deleteById(id);
+    void removeParentById(@NotNull Integer id) {
+        Optional.of(id).ifPresent(parentMenuRepository::deleteById);
     }
 
     ParentMenu loadParentMenuById(Integer id) {
-        return parentMenuRepository.findById(id).orElse(null);
+        return parentMenuRepository.findById(id).orElseThrow(EntityNotFoundException::new);
     }
 
     List<ParentMenu> loadAllParentMenus() {
@@ -105,9 +108,11 @@ public class MenuService {
     }
 
     @Transactional
-    public ChildMenu addChild(@NotNull String name, @NotNull String url,
-                              @NotNull Integer location, @NotNull Integer parentId,
-                              @Nullable Iterable<Integer> roleIds) {
+    public ChildMenu addChild(
+            @NotNull String name, @NotNull String url,
+            @NotNull Integer location, @NotNull Integer parentId,
+            @Nullable Iterable<Integer> roleIds
+    ) {
         if (name == null || url == null || parentId == null || location == null) {
             throw new NullPointerException();
         }
@@ -126,11 +131,14 @@ public class MenuService {
 
     @Transactional
     public ChildMenu updateChild(
-            Integer id, @Nullable String name,
+            @NotNull Integer id, @Nullable String name,
             @Nullable String url, @Nullable Integer location,
-            @Nullable Integer parentId, @Nullable Iterable<Integer> roleIds) {
+            @Nullable Integer parentId, @Nullable Iterable<Integer> roleIds
+    ) {
         Timestamp now = new Timestamp(System.currentTimeMillis());
         User user = SecurityUtil.getUser();
+
+        if (id == null) throw new NullPointerException();
 
         ChildMenu childMenu = childMenuRepository.findById(id)
                 .orElseThrow(EntityNotFoundException::new);
@@ -188,11 +196,11 @@ public class MenuService {
     }
 
     @Transactional
-    void removeChildById(Integer id) {
-        childMenuRepository.deleteById(id);
+    void removeChildById(@NotNull Integer id) {
+        Optional.of(id).ifPresent(childMenuRepository::deleteById);
     }
 
-    ChildMenu loadChildMenuById(Integer id) {
+    ChildMenu loadChildMenuById(@NotNull Integer id) {
         return childMenuRepository.findById(id).orElse(null);
     }
 
