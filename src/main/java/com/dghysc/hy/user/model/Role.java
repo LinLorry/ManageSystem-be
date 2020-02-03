@@ -43,13 +43,13 @@ public class Role implements GrantedAuthority, Serializable {
     private Timestamp updateTime;
 
     @JsonIgnore
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @ManyToOne(optional = false)
     @JoinColumn(nullable = false, updatable = false)
     @NotFound(action = NotFoundAction.IGNORE)
     private User createUser;
 
     @JsonIgnore
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @ManyToOne(optional = false)
     @JoinColumn(nullable = false)
     @NotFound(action = NotFoundAction.IGNORE)
     private User updateUser;
@@ -64,9 +64,13 @@ public class Role implements GrantedAuthority, Serializable {
     private Set<User> users = new HashSet<>();
 
     @JsonIgnore
-    @OneToMany(mappedBy = "role", orphanRemoval = true,
-            cascade = { CascadeType.REFRESH, CascadeType.REMOVE, CascadeType.MERGE, CascadeType.PERSIST })
-    private Set<RoleMenu> roleMenuSet = new HashSet<>();
+    @ManyToMany(cascade = {CascadeType.REMOVE, CascadeType.MERGE, CascadeType.PERSIST})
+    @JoinTable(
+            name = "role_menu",
+            joinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "menu_id", referencedColumnName = "id")
+    )
+    private Set<ChildMenu> menus = new HashSet<>();
 
     public Integer getId() {
         return id;
@@ -136,8 +140,8 @@ public class Role implements GrantedAuthority, Serializable {
         return users;
     }
 
-    public Set<RoleMenu> getRoleMenuSet() {
-        return roleMenuSet;
+    public Set<ChildMenu> getMenus() {
+        return menus;
     }
 
     @Override

@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityNotFoundException;
 import javax.validation.constraints.NotNull;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -76,17 +75,14 @@ public class RoleService {
 
             users.removeIf(user -> !userList.contains(user));
             users.addAll(userList);
-
-            userRepository.flush();
         });
 
         Optional.ofNullable(menuId).ifPresent(ids -> {
-            List<ChildMenu> childMenuList = childMenuRepository.findAllById(ids);
-            Set<RoleMenu> roleMenus = role.getRoleMenuSet();
+            List<ChildMenu> menuList = childMenuRepository.findAllById(ids);
+            Set<ChildMenu> menus = role.getMenus();
 
-            roleMenus.removeIf(roleMenu -> !childMenuList.remove(roleMenu.getMenu()));
-            childMenuList.forEach(childMenu -> roleMenus.add(new RoleMenu(role, childMenu)));
-            childMenuRepository.flush();
+            menus.removeIf(menu -> !menuList.contains(menu));
+            menus.addAll(menuList);
         });
 
         role.setUpdateTime(now);

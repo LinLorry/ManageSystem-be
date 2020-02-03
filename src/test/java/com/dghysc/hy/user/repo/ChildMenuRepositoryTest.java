@@ -18,8 +18,8 @@ import java.util.Set;
 
 import static org.junit.Assert.*;
 
+@SpringBootTest
 @RunWith(SpringRunner.class)
-@SpringBootTest()
 public class ChildMenuRepositoryTest {
 
     private Integer id;
@@ -62,7 +62,7 @@ public class ChildMenuRepositoryTest {
 
     private void beforeRole() throws Exception {
         ChildMenu childMenu = childMenuRepository.getOne(id);
-        if (childMenu.getRoleMenuSet().size() == 0) {
+        if (childMenu.getRoles().size() == 0) {
             addRole();
         }
     }
@@ -89,16 +89,11 @@ public class ChildMenuRepositoryTest {
                 testUtil.nextId(ParentMenu.class)
         ).ifPresent(childMenu::setParent);
 
-        Set<RoleMenu> roleMenuSet = childMenu.getRoleMenuSet();
+        Set<Role> roles = childMenu.getRoles();
 
-        while (roleMenuSet.size() < 3 &&
-                roleMenuSet.size() != roleRepository.count()) {
-            RoleMenu roleMenu = new RoleMenu(
-                    roleRepository.getOne(testUtil.nextId(Role.class)),
-                    childMenu
-            );
-
-            roleMenuSet.add(roleMenu);
+        while (roles.size() < 3 &&
+                roles.size() != roleRepository.count()) {
+            roles.add(roleRepository.getOne(testUtil.nextId(Role.class)));
         }
 
         childMenuRepository.saveAndFlush(childMenu);
@@ -160,26 +155,23 @@ public class ChildMenuRepositoryTest {
 
         ChildMenu childMenu = childMenuRepository.getOne(id);
 
-        Set<RoleMenu> roleMenuSet = childMenu.getRoleMenuSet();
-        Set<RoleMenu> tmp = new HashSet<>();
-        final int beforeCount = roleMenuSet.size();
+        Set<Role> roles = childMenu.getRoles();
+        Set<Role> tmp = new HashSet<>();
 
-        while (roleMenuSet.size() < beforeCount + 3 &&
-                roleMenuSet.size() != roleRepository.count()) {
-            RoleMenu roleMenu = new RoleMenu(
-                    roleRepository.getOne(testUtil.nextId(Role.class)),
-                    childMenu
-            );
+        final int beforeCount = roles.size();
 
-            roleMenuSet.add(roleMenu);
-            tmp.add(roleMenu);
+        while (roles.size() < beforeCount + 3 &&
+                roles.size() != roleRepository.count()) {
+            Role role = roleRepository.getOne(testUtil.nextId(Role.class));
+            roles.add(role);
+            tmp.add(role);
         }
 
         roleRepository.flush();
         childMenuRepository.saveAndFlush(childMenu);
 
         childMenu = childMenuRepository.getOne(id);
-        assertTrue(childMenu.getRoleMenuSet().containsAll(tmp));
+        assertTrue(childMenu.getRoles().containsAll(tmp));
 
         this.id = id;
     }
@@ -191,16 +183,14 @@ public class ChildMenuRepositoryTest {
         Integer id = this.id;
         ChildMenu childMenu = childMenuRepository.getOne(id);
 
-        Set<RoleMenu> roleMenuSet = childMenu.getRoleMenuSet();
-
-        RoleMenu roleMenu = roleMenuSet.iterator().next();
-
-        roleMenuSet.remove(roleMenu);
+        Set<Role> roles = childMenu.getRoles();
+        Role role = roles.iterator().next();
+        roles.remove(role);
 
         childMenuRepository.saveAndFlush(childMenu);
 
         childMenu = childMenuRepository.getOne(id);
-        assertFalse(childMenu.getRoleMenuSet().contains(roleMenu));
+        assertFalse(childMenu.getRoles().contains(role));
     }
 
     @Test
@@ -211,38 +201,37 @@ public class ChildMenuRepositoryTest {
 
         ChildMenu childMenu = childMenuRepository.getOne(id);
 
-        Set<RoleMenu> roleMenuSet = childMenu.getRoleMenuSet();
+        Set<Role> roles = childMenu.getRoles();
 
-        RoleMenu oldRoleMenu = roleMenuSet.iterator().next();
-        RoleMenu newRoleMenu = new RoleMenu(null, childMenu);
+        Role oldRole = roles.iterator().next();
+        Role newRole;
 
         do {
-            roleRepository.findById(
-                    testUtil.nextId(Role.class)
-            ).ifPresent(newRoleMenu::setRole);
-        }
-        while (roleMenuSet.contains(newRoleMenu) &&
-                roleMenuSet.size() != roleRepository.count());
+            newRole = roleRepository.getOne(testUtil.nextId(Role.class));
+        } while (newRole.equals(oldRole) &&
+                roles.size() != roleRepository.count());
 
-        roleMenuSet.add(newRoleMenu);
-        roleMenuSet.remove(oldRoleMenu);
+        roles.add(newRole);
+        roles.remove(oldRole);
 
-        roleRepository.flush();
         childMenuRepository.saveAndFlush(childMenu);
 
         childMenu = childMenuRepository.getOne(id);
 
-        if (!newRoleMenu.equals(oldRoleMenu)) {
-            assertTrue(childMenu.getRoleMenuSet().contains(newRoleMenu));
+        if (!newRole.equals(oldRole)) {
+            assertTrue(childMenu.getRoles().contains(newRole));
         }
-        assertFalse(childMenu.getRoleMenuSet().contains(oldRoleMenu));
+        assertFalse(childMenu.getRoles().contains(oldRole));
     }
 
     @Test
     public void delete() {
         Integer id = this.id;
 
-        ChildMenu childMenu = childMenuRepository.getOne(id);
+        ChildMenu childMenu = childMenuRepository.findById(id)
+                .orElseThrow(EntityNotFoundException::new);
+
+        System.out.println(childMenu.getUpdateUser().getId());
 
         childMenuRepository.delete(childMenu);
 

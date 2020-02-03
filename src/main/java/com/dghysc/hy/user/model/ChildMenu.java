@@ -50,9 +50,13 @@ public class ChildMenu implements Serializable {
     private ParentMenu parent;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "menu", orphanRemoval = true,
-            cascade = {CascadeType.REMOVE, CascadeType.PERSIST, CascadeType.MERGE})
-    private Set<RoleMenu> roleMenuSet = new HashSet<>();
+    @ManyToMany(cascade = {CascadeType.REMOVE, CascadeType.MERGE, CascadeType.PERSIST})
+    @JoinTable(
+            name = "role_menu",
+            joinColumns = @JoinColumn(name = "menu_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id")
+    )
+    private Set<Role> roles = new HashSet<>();
 
     public Integer getId() {
         return id;
@@ -126,7 +130,7 @@ public class ChildMenu implements Serializable {
         this.parent = parent;
     }
 
-    public Set<RoleMenu> getRoleMenuSet() {
-        return roleMenuSet;
+    public Set<Role> getRoles() {
+        return roles;
     }
 }

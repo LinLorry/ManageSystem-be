@@ -134,11 +134,10 @@ public class MenuService {
 
         Optional.ofNullable(roleIds).ifPresent(ids -> {
             List<Role> roleList = roleRepository.findAllById(roleIds);
-            Set<RoleMenu> roleMenus = childMenu.getRoleMenuSet();
+            Set<Role> roles = childMenu.getRoles();
 
-            roleMenus.removeIf(roleMenu -> !roleList.remove(roleMenu.getRole()));
-            roleList.forEach(role -> roleMenus.add(new RoleMenu(role, childMenu)));
-            roleRepository.flush();
+            roles.removeIf(role -> !roleList.contains(role));
+            roles.addAll(roleList);
         });
 
         return childMenuRepository.save(childMenu);

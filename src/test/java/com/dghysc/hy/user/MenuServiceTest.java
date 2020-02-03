@@ -158,7 +158,7 @@ public class MenuServiceTest {
             }
 
             childMenu = menuService.addChild(name, url, location, parentId, roleIdSet);
-            assertEquals(roleIdSet.size(), childMenu.getRoleMenuSet().size());
+            assertEquals(roleIdSet.size(), childMenu.getRoles().size());
         }
 
         boolean mark = false;
@@ -239,10 +239,10 @@ public class MenuServiceTest {
 
             ChildMenu childMenu = menuService.updateChild(id, null, null, null, null, roleIdSet);
 
-            assertEquals(roleIdSet.size(), childMenu.getRoleMenuSet().size());
-            childMenu.getRoleMenuSet().forEach(
-                    roleMenu -> assertTrue(roleIdSet.contains(
-                            roleMenu.getRole().getId())));
+            assertEquals(roleIdSet.size(), childMenu.getRoles().size());
+            childMenu.getRoles().forEach(
+                    role -> assertTrue(roleIdSet.contains(
+                            role.getId())));
         }
     }
 
