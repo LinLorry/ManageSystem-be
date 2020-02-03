@@ -1,7 +1,13 @@
 package com.dghysc.hy.user.model;
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.*;
 import java.io.Serializable;
+import java.sql.Timestamp;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -20,6 +26,25 @@ public class ParentMenu implements Serializable {
 
     @Column(unique = true, length = 16)
     private String name;
+
+    @Column(nullable = false)
+    private Integer location;
+
+    @Column(nullable = false, updatable = false)
+    private Timestamp createTime;
+
+    @JsonIgnore
+    @ManyToOne(optional = false)
+    @JoinColumn(nullable = false, updatable = false)
+    private User createUser;
+
+    @Column(nullable = false)
+    private Timestamp updateTime;
+
+    @JsonIgnore
+    @ManyToOne(optional = false)
+    @JoinColumn(nullable = false)
+    private User updateUser;
 
     @OneToMany(mappedBy = "parent", fetch = FetchType.EAGER,
             cascade = {CascadeType.REMOVE, CascadeType.MERGE})
@@ -41,7 +66,59 @@ public class ParentMenu implements Serializable {
         this.name = name;
     }
 
+    public Integer getLocation() {
+        return location;
+    }
+
+    public void setLocation(Integer location) {
+        this.location = location;
+    }
+
+    public Timestamp getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(Timestamp createTime) {
+        this.createTime = createTime;
+    }
+
+    public User getCreateUser() {
+        return createUser;
+    }
+
+    public void setCreateUser(User createUser) {
+        this.createUser = createUser;
+    }
+
+    public Timestamp getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(Timestamp updateTime) {
+        this.updateTime = updateTime;
+    }
+
+    public User getUpdateUser() {
+        return updateUser;
+    }
+
+    public void setUpdateUser(User updateUser) {
+        this.updateUser = updateUser;
+    }
+
     public Set<ChildMenu> getChildMenuSet() {
         return childMenuSet;
+    }
+
+    @JsonAnyGetter
+    public Map<String, Object> getInfo() {
+        Map<String, Object> map = new HashMap<>();
+
+        map.put("createUserName", createUser.getName());
+        map.put("createUserId", createUser.getId());
+        map.put("updateUserName", updateUser.getName());
+        map.put("updateUserId", updateUser.getId());
+
+        return map;
     }
 }

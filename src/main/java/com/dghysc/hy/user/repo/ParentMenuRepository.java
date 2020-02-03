@@ -4,6 +4,8 @@ import com.dghysc.hy.user.model.ParentMenu;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 /**
  * The Parent Menu Repository
  * @author lorry
@@ -12,4 +14,7 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface ParentMenuRepository extends JpaRepository<ParentMenu, Integer> {
+
+    List<ParentMenu> findAllByOrderByLocationAsc();
+
 }

@@ -1,9 +1,6 @@
 package com.dghysc.hy.user.repo;
 
-import com.dghysc.hy.user.model.ChildMenu;
-import com.dghysc.hy.user.model.ParentMenu;
-import com.dghysc.hy.user.model.Role;
-import com.dghysc.hy.user.model.RoleMenu;
+import com.dghysc.hy.user.model.*;
 import com.dghysc.hy.util.TestUtil;
 import net.bytebuddy.utility.RandomString;
 import org.junit.Before;
@@ -14,6 +11,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityNotFoundException;
+import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -25,8 +24,13 @@ public class ChildMenuRepositoryTest {
 
     private Integer id;
 
+    private User user;
+
     @Autowired
     private TestUtil testUtil;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     private RoleRepository roleRepository;
@@ -40,6 +44,8 @@ public class ChildMenuRepositoryTest {
     @Before
     @Transactional
     public void initTest() throws Exception {
+        user = userRepository.findById(testUtil.nextId(User.class))
+                .orElseThrow(EntityNotFoundException::new);
         if (parentMenuRepository.count() == 0) {
             ParentMenu parentMenu = new ParentMenu();
             parentMenu.setName(RandomString.make());
@@ -64,10 +70,20 @@ public class ChildMenuRepositoryTest {
     @Test
     @Transactional
     public void save() throws Exception {
+        String name = RandomString.make();
+        String url = "/" + RandomString.make();
+        Integer location = testUtil.nextInt();
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        User user = this.user;
         ChildMenu childMenu = new ChildMenu();
 
-        childMenu.setName(RandomString.make());
-        childMenu.setUrl("/" + RandomString.make());
+        childMenu.setName(name);
+        childMenu.setUrl(url);
+        childMenu.setLocation(location);
+        childMenu.setCreateTime(now);
+        childMenu.setCreateUser(user);
+        childMenu.setUpdateTime(now);
+        childMenu.setUpdateUser(user);
 
         parentMenuRepository.findById(
                 testUtil.nextId(ParentMenu.class)
@@ -88,6 +104,8 @@ public class ChildMenuRepositoryTest {
         childMenuRepository.saveAndFlush(childMenu);
 
         assertNotNull(childMenu.getId());
+        assertEquals(user.getId(), childMenu.getCreateUser().getId());
+        assertEquals(now, childMenu.getCreateTime());
     }
 
     @Test
@@ -96,11 +114,17 @@ public class ChildMenuRepositoryTest {
         Integer id = this.id;
         String name = RandomString.make();
         String url = "/" + RandomString.make();
+        Integer location = testUtil.nextInt();
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        User user = this.user;
 
         ChildMenu childMenu = childMenuRepository.getOne(id);
 
         childMenu.setName(name);
         childMenu.setUrl(url);
+        childMenu.setLocation(location);
+        childMenu.setUpdateTime(now);
+        childMenu.setUpdateUser(user);
 
         childMenuRepository.saveAndFlush(childMenu);
 
@@ -108,6 +132,8 @@ public class ChildMenuRepositoryTest {
 
         assertEquals(name, childMenu.getName());
         assertEquals(url, childMenu.getUrl());
+        assertEquals(now, childMenu.getUpdateTime());
+        assertEquals(user.getId(), childMenu.getUpdateUser().getId());
     }
 
     @Test

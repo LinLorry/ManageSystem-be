@@ -2,6 +2,7 @@ package com.dghysc.hy.user.repo;
 
 import com.dghysc.hy.user.model.ChildMenu;
 import com.dghysc.hy.user.model.ParentMenu;
+import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.util.TestUtil;
 import net.bytebuddy.utility.RandomString;
 import org.junit.Before;
@@ -12,6 +13,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityNotFoundException;
+import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -23,8 +26,13 @@ public class ParentMenuRepositoryTest {
 
     private Integer id;
 
+    private User user;
+
     @Autowired
     private TestUtil testUtil;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     private ParentMenuRepository parentMenuRepository;
@@ -34,6 +42,9 @@ public class ParentMenuRepositoryTest {
 
     @Before
     public void initTest() throws Exception {
+        user = userRepository.findById(testUtil.nextId(User.class))
+                .orElseThrow(EntityNotFoundException::new);
+
         if (parentMenuRepository.count() == 0) {
             save();
         }
@@ -42,12 +53,25 @@ public class ParentMenuRepositoryTest {
 
     @Test
     public void save() {
+        String name = RandomString.make();
+        Integer location = testUtil.nextInt();
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        User user = this.user;
+
         ParentMenu parentMenu = new ParentMenu();
 
-        parentMenu.setName(RandomString.make());
+        parentMenu.setName(name);
+        parentMenu.setLocation(location);
+        parentMenu.setCreateTime(now);
+        parentMenu.setCreateUser(user);
+        parentMenu.setUpdateTime(now);
+        parentMenu.setUpdateUser(user);
+
         parentMenuRepository.saveAndFlush(parentMenu);
 
         assertNotNull(parentMenu.getId());
+        assertEquals(now, parentMenu.getCreateTime());
+        assertEquals(user.getId(), parentMenu.getCreateUser().getId());
     }
 
     @Test
@@ -55,21 +79,32 @@ public class ParentMenuRepositoryTest {
     public void update() {
         Integer id = this.id;
         String name = RandomString.make();
+        Integer location = testUtil.nextInt();
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        User user = this.user;
 
         ParentMenu parentMenu = parentMenuRepository.getOne(id);
 
         parentMenu.setName(name);
+        parentMenu.setLocation(location);
+        parentMenu.setUpdateUser(user);
+        parentMenu.setUpdateTime(now);
 
         parentMenuRepository.saveAndFlush(parentMenu);
 
         parentMenu = parentMenuRepository.getOne(id);
         assertEquals(parentMenu.getName(), name);
+        assertEquals(now, parentMenu.getUpdateTime());
+        assertTrue(System.currentTimeMillis() >= parentMenu.getCreateTime().getTime());
+        assertEquals(user.getId(), parentMenu.getUpdateUser().getId());
     }
 
     @Test
     @Transactional
     public void updateChild() throws Exception {
         Integer id = this.id;
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        User user = this.user;
 
         ParentMenu parentMenu = parentMenuRepository.getOne(id);
 
@@ -87,6 +122,8 @@ public class ParentMenuRepositoryTest {
             childMenuSet.add(childMenu);
             tmp.add(childMenu);
         }
+        parentMenu.setUpdateTime(now);
+        parentMenu.setUpdateUser(user);
 
         parentMenuRepository.saveAndFlush(parentMenu);
 
