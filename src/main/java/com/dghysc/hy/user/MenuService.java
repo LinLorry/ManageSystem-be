@@ -70,6 +70,28 @@ public class MenuService {
         return parentMenuRepository.save(parentMenu);
     }
 
+    List<ParentMenu> updateParentsLocation(Map<Integer, Integer> data) {
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        User user = SecurityUtil.getUser();
+        data.forEach((id, location) -> {
+            if (id == null || location == null) {
+                throw new NullPointerException();
+            }
+        });
+
+        List<ParentMenu> parentMenus = parentMenuRepository.findAllById(data.keySet());
+
+        parentMenus.forEach(parentMenu -> {
+            parentMenu.setUpdateUser(user);
+            parentMenu.setUpdateTime(now);
+            parentMenu.setLocation(data.get(parentMenu.getId()));
+        });
+
+        parentMenuRepository.saveAll(parentMenus);
+
+        return parentMenus;
+    }
+
     void removeParentById(Integer id) {
         parentMenuRepository.deleteById(id);
     }
@@ -143,6 +165,7 @@ public class MenuService {
         return childMenuRepository.save(childMenu);
     }
 
+    @Transactional
     void removeChildById(Integer id) {
         childMenuRepository.deleteById(id);
     }
