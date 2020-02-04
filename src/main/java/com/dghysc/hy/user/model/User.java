@@ -36,7 +36,7 @@ public class User implements UserDetails, Serializable {
     private String password;
 
     @JsonIgnore
-    @ManyToMany(cascade = {CascadeType.REMOVE, CascadeType.MERGE, CascadeType.PERSIST})
+    @ManyToMany
     @JoinTable(
             name = "user_role",
             joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),

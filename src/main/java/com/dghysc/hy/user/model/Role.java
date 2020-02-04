@@ -55,7 +55,7 @@ public class Role implements GrantedAuthority, Serializable {
     private User updateUser;
 
     @JsonIgnore
-    @ManyToMany(cascade = {CascadeType.REMOVE, CascadeType.MERGE, CascadeType.PERSIST})
+    @ManyToMany
     @JoinTable(
             name = "user_role",
             joinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"),
@@ -64,7 +64,7 @@ public class Role implements GrantedAuthority, Serializable {
     private Set<User> users = new HashSet<>();
 
     @JsonIgnore
-    @ManyToMany(cascade = {CascadeType.REMOVE, CascadeType.MERGE, CascadeType.PERSIST})
+    @ManyToMany
     @JoinTable(
             name = "role_menu",
             joinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"),
