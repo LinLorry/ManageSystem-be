@@ -24,6 +24,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
 import java.lang.reflect.InvocationTargetException;
@@ -47,13 +48,15 @@ public class TestUtil extends Random {
 
     private Iterator<User> userIterator;
 
-    public TestUtil(UserRepository userRepository,
-                    RoleRepository roleRepository,
-                    ParentMenuRepository parentMenuRepository,
-                    ChildMenuRepository childMenuRepository,
-                    ProcessRepository processRepository,
-                    WorkRepository workRepository,
-                    ProductRepository productRepository) {
+    public TestUtil(
+            UserRepository userRepository,
+            RoleRepository roleRepository,
+            ParentMenuRepository parentMenuRepository,
+            ChildMenuRepository childMenuRepository,
+            ProcessRepository processRepository,
+            WorkRepository workRepository,
+            ProductRepository productRepository
+    ) {
 
         this.map = new HashMap<>();
         this.userRepository = userRepository;
@@ -108,6 +111,7 @@ public class TestUtil extends Random {
         return (T) method.invoke(obj);
     }
 
+    @Transactional(readOnly = true)
     public void setAuthorities(Long userId, String... authorities) {
         user = userRepository.findById(userId).orElseThrow(EntityNotFoundException::new);
 
