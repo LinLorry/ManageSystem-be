@@ -3,6 +3,7 @@ package com.dghysc.hy.user;
 import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.user.model.ChildMenu;
 import com.dghysc.hy.user.model.ParentMenu;
+import com.dghysc.hy.util.SecurityUtil;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +23,18 @@ public class MenuController {
 
     public MenuController(MenuService menuService) {
         this.menuService = menuService;
+        menuService.refreshMenuMap();
+    }
+
+    @GetMapping
+    public JSONObject getMenu() {
+        JSONObject response = new JSONObject();
+
+        response.put("data", menuService.getMenus(SecurityUtil.getAuthorities()));
+        response.put("status", 1);
+        response.put("message", "获取菜单成功");
+
+        return response;
     }
 
     @PostMapping("/parent")
@@ -42,6 +55,7 @@ public class MenuController {
                 parentMenu = menuService.updateParent(id, name, location);
                 response.put("message", "更新父菜单成功");
             }
+            menuService.refreshMenuMap();
 
             response.put("status", 1);
             response.put("data", parentMenu);
@@ -90,6 +104,7 @@ public class MenuController {
 
         try {
             menuService.removeParentById(id);
+            menuService.refreshMenuMap();
 
             response.put("status", 1);
             response.put("message", "删除父菜单成功");
@@ -114,6 +129,7 @@ public class MenuController {
             response.put("data", menuService.updateParentsLocation(map));
             response.put("status", 1);
             response.put("message", "更新父菜单位置成功");
+            menuService.refreshMenuMap();
         } catch (NullPointerException e) {
             response.put("status", 0);
             response.put("message", "更新父菜单位置失败");
@@ -142,6 +158,7 @@ public class MenuController {
                 childMenu = menuService.updateChild(id, name, url, location, parentId, roleIds);
                 response.put("message", "更新子菜单成功");
             }
+            menuService.refreshMenuMap();
 
             response.put("status", 1);
             response.put("data", childMenu);
@@ -194,6 +211,7 @@ public class MenuController {
 
         try {
             menuService.removeChildById(id);
+            menuService.refreshMenuMap();
 
             response.put("status", 1);
             response.put("message", "删除子菜单成功");
@@ -218,6 +236,7 @@ public class MenuController {
             response.put("data", menuService.updateChildrenLocation(map));
             response.put("status", 1);
             response.put("message", "更新子菜单位置成功");
+            menuService.refreshMenuMap();
         } catch (NullPointerException e) {
             response.put("status", 0);
             response.put("message", "更新子菜单位置失败");
