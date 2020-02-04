@@ -2,6 +2,8 @@ package com.dghysc.hy.user.model;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -17,6 +19,7 @@ import java.util.Set;
  * @author lin864464995@163.com
  */
 @Entity
+@Table(name = "child_menu")
 public class ChildMenu implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -40,6 +43,7 @@ public class ChildMenu implements Serializable {
     @JsonIgnore
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false, updatable = false)
+    @NotFound(action = NotFoundAction.IGNORE)
     private User createUser;
 
     @Column(nullable = false)
@@ -48,6 +52,7 @@ public class ChildMenu implements Serializable {
     @JsonIgnore
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false)
+    @NotFound(action = NotFoundAction.IGNORE)
     private User updateUser;
 
     @JsonIgnore
