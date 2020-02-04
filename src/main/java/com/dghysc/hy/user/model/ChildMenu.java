@@ -56,7 +56,7 @@ public class ChildMenu implements Serializable {
     private ParentMenu parent;
 
     @JsonIgnore
-    @ManyToMany(cascade = {CascadeType.REMOVE, CascadeType.MERGE, CascadeType.PERSIST})
+    @ManyToMany
     @JoinTable(
             name = "role_menu",
             joinColumns = @JoinColumn(name = "menu_id", referencedColumnName = "id"),
