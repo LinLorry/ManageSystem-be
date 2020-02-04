@@ -101,7 +101,7 @@ public class WechatUserService {
         String id = Optional.ofNullable(response.getString("openid"))
                 .orElseThrow(Exception::new);
         String accessToken = response.getString("access_token");
-        long expiresIn = response.getLongValue("expires_in");
+        long expiresIn = response.getLongValue("expires_in") * 1000L;
 
         WechatUser wechatUser;
         if (wechatUserRepository.existsById(id)) {
