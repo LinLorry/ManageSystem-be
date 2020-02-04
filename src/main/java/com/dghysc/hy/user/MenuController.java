@@ -5,6 +5,7 @@ import com.dghysc.hy.user.model.ChildMenu;
 import com.dghysc.hy.user.model.ParentMenu;
 import com.dghysc.hy.util.SecurityUtil;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityNotFoundException;
@@ -17,6 +18,7 @@ import java.util.*;
  */
 @RestController
 @RequestMapping("/api/menu")
+@PreAuthorize("hasRole('ADMIN')")
 public class MenuController {
 
     private final MenuService menuService;

@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -33,6 +34,8 @@ import static org.junit.Assert.*;
 public class MenuControllerTest {
 
     private final static String baseUrl = "/api/menu";
+
+    private HttpHeaders headers;
 
     @Autowired
     private TestRestTemplate restTemplate;
@@ -51,6 +54,11 @@ public class MenuControllerTest {
 
     @Before
     public void initTest() throws Exception {
+        if (headers == null) {
+            testUtil.setAuthorities(1L, "ROLE_ADMIN");
+            headers = testUtil.getTokenHeader();
+        }
+
         if (parentMenuRepository.count() == 0) {
             createParent();
         }
@@ -58,6 +66,17 @@ public class MenuControllerTest {
         if (childMenuRepository.count() == 0) {
             createChild();
         }
+    }
+
+    @Test
+    public void getMenu() {
+        HttpEntity<JSONObject> request = new HttpEntity<>(headers);
+
+        ResponseEntity<JSONObject> response = restTemplate
+                .exchange(baseUrl, HttpMethod.GET, request, JSONObject.class);
+
+        System.out.println(response.getBody());
+        assertEquals(200, response.getStatusCodeValue());
     }
 
     @Test
@@ -70,7 +89,7 @@ public class MenuControllerTest {
         body.put("name", RandomString.make());
         body.put("location", testUtil.nextInt());
 
-        HttpEntity<JSONObject> request = new HttpEntity<>(body, testUtil.getTokenHeader());
+        HttpEntity<JSONObject> request = new HttpEntity<>(body, headers);
 
         ResponseEntity<JSONObject> response = restTemplate
                 .exchange(uri, HttpMethod.POST, request, JSONObject.class);
@@ -92,7 +111,7 @@ public class MenuControllerTest {
         body.put("name", RandomString.make());
         body.put("location", testUtil.nextInt());
 
-        HttpEntity<JSONObject> request = new HttpEntity<>(body, testUtil.getTokenHeader());
+        HttpEntity<JSONObject> request = new HttpEntity<>(body, headers);
 
         ResponseEntity<JSONObject> response = restTemplate
                 .exchange(uri, HttpMethod.POST, request, JSONObject.class);
@@ -107,7 +126,7 @@ public class MenuControllerTest {
 
         URI uri = new URI(url);
 
-        HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
+        HttpEntity<JSONObject> request = new HttpEntity<>(headers);
 
         ResponseEntity<JSONObject> response = restTemplate
                 .exchange(uri, HttpMethod.GET, request, JSONObject.class);
@@ -122,7 +141,7 @@ public class MenuControllerTest {
 
         URI uri = new URI(url);
 
-        HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
+        HttpEntity<JSONObject> request = new HttpEntity<>(headers);
 
         ResponseEntity<JSONObject> response = restTemplate
                 .exchange(uri, HttpMethod.GET, request, JSONObject.class);
@@ -137,7 +156,7 @@ public class MenuControllerTest {
 
         URI uri = new URI(url);
 
-        HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
+        HttpEntity<JSONObject> request = new HttpEntity<>(headers);
 
         ResponseEntity<JSONObject> response = restTemplate
                 .exchange(uri, HttpMethod.DELETE, request, JSONObject.class);
@@ -162,7 +181,7 @@ public class MenuControllerTest {
 
         System.out.println(body);
 
-        HttpEntity<List<JSONObject>> request = new HttpEntity<>(body, testUtil.getTokenHeader());
+        HttpEntity<List<JSONObject>> request = new HttpEntity<>(body, headers);
 
         ResponseEntity<JSONObject> response = restTemplate
                 .exchange(url, HttpMethod.POST, request, JSONObject.class);
@@ -177,7 +196,7 @@ public class MenuControllerTest {
 
         URI uri = new URI(url);
 
-        HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
+        HttpEntity<JSONObject> request = new HttpEntity<>(headers);
 
         ResponseEntity<JSONObject> response = restTemplate
                 .exchange(uri, HttpMethod.GET, request, JSONObject.class);
@@ -192,7 +211,7 @@ public class MenuControllerTest {
 
         URI uri = new URI(url);
 
-        HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
+        HttpEntity<JSONObject> request = new HttpEntity<>(headers);
 
         ResponseEntity<JSONObject> response = restTemplate
                 .exchange(uri, HttpMethod.GET, request, JSONObject.class);
@@ -224,7 +243,7 @@ public class MenuControllerTest {
             body.put("roles", roleIds);
         }
 
-        HttpEntity<JSONObject> request = new HttpEntity<>(body, testUtil.getTokenHeader());
+        HttpEntity<JSONObject> request = new HttpEntity<>(body, headers);
 
         ResponseEntity<JSONObject> response = restTemplate
                 .exchange(uri, HttpMethod.POST, request, JSONObject.class);
@@ -257,7 +276,7 @@ public class MenuControllerTest {
             body.put("roles", roleIds);
         }
 
-        HttpEntity<JSONObject> request = new HttpEntity<>(body, testUtil.getTokenHeader());
+        HttpEntity<JSONObject> request = new HttpEntity<>(body, headers);
 
         ResponseEntity<JSONObject> response = restTemplate
                 .exchange(uri, HttpMethod.POST, request, JSONObject.class);
@@ -272,7 +291,7 @@ public class MenuControllerTest {
 
         URI uri = new URI(url);
 
-        HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
+        HttpEntity<JSONObject> request = new HttpEntity<>(headers);
 
         ResponseEntity<JSONObject> response = restTemplate
                 .exchange(uri, HttpMethod.DELETE, request, JSONObject.class);
@@ -297,7 +316,7 @@ public class MenuControllerTest {
 
         System.out.println(body);
 
-        HttpEntity<List<JSONObject>> request = new HttpEntity<>(body, testUtil.getTokenHeader());
+        HttpEntity<List<JSONObject>> request = new HttpEntity<>(body, headers);
 
         ResponseEntity<JSONObject> response = restTemplate
                 .exchange(url, HttpMethod.POST, request, JSONObject.class);
