@@ -1,8 +1,10 @@
 package com.dghysc.hy.wechat;
 
+import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.util.TokenUtil;
 import com.dghysc.hy.wechat.model.WechatUser;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -24,19 +26,35 @@ public class WechatController {
 
     private final TokenUtil tokenUtil;
 
+    private final WechatServer wechatServer;
+
     private final WechatUserService wechatUserService;
 
     public WechatController(
             @Value("${manage.loginUrl}") String loginBaseUrl,
             @Value("${manage.wechat.infoUrl}") String infoBaseUrl,
             @Value("${manage.wechat.successUrl}") String successUrl,
-            TokenUtil tokenUtil, WechatUserService wechatUserService
+            TokenUtil tokenUtil, WechatServer wechatServer,
+            WechatUserService wechatUserService
     ) {
         this.loginBaseUrl = loginBaseUrl;
         this.infoBaseUrl = infoBaseUrl;
         this.successUrl = successUrl;
         this.tokenUtil = tokenUtil;
+        this.wechatServer = wechatServer;
         this.wechatUserService = wechatUserService;
+    }
+
+    @GetMapping("/refreshToken")
+    @PreAuthorize("hasRole('ADMIN')")
+    public JSONObject refreshToken() throws Exception {
+        JSONObject response = new JSONObject();
+        wechatServer.refreshToken();
+
+        response.put("status", 1);
+        response.put("message", "Refresh wechat access token success.");
+
+        return response;
     }
 
     @GetMapping("/login/")
