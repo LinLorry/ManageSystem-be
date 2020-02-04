@@ -1,5 +1,7 @@
 package com.dghysc.hy.user.model;
 
+import com.dghysc.hy.util.EntityUtil;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
@@ -9,6 +11,7 @@ import javax.persistence.*;
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -145,7 +148,13 @@ public class Role implements GrantedAuthority, Serializable {
     }
 
     @Override
+    @JsonIgnore
     public String getAuthority() {
         return role;
+    }
+
+    @JsonAnyGetter
+    public Map<String, Object> getInfo() {
+        return EntityUtil.getCreateAndUpdateInfo(createUser, updateUser);
     }
 }
