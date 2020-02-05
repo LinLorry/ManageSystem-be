@@ -46,12 +46,13 @@ public class MenuService {
         this.childMenuRepository = childMenuRepository;
     }
 
-    ParentMenu addParent(@NotNull String name, @NotNull Integer location) {
+    ParentMenu addParent(@NotNull String name, @Nullable String url, @NotNull Integer location) {
         Timestamp now = new Timestamp(System.currentTimeMillis());
         User creator = SecurityUtil.getUser();
 
         ParentMenu parentMenu = new ParentMenu();
         Optional.of(name).ifPresent(parentMenu::setName);
+        parentMenu.setUrl(url);
         Optional.of(location).ifPresent(parentMenu::setLocation);
 
         parentMenu.setCreateTime(now);
@@ -64,7 +65,7 @@ public class MenuService {
 
     ParentMenu updateParent(
             @NotNull Integer id, @Nullable String name,
-            @Nullable Integer location
+            @Nullable String url, @Nullable Integer location
     ) {
         Timestamp now = new Timestamp(System.currentTimeMillis());
         User creator = SecurityUtil.getUser();
@@ -74,6 +75,7 @@ public class MenuService {
         ParentMenu parentMenu = parentMenuRepository.findById(id)
                 .orElseThrow(EntityNotFoundException::new);
         Optional.ofNullable(name).ifPresent(parentMenu::setName);
+        Optional.ofNullable(url).ifPresent(parentMenu::setUrl);
         Optional.ofNullable(location).ifPresent(parentMenu::setLocation);
 
         parentMenu.setUpdateTime(now);
@@ -265,6 +267,7 @@ public class MenuService {
                 parentTmp.computeIfAbsent(childMenu.getParent(), parentMenu -> {
                     JSONObject tmp = new JSONObject();
                     tmp.put("name", parentMenu.getName());
+                    tmp.put("url", parentMenu.getUrl());
                     tmp.put("location", parentMenu.getLocation());
 
                     return Pair.of(tmp, new HashSet<>());

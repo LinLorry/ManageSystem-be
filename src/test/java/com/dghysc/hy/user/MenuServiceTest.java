@@ -72,8 +72,9 @@ public class MenuServiceTest {
     @Test
     public void addParent() {
         String name = RandomString.make();
+        String url = RandomString.make();
         Integer location = testUtil.nextInt();
-        ParentMenu parentMenu = menuService.addParent(name, location);
+        ParentMenu parentMenu = menuService.addParent(name, url, location);
 
         assertNotNull(parentMenu.getId());
         assertEquals(name, parentMenu.getName());
@@ -81,7 +82,7 @@ public class MenuServiceTest {
         boolean mark = false;
 
         try {
-            menuService.addParent(null, null);
+            menuService.addParent(null, null, null);
         } catch (NullPointerException e) {
             mark = true;
         }
@@ -93,16 +94,17 @@ public class MenuServiceTest {
     public void updateParent() {
         Integer id = parentId;
         String name = RandomString.make();
+        String url = RandomString.make();
         Integer location = testUtil.nextInt();
 
-        ParentMenu parentMenu = menuService.updateParent(id, name, location);
+        ParentMenu parentMenu = menuService.updateParent(id, name, url, location);
 
         assertEquals(parentMenu.getName(), name);
 
         boolean mark = false;
 
         try {
-            menuService.updateParent(null, name, location);
+            menuService.updateParent(null, name, url, location);
         } catch (NullPointerException e) {
             mark = true;
         }

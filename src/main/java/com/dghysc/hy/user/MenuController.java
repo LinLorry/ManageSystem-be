@@ -45,16 +45,17 @@ public class MenuController {
 
         Integer id = request.getInteger("id");
         String name = request.getString("name");
+        String url = request.getString("url");
         Integer location = request.getInteger("location");
 
         try {
             ParentMenu parentMenu;
 
             if (id == null) {
-                parentMenu = menuService.addParent(name, location);
+                parentMenu = menuService.addParent(name, url, location);
                 response.put("message", "创建父菜单成功");
             } else {
-                parentMenu = menuService.updateParent(id, name, location);
+                parentMenu = menuService.updateParent(id, name, url, location);
                 response.put("message", "更新父菜单成功");
             }
             menuService.refreshMenuMap();

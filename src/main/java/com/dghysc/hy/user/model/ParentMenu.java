@@ -27,6 +27,9 @@ public class ParentMenu implements Serializable {
     @Column(unique = true, length = 16)
     private String name;
 
+    @Column(length = 64)
+    private String url;
+
     @Column(nullable = false)
     private Integer location;
 
@@ -64,6 +67,14 @@ public class ParentMenu implements Serializable {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
     }
 
     public Integer getLocation() {

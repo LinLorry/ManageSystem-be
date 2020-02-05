@@ -87,6 +87,7 @@ public class MenuControllerTest {
 
         JSONObject body = new JSONObject();
         body.put("name", RandomString.make());
+        body.put("url", RandomString.make());
         body.put("location", testUtil.nextInt());
 
         HttpEntity<JSONObject> request = new HttpEntity<>(body, headers);
@@ -109,6 +110,7 @@ public class MenuControllerTest {
         JSONObject body = new JSONObject();
         body.put("id", testUtil.nextId(ParentMenu.class));
         body.put("name", RandomString.make());
+        body.put("url", RandomString.make());
         body.put("location", testUtil.nextInt());
 
         HttpEntity<JSONObject> request = new HttpEntity<>(body, headers);
