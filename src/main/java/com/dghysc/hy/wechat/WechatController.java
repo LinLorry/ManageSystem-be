@@ -51,7 +51,7 @@ public class WechatController {
 
     @GetMapping("/refreshToken")
     @PreAuthorize("hasRole('ADMIN')")
-    public JSONObject refreshToken() {
+    public JSONObject refreshToken() throws WechatServiceDownException {
         JSONObject response = new JSONObject();
 
         try {
@@ -60,7 +60,7 @@ public class WechatController {
             response.put("status", 1);
             response.put("message", "Refresh wechat access token success.");
             response.put("data", wechatServer.loadToken());
-        } catch (WechatServiceDownException | WechatConfigWrongException e) {
+        } catch (WechatConfigWrongException e) {
             response.put("status", 0);
             response.put("message", e.getMessage());
         }
@@ -71,38 +71,41 @@ public class WechatController {
     @GetMapping("/login/")
     public void login(@RequestParam(name = "code") String code,
                       HttpServletResponse response)
-            throws IOException {
-        try {
-            WechatUser wechatUser = wechatUserService.loadByCode(code);
+            throws IOException, WechatServiceDownException, WechatUserCodeWrongException {
+        WechatUser wechatUser = wechatUserService.loadByCode(code);
 
-            if (wechatUser.getUser() == null) {
-                response.sendRedirect(infoBaseUrl);
-            } else {
-                response.sendRedirect(
-                        loginBaseUrl + "?token=" + tokenUtil.generateToken(wechatUser.getUser())
-                );
-            }
-        } catch (WechatServiceDownException e) {
-            response.sendError(0, "微信服务异常，请稍后重试");
-        } catch (WechatUserCodeWrongException e) {
-            response.sendError(0, "Code invalid.");
+        if (wechatUser.getUser() == null) {
+            response.sendRedirect(infoBaseUrl);
+        } else {
+            response.sendRedirect(
+                    loginBaseUrl + "?token=" + tokenUtil.generateToken(wechatUser.getUser())
+            );
         }
     }
 
     @GetMapping("/info/{name}/")
     public void submit(@PathVariable String name,
                        @RequestParam(name = "code") String code,
-                       HttpServletResponse response) throws IOException {
-        try {
-            WechatUser wechatUser = wechatUserService.loadByCode(code);
+                       HttpServletResponse response)
+            throws IOException, WechatServiceDownException, WechatUserCodeWrongException {
+        WechatUser wechatUser = wechatUserService.loadByCode(code);
 
-            wechatUser = wechatUserService.update(wechatUser.getId(), name);
+        wechatUser = wechatUserService.update(wechatUser.getId(), name);
 
-            response.sendRedirect(successUrl + "?name=" + wechatUser.getName());
-        } catch (WechatServiceDownException e) {
-            response.sendError(0, "微信服务异常，请稍后重试");
-        } catch (WechatUserCodeWrongException e) {
-            response.sendError(0, "Code invalid.");
-        }
+        response.sendRedirect(successUrl + "?name=" + wechatUser.getName());
+    }
+
+    @ExceptionHandler(value = WechatServiceDownException.class)
+    public void wechatServiceDownExceptionHandler(HttpServletResponse response)
+            throws IOException {
+        response.sendError(0, "微信服务异常，请稍后重试");
+    }
+
+    @ExceptionHandler(value = WechatUserCodeWrongException.class)
+    public JSONObject wechatUserCodeWrongExceptionHandler() {
+        JSONObject response = new JSONObject();
+        response.put("status", 0);
+        response.put("message", "Code invalid");
+        return response;
     }
 }
