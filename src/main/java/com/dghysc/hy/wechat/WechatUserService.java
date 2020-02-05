@@ -60,6 +60,19 @@ public class WechatUserService {
         return wechatUserRepository.save(wechatUser);
     }
 
+    WechatUser addUserByWechatUser(@NotNull String id) {
+        WechatUser wechatUser = wechatUserRepository.findById(id)
+                .orElseThrow(EntityNotFoundException::new);
+
+        if (wechatUser.getUser() != null) {
+            throw new RuntimeException();
+        }
+
+        wechatUser.setUser(new User());
+
+        return wechatUserRepository.save(wechatUser);
+    }
+
     WechatUser update(@NotNull String id, @NotNull String name) {
         WechatUser wechatUser = wechatUserRepository.findById(id).orElseThrow(EntityNotFoundException::new);
 

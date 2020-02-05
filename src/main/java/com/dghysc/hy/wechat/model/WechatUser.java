@@ -26,7 +26,7 @@ public class WechatUser implements Serializable {
 
     private Timestamp tokenExpiresTime;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.PERSIST)
     @JoinColumn
     private User user;
 
