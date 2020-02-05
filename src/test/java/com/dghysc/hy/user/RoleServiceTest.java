@@ -58,7 +58,7 @@ public class RoleServiceTest {
     }
 
     @Test
-    public void update() throws Exception {
+    public void update() {
         Integer id = testUtil.nextId(Role.class);
         String roleStr = testUtil.nextString();
         String name = testUtil.nextString();
@@ -78,7 +78,7 @@ public class RoleServiceTest {
     }
 
     @Test
-    public void loadById() throws Exception {
+    public void loadById() {
         Integer id = testUtil.nextId(Role.class);
         Role role = roleRepository.findById(id)
                 .orElseThrow(EntityNotFoundException::new);
@@ -100,7 +100,7 @@ public class RoleServiceTest {
     }
 
     @Test
-    public void delete() throws Exception {
+    public void delete() {
         Integer id = testUtil.nextId(Role.class);
         System.out.println(id);
         Role role = roleRepository.findById(id).orElseThrow(EntityNotFoundException::new);

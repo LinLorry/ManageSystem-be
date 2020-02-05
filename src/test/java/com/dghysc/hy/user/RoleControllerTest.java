@@ -87,7 +87,7 @@ public class RoleControllerTest {
     }
 
     @Test
-    public void update() throws Exception {
+    public void update() {
         JSONObject body = new JSONObject();
 
         Integer id = testUtil.nextId(Role.class);
@@ -119,7 +119,7 @@ public class RoleControllerTest {
     }
 
     @Test
-    public void getOne() throws Exception {
+    public void getOne() {
         String url = baseUrl + "?id=" + testUtil.nextId(Role.class);
 
         HttpEntity<JSONObject> request = new HttpEntity<>(headers);
@@ -148,7 +148,7 @@ public class RoleControllerTest {
     }
 
     @Test
-    public void delete() throws Exception {
+    public void delete() {
         String url = baseUrl + "?id=" + testUtil.nextId(Role.class);
 
         HttpEntity<JSONObject> request = new HttpEntity<>(headers);

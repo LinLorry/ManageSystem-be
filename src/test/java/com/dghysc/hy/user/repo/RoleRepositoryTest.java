@@ -31,14 +31,14 @@ public class RoleRepositoryTest {
     private RoleRepository roleRepository;
 
     @Before
-    public void initTest() throws Exception {
+    public void initTest() {
         if (roleRepository.count() == 0) {
             save();
         }
     }
 
     @Test
-    public void save() throws Exception {
+    public void save() {
         String roleStr = testUtil.nextString();
         String name = testUtil.nextString();
         Timestamp now = new Timestamp(System.currentTimeMillis());
@@ -61,7 +61,7 @@ public class RoleRepositoryTest {
 
     @Test
     @Transactional
-    public void update() throws Exception {
+    public void update() {
         Role role = roleRepository.getOne(testUtil.nextId(Role.class));
         String name = testUtil.nextString();
         String roleStr = testUtil.nextString();
