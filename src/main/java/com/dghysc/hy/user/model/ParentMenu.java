@@ -117,7 +117,7 @@ public class ParentMenu implements Serializable {
         this.updateUser = updateUser;
     }
 
-    public Set<ChildMenu> getChildMenuSet() {
+    public Set<ChildMenu> getChildren() {
         return childMenuSet;
     }
 
