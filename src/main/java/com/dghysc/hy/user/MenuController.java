@@ -18,7 +18,6 @@ import java.util.*;
  */
 @RestController
 @RequestMapping("/api/menu")
-@PreAuthorize("hasRole('ADMIN')")
 public class MenuController {
 
     private final MenuService menuService;
@@ -40,6 +39,7 @@ public class MenuController {
     }
 
     @PostMapping("/parent")
+    @PreAuthorize("hasRole('ADMIN')")
     public JSONObject createOrUpdateParent(@RequestBody JSONObject request) {
         JSONObject response = new JSONObject();
 
@@ -78,6 +78,7 @@ public class MenuController {
     }
 
     @GetMapping("/parent")
+    @PreAuthorize("hasRole('ADMIN')")
     public JSONObject getParent(@RequestParam(required = false) Integer id) {
         JSONObject response = new JSONObject();
 
@@ -101,6 +102,7 @@ public class MenuController {
     }
 
     @DeleteMapping("/parent")
+    @PreAuthorize("hasRole('ADMIN')")
     public JSONObject deleteParent(@RequestParam Integer id) {
         JSONObject response = new JSONObject();
 
@@ -119,6 +121,7 @@ public class MenuController {
     }
 
     @PostMapping("/parent/location")
+    @PreAuthorize("hasRole('ADMIN')")
     public JSONObject updateParentLocation(@RequestBody List<JSONObject> request) {
         JSONObject response = new JSONObject();
         Map<Integer, Integer> map = new HashMap<>();
@@ -140,6 +143,7 @@ public class MenuController {
     }
 
     @PostMapping("/child")
+    @PreAuthorize("hasRole('ADMIN')")
     public JSONObject createOrUpdateChild(@RequestBody JSONObject request) {
         JSONObject response = new JSONObject();
 
@@ -185,6 +189,7 @@ public class MenuController {
     }
 
     @GetMapping("/child")
+    @PreAuthorize("hasRole('ADMIN')")
     public JSONObject getChild(@RequestParam(required = false) Integer id) {
         JSONObject response = new JSONObject();
 
@@ -208,6 +213,7 @@ public class MenuController {
     }
 
     @DeleteMapping("/child")
+    @PreAuthorize("hasRole('ADMIN')")
     public JSONObject deleteChild(@RequestParam Integer id) {
         JSONObject response = new JSONObject();
 
@@ -226,6 +232,7 @@ public class MenuController {
     }
 
     @PostMapping("/child/location")
+    @PreAuthorize("hasRole('ADMIN')")
     public JSONObject updateChildLocation(@RequestBody List<JSONObject> request) {
         JSONObject response = new JSONObject();
         Map<Integer, Integer> map = new HashMap<>();
