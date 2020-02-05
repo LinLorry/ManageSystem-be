@@ -2,7 +2,6 @@ package com.dghysc.hy.user.repo;
 
 import com.dghysc.hy.user.model.*;
 import com.dghysc.hy.util.TestUtil;
-import net.bytebuddy.utility.RandomString;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -42,13 +41,12 @@ public class ChildMenuRepositoryTest {
     private ChildMenuRepository childMenuRepository;
 
     @Before
-    @Transactional
-    public void initTest() throws Exception {
+    public void initTest() {
         user = userRepository.findById(testUtil.nextId(User.class))
                 .orElseThrow(EntityNotFoundException::new);
         if (parentMenuRepository.count() == 0) {
             ParentMenu parentMenu = new ParentMenu();
-            parentMenu.setName(RandomString.make());
+            parentMenu.setName(testUtil.nextString());
 
             parentMenuRepository.save(parentMenu);
         }
@@ -60,7 +58,7 @@ public class ChildMenuRepositoryTest {
         id = testUtil.nextId(ChildMenu.class);
     }
 
-    private void beforeRole() throws Exception {
+    private void beforeRole() {
         ChildMenu childMenu = childMenuRepository.getOne(id);
         if (childMenu.getRoles().size() == 0) {
             addRole();
@@ -68,10 +66,9 @@ public class ChildMenuRepositoryTest {
     }
 
     @Test
-    @Transactional
-    public void save() throws Exception {
-        String name = RandomString.make();
-        String url = "/" + RandomString.make();
+    public void save() {
+        String name = testUtil.nextString();
+        String url = "/" + testUtil.nextString();
         Integer location = testUtil.nextInt();
         Timestamp now = new Timestamp(System.currentTimeMillis());
         User user = this.user;
@@ -104,16 +101,16 @@ public class ChildMenuRepositoryTest {
     }
 
     @Test
-    @Transactional
     public void update() {
         Integer id = this.id;
-        String name = RandomString.make();
-        String url = "/" + RandomString.make();
+        String name = testUtil.nextString();
+        String url = "/" + testUtil.nextString();
         Integer location = testUtil.nextInt();
-        Timestamp now = new Timestamp(System.currentTimeMillis());
+        Timestamp now = new Timestamp(System.currentTimeMillis() / 1000 * 1000);
         User user = this.user;
 
-        ChildMenu childMenu = childMenuRepository.getOne(id);
+        ChildMenu childMenu = childMenuRepository.findById(id)
+                .orElseThrow(EntityNotFoundException::new);
 
         childMenu.setName(name);
         childMenu.setUrl(url);
@@ -123,7 +120,8 @@ public class ChildMenuRepositoryTest {
 
         childMenuRepository.saveAndFlush(childMenu);
 
-        childMenu = childMenuRepository.getOne(id);
+        childMenu = childMenuRepository.findById(id)
+                .orElseThrow(EntityNotFoundException::new);
 
         assertEquals(name, childMenu.getName());
         assertEquals(url, childMenu.getUrl());
@@ -132,25 +130,27 @@ public class ChildMenuRepositoryTest {
     }
 
     @Test
-    @Transactional
-    public void updateParent() throws Exception {
+    public void updateParent() {
         Integer childId = this.id;
         Integer parentId = testUtil.nextId(ParentMenu.class);
 
-        ChildMenu childMenu = childMenuRepository.getOne(childId);
-        ParentMenu parentMenu = parentMenuRepository.getOne(parentId);
+        ChildMenu childMenu = childMenuRepository.findById(childId)
+                .orElseThrow(EntityNotFoundException::new);
+        ParentMenu parentMenu = parentMenuRepository.findById(parentId)
+                .orElseThrow(EntityNotFoundException::new);
 
         childMenu.setParent(parentMenu);
 
         childMenuRepository.saveAndFlush(childMenu);
 
-        childMenu = childMenuRepository.getOne(childId);
+        childMenu = childMenuRepository.findById(childId)
+                .orElseThrow(EntityNotFoundException::new);
 
         assertEquals(childMenu.getParent().getId(), parentMenu.getId());
     }
 
     @Transactional
-    public void addRole() throws Exception {
+    public void addRole() {
         Integer id = this.id;
 
         ChildMenu childMenu = childMenuRepository.getOne(id);
@@ -178,7 +178,7 @@ public class ChildMenuRepositoryTest {
 
     @Test
     @Transactional
-    public void removeRole() throws Exception {
+    public void removeRole() {
         beforeRole();
         Integer id = this.id;
         ChildMenu childMenu = childMenuRepository.getOne(id);
@@ -195,7 +195,7 @@ public class ChildMenuRepositoryTest {
 
     @Test
     @Transactional
-    public void updateRole() throws Exception {
+    public void updateRole() {
         beforeRole();
         Integer id = this.id;
 

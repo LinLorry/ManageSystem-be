@@ -1,11 +1,15 @@
 package com.dghysc.hy.user;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.user.model.*;
 import com.dghysc.hy.user.repo.ChildMenuRepository;
 import com.dghysc.hy.user.repo.ParentMenuRepository;
 import com.dghysc.hy.user.repo.RoleRepository;
 import com.dghysc.hy.util.SecurityUtil;
+import org.springframework.data.util.Pair;
 import org.springframework.lang.Nullable;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +32,11 @@ public class MenuService {
 
     private final ChildMenuRepository childMenuRepository;
 
+    private static Map<ChildMenu, JSONObject> childData = new HashMap<>();
+
+    private static Map<String, Map<ParentMenu,
+            Pair<JSONObject, Set<ChildMenu>>>> menus = new HashMap<>();
+
     public MenuService(
             RoleRepository roleRepository,
             ParentMenuRepository parentMenuRepository,
@@ -37,12 +46,13 @@ public class MenuService {
         this.childMenuRepository = childMenuRepository;
     }
 
-    ParentMenu addParent(@NotNull String name, @NotNull Integer location) {
+    ParentMenu addParent(@NotNull String name, @Nullable String url, @NotNull Integer location) {
         Timestamp now = new Timestamp(System.currentTimeMillis());
         User creator = SecurityUtil.getUser();
 
         ParentMenu parentMenu = new ParentMenu();
         Optional.of(name).ifPresent(parentMenu::setName);
+        parentMenu.setUrl(url);
         Optional.of(location).ifPresent(parentMenu::setLocation);
 
         parentMenu.setCreateTime(now);
@@ -53,7 +63,10 @@ public class MenuService {
         return parentMenuRepository.save(parentMenu);
     }
 
-    ParentMenu updateParent(@NotNull Integer id, @Nullable String name, @Nullable Integer location) {
+    ParentMenu updateParent(
+            @NotNull Integer id, @Nullable String name,
+            @Nullable String url, @Nullable Integer location
+    ) {
         Timestamp now = new Timestamp(System.currentTimeMillis());
         User creator = SecurityUtil.getUser();
 
@@ -62,6 +75,7 @@ public class MenuService {
         ParentMenu parentMenu = parentMenuRepository.findById(id)
                 .orElseThrow(EntityNotFoundException::new);
         Optional.ofNullable(name).ifPresent(parentMenu::setName);
+        Optional.ofNullable(url).ifPresent(parentMenu::setUrl);
         Optional.ofNullable(location).ifPresent(parentMenu::setLocation);
 
         parentMenu.setUpdateTime(now);
@@ -70,22 +84,45 @@ public class MenuService {
         return parentMenuRepository.save(parentMenu);
     }
 
-    void removeParentById(Integer id) {
-        parentMenuRepository.deleteById(id);
+    List<ParentMenu> updateParentsLocation(@NotNull Map<Integer, Integer> data) {
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        User user = SecurityUtil.getUser();
+        data.forEach((id, location) -> {
+            if (id == null || location == null) {
+                throw new NullPointerException();
+            }
+        });
+
+        List<ParentMenu> parentMenus = parentMenuRepository.findAllById(data.keySet());
+
+        parentMenus.forEach(parentMenu -> {
+            parentMenu.setUpdateUser(user);
+            parentMenu.setUpdateTime(now);
+            parentMenu.setLocation(data.get(parentMenu.getId()));
+        });
+
+        parentMenuRepository.saveAll(parentMenus);
+
+        return parentMenus;
+    }
+
+    void removeParentById(@NotNull Integer id) {
+        Optional.of(id).ifPresent(parentMenuRepository::deleteById);
     }
 
     ParentMenu loadParentMenuById(Integer id) {
-        return parentMenuRepository.findById(id).orElse(null);
+        return parentMenuRepository.findById(id).orElseThrow(EntityNotFoundException::new);
     }
 
     List<ParentMenu> loadAllParentMenus() {
-        return parentMenuRepository.findAllByOrderByLocationAsc();
+        return parentMenuRepository.findAll();
     }
 
-    @Transactional
-    public ChildMenu addChild(@NotNull String name, @NotNull String url,
-                              @NotNull Integer location, @NotNull Integer parentId,
-                              @Nullable Iterable<Integer> roleIds) {
+    public ChildMenu addChild(
+            @NotNull String name, @NotNull String url,
+            @NotNull Integer location, @NotNull Integer parentId,
+            @Nullable Iterable<Integer> roleIds
+    ) {
         if (name == null || url == null || parentId == null || location == null) {
             throw new NullPointerException();
         }
@@ -104,11 +141,14 @@ public class MenuService {
 
     @Transactional
     public ChildMenu updateChild(
-            Integer id, @Nullable String name,
+            @NotNull Integer id, @Nullable String name,
             @Nullable String url, @Nullable Integer location,
-            @Nullable Integer parentId, @Nullable Iterable<Integer> roleIds) {
+            @Nullable Integer parentId, @Nullable Iterable<Integer> roleIds
+    ) {
         Timestamp now = new Timestamp(System.currentTimeMillis());
         User user = SecurityUtil.getUser();
+
+        if (id == null) throw new NullPointerException();
 
         ChildMenu childMenu = childMenuRepository.findById(id)
                 .orElseThrow(EntityNotFoundException::new);
@@ -143,15 +183,98 @@ public class MenuService {
         return childMenuRepository.save(childMenu);
     }
 
-    void removeChildById(Integer id) {
-        childMenuRepository.deleteById(id);
+    List<ChildMenu> updateChildrenLocation(@NotNull Map<Integer, Integer> data) {
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        User user = SecurityUtil.getUser();
+        data.forEach((id, location) -> {
+            if (id == null || location == null) {
+                throw new NullPointerException();
+            }
+        });
+
+        List<ChildMenu> childMenus = childMenuRepository.findAllById(data.keySet());
+
+        childMenus.forEach(childMenu -> {
+            childMenu.setUpdateUser(user);
+            childMenu.setUpdateTime(now);
+            childMenu.setLocation(data.get(childMenu.getId()));
+        });
+
+        childMenuRepository.saveAll(childMenus);
+
+        return childMenus;
     }
 
-    ChildMenu loadChildMenuById(Integer id) {
+    void removeChildById(@NotNull Integer id) {
+        Optional.of(id).ifPresent(childMenuRepository::deleteById);
+    }
+
+    ChildMenu loadChildMenuById(@NotNull Integer id) {
         return childMenuRepository.findById(id).orElse(null);
     }
 
     List<ChildMenu> loadAllChildMenus() {
         return childMenuRepository.findAll();
+    }
+
+    public Collection<JSONObject> getMenus(Collection<? extends GrantedAuthority> roles) {
+        Map<ParentMenu, Set<ChildMenu>> parentTmp = new HashMap<>();
+
+        Map<ParentMenu, JSONObject> parentMenuJSONObjectMap = new HashMap<>();
+
+        roles.forEach(role -> {
+            Map<ParentMenu, Pair<JSONObject, Set<ChildMenu>>> map = menus.get(role.getAuthority());
+            map.forEach((key, value) -> {
+                parentMenuJSONObjectMap.putIfAbsent(key, (JSONObject) value.getFirst().clone());
+                parentTmp.putIfAbsent(key, new HashSet<>());
+                parentTmp.get(key).addAll(value.getSecond());
+            });
+        });
+
+        parentTmp.forEach((key, value) -> {
+            JSONArray children = new JSONArray();
+
+            value.forEach(childMenu ->
+                    children.add(childData.get(childMenu))
+            );
+            parentMenuJSONObjectMap.get(key).put("children", children);
+        });
+
+
+        return parentMenuJSONObjectMap.values();
+    }
+
+    @Transactional(readOnly = true)
+    public void refreshMenuMap() {
+        menus.clear();
+        childData.clear();
+
+        roleRepository.findAll().forEach(role -> {
+            Map<ParentMenu, Pair<JSONObject, Set<ChildMenu>>> parentTmp = new HashMap<>();
+
+            role.getMenus().forEach(childMenu -> {
+                childData.computeIfAbsent(childMenu, key -> {
+                    JSONObject tmp = new JSONObject();
+                    tmp.put("name", key.getName());
+                    tmp.put("url", key.getUrl());
+                    tmp.put("location", key.getLocation());
+
+                    return tmp;
+                });
+
+                parentTmp.computeIfAbsent(childMenu.getParent(), parentMenu -> {
+                    JSONObject tmp = new JSONObject();
+                    tmp.put("name", parentMenu.getName());
+                    tmp.put("url", parentMenu.getUrl());
+                    tmp.put("location", parentMenu.getLocation());
+
+                    return Pair.of(tmp, new HashSet<>());
+                });
+
+                parentTmp.get(childMenu.getParent()).getSecond().add(childMenu);
+            });
+
+            menus.put(role.getAuthority(), parentTmp);
+        });
     }
 }

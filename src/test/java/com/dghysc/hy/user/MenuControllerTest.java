@@ -9,7 +9,6 @@ import com.dghysc.hy.user.repo.ChildMenuRepository;
 import com.dghysc.hy.user.repo.ParentMenuRepository;
 import com.dghysc.hy.user.repo.RoleRepository;
 import com.dghysc.hy.util.TestUtil;
-import net.bytebuddy.utility.RandomString;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -17,12 +16,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -31,6 +31,8 @@ import static org.junit.Assert.*;
 public class MenuControllerTest {
 
     private final static String baseUrl = "/api/menu";
+
+    private HttpHeaders headers;
 
     @Autowired
     private TestRestTemplate restTemplate;
@@ -48,7 +50,12 @@ public class MenuControllerTest {
     private ChildMenuRepository childMenuRepository;
 
     @Before
-    public void initTest() throws Exception {
+    public void initTest() {
+        if (headers == null) {
+            testUtil.setAuthorities(1L, "ROLE_ADMIN");
+            headers = testUtil.getTokenHeader();
+        }
+
         if (parentMenuRepository.count() == 0) {
             createParent();
         }
@@ -59,19 +66,29 @@ public class MenuControllerTest {
     }
 
     @Test
-    public void createParent() throws URISyntaxException {
-        String url = baseUrl + "/parent";
-
-        URI uri = new URI(url);
-
-        JSONObject body = new JSONObject();
-        body.put("name", RandomString.make());
-        body.put("location", testUtil.nextInt());
-
-        HttpEntity<JSONObject> request = new HttpEntity<>(body, testUtil.getTokenHeader());
+    public void getMenu() {
+        HttpEntity<JSONObject> request = new HttpEntity<>(headers);
 
         ResponseEntity<JSONObject> response = restTemplate
-                .exchange(uri, HttpMethod.POST, request, JSONObject.class);
+                .exchange(baseUrl, HttpMethod.GET, request, JSONObject.class);
+
+        System.out.println(response.getBody());
+        assertEquals(200, response.getStatusCodeValue());
+    }
+
+    @Test
+    public void createParent() {
+        String url = baseUrl + "/parent";
+
+        JSONObject body = new JSONObject();
+        body.put("name", testUtil.nextString());
+        body.put("url", testUtil.nextString());
+        body.put("location", testUtil.nextInt());
+
+        HttpEntity<JSONObject> request = new HttpEntity<>(body, headers);
+
+        ResponseEntity<JSONObject> response = restTemplate
+                .exchange(url, HttpMethod.POST, request, JSONObject.class);
 
         JSONObject responseBody = response.getBody();
         System.out.println(responseBody);
@@ -80,109 +97,121 @@ public class MenuControllerTest {
     }
 
     @Test
-    public void updateParent() throws Exception {
+    public void updateParent() {
         String url = baseUrl + "/parent";
-
-        URI uri = new URI(url);
 
         JSONObject body = new JSONObject();
         body.put("id", testUtil.nextId(ParentMenu.class));
-        body.put("name", RandomString.make());
+        body.put("name", testUtil.nextString());
+        body.put("url", testUtil.nextString());
         body.put("location", testUtil.nextInt());
 
-        HttpEntity<JSONObject> request = new HttpEntity<>(body, testUtil.getTokenHeader());
+        HttpEntity<JSONObject> request = new HttpEntity<>(body, headers);
 
         ResponseEntity<JSONObject> response = restTemplate
-                .exchange(uri, HttpMethod.POST, request, JSONObject.class);
+                .exchange(url, HttpMethod.POST, request, JSONObject.class);
 
         System.out.println(response.getBody());
         assertEquals(200, response.getStatusCodeValue());
     }
 
     @Test
-    public void getAllParent() throws URISyntaxException {
+    public void getAllParent() {
         String url = baseUrl + "/parent";
 
-        URI uri = new URI(url);
-
-        HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
+        HttpEntity<JSONObject> request = new HttpEntity<>(headers);
 
         ResponseEntity<JSONObject> response = restTemplate
-                .exchange(uri, HttpMethod.GET, request, JSONObject.class);
+                .exchange(url, HttpMethod.GET, request, JSONObject.class);
 
         System.out.println(response.getBody());
         assertEquals(200, response.getStatusCodeValue());
     }
 
     @Test
-    public void getOneParent() throws Exception {
+    public void getOneParent() {
         String url = baseUrl + "/parent?id=" + testUtil.nextId(ParentMenu.class);
 
-        URI uri = new URI(url);
-
-        HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
+        HttpEntity<JSONObject> request = new HttpEntity<>(headers);
 
         ResponseEntity<JSONObject> response = restTemplate
-                .exchange(uri, HttpMethod.GET, request, JSONObject.class);
+                .exchange(url, HttpMethod.GET, request, JSONObject.class);
 
         System.out.println(response.getBody());
         assertEquals(200, response.getStatusCodeValue());
     }
 
     @Test
-    public void deleteParent() throws Exception {
+    public void deleteParent() {
         String url = baseUrl + "/parent?id=" + testUtil.nextId(ParentMenu.class);
 
-        URI uri = new URI(url);
-
-        HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
+        HttpEntity<JSONObject> request = new HttpEntity<>(headers);
 
         ResponseEntity<JSONObject> response = restTemplate
-                .exchange(uri, HttpMethod.DELETE, request, JSONObject.class);
+                .exchange(url, HttpMethod.DELETE, request, JSONObject.class);
 
         System.out.println(response.getBody());
         assertEquals(200, response.getStatusCodeValue());
     }
 
     @Test
-    public void getAllChild() throws URISyntaxException {
+    public void updateParentLocation() {
+        String url = baseUrl + "/parent/location";
+
+        List<JSONObject> body = new ArrayList<>();
+        List<ParentMenu> parentMenus = parentMenuRepository.findAll();
+
+        parentMenus.forEach(parentMenu -> {
+            JSONObject one = new JSONObject();
+            one.put("id", parentMenu.getId());
+            one.put("location", testUtil.nextInt());
+            body.add(one);
+        });
+
+        System.out.println(body);
+
+        HttpEntity<List<JSONObject>> request = new HttpEntity<>(body, headers);
+
+        ResponseEntity<JSONObject> response = restTemplate
+                .exchange(url, HttpMethod.POST, request, JSONObject.class);
+
+        System.out.println(response.getBody());
+        assertEquals(200, response.getStatusCodeValue());
+    }
+
+    @Test
+    public void getAllChild() {
         String url = baseUrl + "/child";
 
-        URI uri = new URI(url);
-
-        HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
+        HttpEntity<JSONObject> request = new HttpEntity<>(headers);
 
         ResponseEntity<JSONObject> response = restTemplate
-                .exchange(uri, HttpMethod.GET, request, JSONObject.class);
+                .exchange(url, HttpMethod.GET, request, JSONObject.class);
 
         System.out.println(response.getBody());
         assertEquals(200, response.getStatusCodeValue());
     }
 
     @Test
-    public void getOneChild() throws Exception {
+    public void getOneChild() {
         String url = baseUrl + "/child?id=" + testUtil.nextId(ChildMenu.class);
 
-        URI uri = new URI(url);
-
-        HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
+        HttpEntity<JSONObject> request = new HttpEntity<>(headers);
 
         ResponseEntity<JSONObject> response = restTemplate
-                .exchange(uri, HttpMethod.GET, request, JSONObject.class);
+                .exchange(url, HttpMethod.GET, request, JSONObject.class);
 
         System.out.println(response.getBody());
         assertEquals(200, response.getStatusCodeValue());
     }
 
     @Test
-    public void createChild() throws Exception {
+    public void createChild() {
         String url = baseUrl + "/child";
 
-        URI uri = new URI(url);
-
         JSONObject body = new JSONObject();
-        body.put("name", RandomString.make());
-        body.put("url", RandomString.make());
+        body.put("name", testUtil.nextString());
+        body.put("url", testUtil.nextString());
         body.put("location", testUtil.nextInt());
         body.put("parentId", testUtil.nextId(ParentMenu.class));
 
@@ -197,25 +226,23 @@ public class MenuControllerTest {
             body.put("roles", roleIds);
         }
 
-        HttpEntity<JSONObject> request = new HttpEntity<>(body, testUtil.getTokenHeader());
+        HttpEntity<JSONObject> request = new HttpEntity<>(body, headers);
 
         ResponseEntity<JSONObject> response = restTemplate
-                .exchange(uri, HttpMethod.POST, request, JSONObject.class);
+                .exchange(url, HttpMethod.POST, request, JSONObject.class);
 
         System.out.println(response.getBody());
         assertEquals(200, response.getStatusCodeValue());
     }
 
     @Test
-    public void updateChild() throws Exception {
+    public void updateChild() {
         String url = baseUrl + "/child";
-
-        URI uri = new URI(url);
 
         JSONObject body = new JSONObject();
         body.put("id", testUtil.nextId(ChildMenu.class));
-        body.put("name", RandomString.make());
-        body.put("url", RandomString.make());
+        body.put("name", testUtil.nextString());
+        body.put("url", testUtil.nextString());
         body.put("location", testUtil.nextInt());
         body.put("parentId", testUtil.nextId(ParentMenu.class));
 
@@ -230,25 +257,48 @@ public class MenuControllerTest {
             body.put("roles", roleIds);
         }
 
-        HttpEntity<JSONObject> request = new HttpEntity<>(body, testUtil.getTokenHeader());
+        HttpEntity<JSONObject> request = new HttpEntity<>(body, headers);
 
         ResponseEntity<JSONObject> response = restTemplate
-                .exchange(uri, HttpMethod.POST, request, JSONObject.class);
+                .exchange(url, HttpMethod.POST, request, JSONObject.class);
 
         System.out.println(response.getBody());
         assertEquals(200, response.getStatusCodeValue());
     }
 
     @Test
-    public void deleteChild() throws Exception {
+    public void deleteChild() {
         String url = baseUrl + "/child?id=" + testUtil.nextId(ChildMenu.class);
 
-        URI uri = new URI(url);
-
-        HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
+        HttpEntity<JSONObject> request = new HttpEntity<>(headers);
 
         ResponseEntity<JSONObject> response = restTemplate
-                .exchange(uri, HttpMethod.DELETE, request, JSONObject.class);
+                .exchange(url, HttpMethod.DELETE, request, JSONObject.class);
+
+        System.out.println(response.getBody());
+        assertEquals(200, response.getStatusCodeValue());
+    }
+
+    @Test
+    public void updateChildLocation() {
+        String url = baseUrl + "/child/location";
+
+        List<JSONObject> body = new ArrayList<>();
+        List<ChildMenu> childMenus = childMenuRepository.findAll();
+
+        childMenus.forEach(childMenu -> {
+            JSONObject one = new JSONObject();
+            one.put("id", childMenu.getId());
+            one.put("location", testUtil.nextInt());
+            body.add(one);
+        });
+
+        System.out.println(body);
+
+        HttpEntity<List<JSONObject>> request = new HttpEntity<>(body, headers);
+
+        ResponseEntity<JSONObject> response = restTemplate
+                .exchange(url, HttpMethod.POST, request, JSONObject.class);
 
         System.out.println(response.getBody());
         assertEquals(200, response.getStatusCodeValue());

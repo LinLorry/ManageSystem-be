@@ -8,7 +8,6 @@ import com.dghysc.hy.user.repo.ChildMenuRepository;
 import com.dghysc.hy.user.repo.ParentMenuRepository;
 import com.dghysc.hy.user.repo.RoleRepository;
 import com.dghysc.hy.util.TestUtil;
-import net.bytebuddy.utility.RandomString;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -18,8 +17,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -47,7 +45,7 @@ public class MenuServiceTest {
     private RoleRepository roleRepository;
 
     @Before
-    public  void initTest() throws Exception {
+    public void initTest() {
         User user = new User();
         user.setId(testUtil.nextId(User.class));
 
@@ -72,9 +70,10 @@ public class MenuServiceTest {
 
     @Test
     public void addParent() {
-        String name = RandomString.make();
+        String name = testUtil.nextString();
+        String url = testUtil.nextString();
         Integer location = testUtil.nextInt();
-        ParentMenu parentMenu = menuService.addParent(name, location);
+        ParentMenu parentMenu = menuService.addParent(name, url, location);
 
         assertNotNull(parentMenu.getId());
         assertEquals(name, parentMenu.getName());
@@ -82,7 +81,7 @@ public class MenuServiceTest {
         boolean mark = false;
 
         try {
-            menuService.addParent(null, null);
+            menuService.addParent(null, null, null);
         } catch (NullPointerException e) {
             mark = true;
         }
@@ -93,22 +92,37 @@ public class MenuServiceTest {
     @Test
     public void updateParent() {
         Integer id = parentId;
-        String name = RandomString.make();
+        String name = testUtil.nextString();
+        String url = testUtil.nextString();
         Integer location = testUtil.nextInt();
 
-        ParentMenu parentMenu = menuService.updateParent(id, name, location);
+        ParentMenu parentMenu = menuService.updateParent(id, name, url, location);
 
         assertEquals(parentMenu.getName(), name);
 
         boolean mark = false;
 
         try {
-            menuService.updateParent(null, name, location);
+            menuService.updateParent(null, name, url, location);
         } catch (NullPointerException e) {
             mark = true;
         }
 
         assertTrue(mark);
+    }
+
+    @Test
+    public void updateParentsLocation() {
+        List<ParentMenu> parentMenus = parentMenuRepository.findAll();
+        Map<Integer, Integer> map = new HashMap<>();
+
+        parentMenus.forEach(parentMenu -> map.put(parentMenu.getId(), testUtil.nextInt()));
+
+        List<ParentMenu> results = menuService.updateParentsLocation(map);
+
+        results.forEach(parentMenu -> assertEquals(
+                map.get(parentMenu.getId()), parentMenu.getLocation()
+        ));
     }
 
     @Test
@@ -133,9 +147,9 @@ public class MenuServiceTest {
     }
 
     @Test
-    public void addChild() throws Exception {
-        String name = RandomString.make();
-        String url = "/" + RandomString.make();
+    public void addChild() {
+        String name = testUtil.nextString();
+        String url = "/" + testUtil.nextString();
         Integer location = testUtil.nextInt();
         Integer parentId = this.parentId;
 
@@ -149,8 +163,8 @@ public class MenuServiceTest {
         final long roleCount = roleRepository.count();
 
         if (roleCount > 0) {
-            name = RandomString.make();
-            url = "/" + RandomString.make();
+            name = testUtil.nextString();
+            url = "/" + testUtil.nextString();
             Set<Integer> roleIdSet = new HashSet<>();
             final long num = Math.abs(testUtil.nextLong() % roleCount) + 1;
             for (int i = 0; i < num; ++i) {
@@ -202,9 +216,9 @@ public class MenuServiceTest {
     @Test
     public void updateChildField() {
         Integer id = childId;
-        String name = RandomString.make();
+        String name = testUtil.nextString();
         Integer location = testUtil.nextInt();
-        String url = "/" + RandomString.make();
+        String url = "/" + testUtil.nextString();
 
         ChildMenu childMenu = menuService.updateChild(id, name, url, location, null, null);
 
@@ -225,7 +239,7 @@ public class MenuServiceTest {
     }
 
     @Test
-    public void updateChildRoles() throws Exception {
+    public void updateChildRoles() {
         Integer id = childId;
 
         final long roleCount = roleRepository.count();
@@ -244,6 +258,20 @@ public class MenuServiceTest {
                     role -> assertTrue(roleIdSet.contains(
                             role.getId())));
         }
+    }
+
+    @Test
+    public void updateChildrenLocation() {
+        List<ChildMenu> childMenus = childMenuRepository.findAll();
+        Map<Integer, Integer> map = new HashMap<>();
+
+        childMenus.forEach(childMenu -> map.put(childMenu.getId(), testUtil.nextInt()));
+
+        List<ChildMenu> results = menuService.updateChildrenLocation(map);
+
+        results.forEach(childMenu -> assertEquals(
+                map.get(childMenu.getId()), childMenu.getLocation()
+        ));
     }
 
     @Test
@@ -266,5 +294,4 @@ public class MenuServiceTest {
     public void loadAllChildMenus() {
         assertEquals(childMenuRepository.count(), menuService.loadAllChildMenus().size());
     }
-
 }

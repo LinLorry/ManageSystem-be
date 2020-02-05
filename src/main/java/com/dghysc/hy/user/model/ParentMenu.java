@@ -21,11 +21,14 @@ public class ParentMenu implements Serializable {
 
     @Id
     @Column(updatable = false)
-    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @Column(unique = true, length = 16)
     private String name;
+
+    @Column(length = 64)
+    private String url;
 
     @Column(nullable = false)
     private Integer location;
@@ -47,7 +50,7 @@ public class ParentMenu implements Serializable {
     private User updateUser;
 
     @OneToMany(mappedBy = "parent", fetch = FetchType.EAGER,
-            cascade = {CascadeType.REMOVE, CascadeType.MERGE})
+            cascade = CascadeType.REMOVE)
     private Set<ChildMenu> childMenuSet;
 
     public Integer getId() {
@@ -64,6 +67,14 @@ public class ParentMenu implements Serializable {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
     }
 
     public Integer getLocation() {
@@ -106,7 +117,7 @@ public class ParentMenu implements Serializable {
         this.updateUser = updateUser;
     }
 
-    public Set<ChildMenu> getChildMenuSet() {
+    public Set<ChildMenu> getChildren() {
         return childMenuSet;
     }
 
@@ -114,10 +125,10 @@ public class ParentMenu implements Serializable {
     public Map<String, Object> getInfo() {
         Map<String, Object> map = new HashMap<>();
 
-        map.put("createUserName", createUser.getName());
-        map.put("createUserId", createUser.getId());
-        map.put("updateUserName", updateUser.getName());
-        map.put("updateUserId", updateUser.getId());
+        map.put("creatorName", createUser.getName());
+        map.put("creatorId", createUser.getId());
+        map.put("updaterName", updateUser.getName());
+        map.put("updaterId", updateUser.getId());
 
         return map;
     }
