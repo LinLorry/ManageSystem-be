@@ -118,7 +118,6 @@ public class MenuService {
         return parentMenuRepository.findAllByOrderByLocationAsc();
     }
 
-    @Transactional
     public ChildMenu addChild(
             @NotNull String name, @NotNull String url,
             @NotNull Integer location, @NotNull Integer parentId,
@@ -206,7 +205,6 @@ public class MenuService {
         return childMenus;
     }
 
-    @Transactional
     void removeChildById(@NotNull Integer id) {
         Optional.of(id).ifPresent(childMenuRepository::deleteById);
     }

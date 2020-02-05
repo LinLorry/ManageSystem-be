@@ -42,7 +42,6 @@ public class ChildMenuRepositoryTest {
     private ChildMenuRepository childMenuRepository;
 
     @Before
-    @Transactional
     public void initTest() throws Exception {
         user = userRepository.findById(testUtil.nextId(User.class))
                 .orElseThrow(EntityNotFoundException::new);
@@ -68,7 +67,6 @@ public class ChildMenuRepositoryTest {
     }
 
     @Test
-    @Transactional
     public void save() throws Exception {
         String name = RandomString.make();
         String url = "/" + RandomString.make();
@@ -104,16 +102,16 @@ public class ChildMenuRepositoryTest {
     }
 
     @Test
-    @Transactional
     public void update() {
         Integer id = this.id;
         String name = RandomString.make();
         String url = "/" + RandomString.make();
         Integer location = testUtil.nextInt();
-        Timestamp now = new Timestamp(System.currentTimeMillis());
+        Timestamp now = new Timestamp(System.currentTimeMillis() / 1000 * 1000);
         User user = this.user;
 
-        ChildMenu childMenu = childMenuRepository.getOne(id);
+        ChildMenu childMenu = childMenuRepository.findById(id)
+                .orElseThrow(EntityNotFoundException::new);
 
         childMenu.setName(name);
         childMenu.setUrl(url);
@@ -123,7 +121,8 @@ public class ChildMenuRepositoryTest {
 
         childMenuRepository.saveAndFlush(childMenu);
 
-        childMenu = childMenuRepository.getOne(id);
+        childMenu = childMenuRepository.findById(id)
+                .orElseThrow(EntityNotFoundException::new);
 
         assertEquals(name, childMenu.getName());
         assertEquals(url, childMenu.getUrl());
@@ -132,19 +131,21 @@ public class ChildMenuRepositoryTest {
     }
 
     @Test
-    @Transactional
     public void updateParent() throws Exception {
         Integer childId = this.id;
         Integer parentId = testUtil.nextId(ParentMenu.class);
 
-        ChildMenu childMenu = childMenuRepository.getOne(childId);
-        ParentMenu parentMenu = parentMenuRepository.getOne(parentId);
+        ChildMenu childMenu = childMenuRepository.findById(childId)
+                .orElseThrow(EntityNotFoundException::new);
+        ParentMenu parentMenu = parentMenuRepository.findById(parentId)
+                .orElseThrow(EntityNotFoundException::new);
 
         childMenu.setParent(parentMenu);
 
         childMenuRepository.saveAndFlush(childMenu);
 
-        childMenu = childMenuRepository.getOne(childId);
+        childMenu = childMenuRepository.findById(childId)
+                .orElseThrow(EntityNotFoundException::new);
 
         assertEquals(childMenu.getParent().getId(), parentMenu.getId());
     }
