@@ -65,7 +65,8 @@ public class RoleControllerTest {
 
     @Test
     public void create() {
-        Role role = roleRepository.findById(2).orElseThrow(EntityNotFoundException::new);
+        Role role = roleRepository.findById(testUtil.nextId(Role.class))
+                .orElseThrow(EntityNotFoundException::new);
         System.out.println(role.getCreateUser());
         System.out.println(role.getUpdateUser());
 
