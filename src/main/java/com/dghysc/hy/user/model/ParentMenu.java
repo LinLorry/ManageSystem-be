@@ -50,7 +50,7 @@ public class ParentMenu implements Serializable {
     private User updateUser;
 
     @OneToMany(mappedBy = "parent", fetch = FetchType.EAGER,
-            cascade = {CascadeType.REMOVE, CascadeType.MERGE})
+            cascade = CascadeType.REMOVE)
     private Set<ChildMenu> childMenuSet;
 
     public Integer getId() {
