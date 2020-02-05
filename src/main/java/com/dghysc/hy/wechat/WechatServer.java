@@ -1,6 +1,8 @@
 package com.dghysc.hy.wechat;
 
 import com.alibaba.fastjson.JSONObject;
+import com.dghysc.hy.exception.WechatConfigWrongException;
+import com.dghysc.hy.exception.WechatServiceDownException;
 import com.dghysc.hy.wechat.model.WechatAccessToken;
 import com.dghysc.hy.wechat.repo.WechatAccessTokenRepository;
 import org.apache.commons.logging.Log;
@@ -22,7 +24,7 @@ import java.util.Optional;
  */
 @Service
 public class WechatServer {
-    // TODO perfect exception.
+
     private WechatAccessToken token;
 
     private final String appId;
@@ -42,7 +44,7 @@ public class WechatServer {
             @Value("${manage.wechat.appId}") String appId,
             @Value("${manage.wechat.accessTokenURL}") String url,
             @Value("${manage.wechat.secret}") String secret
-    ) throws Exception {
+    ) throws WechatServiceDownException, WechatConfigWrongException {
         this.accessTokenRepository = accessTokenRepository;
         this.appId = appId;
         this.secret = secret;
@@ -56,8 +58,7 @@ public class WechatServer {
                 "&secret=" + secret
         );
 
-        token = accessTokenRepository
-                .findById(appId)
+        token = accessTokenRepository.findById(appId)
                 .orElse(new WechatAccessToken(appId));
 
         if (
@@ -68,7 +69,7 @@ public class WechatServer {
         }
     }
 
-    public String loadToken() throws Exception {
+    public String loadToken() throws WechatServiceDownException, WechatConfigWrongException {
         if (token.getExpiresTime().getTime() < System.currentTimeMillis()) {
             refreshToken();
         }
@@ -76,28 +77,33 @@ public class WechatServer {
         return token.getAccessToken();
     }
 
-    void refreshToken() throws Exception {
-        ResponseEntity<JSONObject> responseEntity = restTemplate.exchange(accessTokenUri, HttpMethod.GET, null, JSONObject.class);
+    void refreshToken() throws WechatServiceDownException, WechatConfigWrongException {
+        ResponseEntity<JSONObject> responseEntity = restTemplate
+                .exchange(accessTokenUri, HttpMethod.GET, null, JSONObject.class);
         long now = System.currentTimeMillis();
 
         if (!responseEntity.getStatusCode().is2xxSuccessful()) {
-            logger.error("Request wechat access token failed.\n" +
-                    "Return status: " + responseEntity.getStatusCode());
-            throw new Exception();
+            String message = "Request wechat access token failed.\n" +
+                    "Return status: " + responseEntity.getStatusCode();
+            logger.error(message);
+            throw new WechatServiceDownException(message);
         }
 
         JSONObject response = Optional.ofNullable(responseEntity.getBody())
                 .orElseThrow(() -> {
-                    logger.error("Get access token response body null.");
-                    return new Exception();
+                    String message = "Get access token response body null.";
+                    logger.error(message);
+                    return new WechatServiceDownException(message);
                 });
 
         String accessToken = Optional.ofNullable(response.getString("access_token"))
                 .orElseThrow(() -> {
-                    logger.error("Get access token failed.\n" +
-                            "Response: " + response);
-                    return new Exception();
+                    String message = "Get access token failed.\n" +
+                            "Response: " + response;
+                    logger.error(message);
+                    return new WechatConfigWrongException(message);
                 });
+
         long expiresIn = response.getLongValue("expires_in") * 1000L;
 
         token.setAccessToken(accessToken);

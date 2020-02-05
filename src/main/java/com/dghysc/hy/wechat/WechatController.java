@@ -1,6 +1,8 @@
 package com.dghysc.hy.wechat;
 
 import com.alibaba.fastjson.JSONObject;
+import com.dghysc.hy.exception.WechatConfigWrongException;
+import com.dghysc.hy.exception.WechatServiceDownException;
 import com.dghysc.hy.util.TokenUtil;
 import com.dghysc.hy.wechat.model.WechatUser;
 import org.springframework.beans.factory.annotation.Value;
@@ -47,12 +49,19 @@ public class WechatController {
 
     @GetMapping("/refreshToken")
     @PreAuthorize("hasRole('ADMIN')")
-    public JSONObject refreshToken() throws Exception {
+    public JSONObject refreshToken() {
         JSONObject response = new JSONObject();
-        wechatServer.refreshToken();
 
-        response.put("status", 1);
-        response.put("message", "Refresh wechat access token success.");
+        try {
+            wechatServer.refreshToken();
+
+            response.put("status", 1);
+            response.put("message", "Refresh wechat access token success.");
+            response.put("data", wechatServer.loadToken());
+        } catch (WechatServiceDownException | WechatConfigWrongException e) {
+            response.put("status", 0);
+            response.put("message", e.getMessage());
+        }
 
         return response;
     }
