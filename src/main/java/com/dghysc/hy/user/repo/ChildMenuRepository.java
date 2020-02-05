@@ -14,7 +14,4 @@ import java.util.List;
  */
 @Repository
 public interface ChildMenuRepository extends JpaRepository<ChildMenu, Integer> {
-
-    List<ChildMenu> findAllByOrderByLocationAsc();
-
 }

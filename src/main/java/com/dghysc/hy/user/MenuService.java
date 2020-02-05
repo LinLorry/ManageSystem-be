@@ -115,7 +115,7 @@ public class MenuService {
     }
 
     List<ParentMenu> loadAllParentMenus() {
-        return parentMenuRepository.findAllByOrderByLocationAsc();
+        return parentMenuRepository.findAll();
     }
 
     public ChildMenu addChild(
@@ -214,7 +214,7 @@ public class MenuService {
     }
 
     List<ChildMenu> loadAllChildMenus() {
-        return childMenuRepository.findAllByOrderByLocationAsc();
+        return childMenuRepository.findAll();
     }
 
     public Collection<JSONObject> getMenus(Collection<? extends GrantedAuthority> roles) {
