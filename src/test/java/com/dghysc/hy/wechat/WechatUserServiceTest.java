@@ -57,6 +57,20 @@ public class WechatUserServiceTest {
     }
 
     @Test
+    public void addUserByWechatUser() throws Exception {
+        String id = testUtil.nextId(WechatUser.class);
+        WechatUser wechatUser;
+
+        try {
+            wechatUser = wechatUserService.addUserByWechatUser(id);
+        } catch (RuntimeException e) {
+            wechatUser = wechatUserService.loadById(id);
+        }
+
+        assertNotNull(wechatUser.getUser());
+    }
+
+    @Test
     public void update() throws Exception {
         String id = testUtil.nextId(WechatUser.class);
         String name = RandomString.make();
