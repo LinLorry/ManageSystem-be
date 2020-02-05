@@ -3,7 +3,6 @@ package com.dghysc.hy.product;
 import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.product.rep.ProductRepository;
 import com.dghysc.hy.util.TestUtil;
-import net.bytebuddy.utility.RandomString;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,7 +43,7 @@ public class ProductControllerTest {
         URI uri = new URI(url);
 
         JSONObject requestBody = new JSONObject();
-        requestBody.put("serial", RandomString.make());
+        requestBody.put("serial", testUtil.nextString());
         requestBody.put("endTime", new Timestamp(System.currentTimeMillis() + 1000 * 60 * 60 * 28));
         requestBody.put("workId", 1);
 
@@ -64,7 +63,7 @@ public class ProductControllerTest {
         JSONObject requestBody = new JSONObject();
 
         requestBody.put("id", 1);
-        requestBody.put("serial", RandomString.make());
+        requestBody.put("serial", testUtil.nextString());
         requestBody.put("endTime", new Timestamp(System.currentTimeMillis()));
 
         HttpEntity<JSONObject> request = new HttpEntity<>(requestBody, testUtil.getTokenHeader());

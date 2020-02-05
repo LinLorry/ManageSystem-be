@@ -6,7 +6,6 @@ import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.user.repo.RoleRepository;
 import com.dghysc.hy.user.repo.UserRepository;
 import com.dghysc.hy.util.TestUtil;
-import net.bytebuddy.utility.RandomString;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -47,8 +46,8 @@ public class RoleServiceTest {
 
     @Test
     public void add() {
-        String roleStr = RandomString.make();
-        String name = RandomString.make();
+        String roleStr = testUtil.nextString();
+        String name = testUtil.nextString();
 
         Role role = roleService.add(roleStr, name);
         assertNotNull(role.getId());
@@ -61,8 +60,8 @@ public class RoleServiceTest {
     @Test
     public void update() throws Exception {
         Integer id = testUtil.nextId(Role.class);
-        String roleStr = RandomString.make();
-        String name = RandomString.make();
+        String roleStr = testUtil.nextString();
+        String name = testUtil.nextString();
         List<Long> userId = new ArrayList<>();
         List<Integer> menuId = new ArrayList<>();
 

@@ -6,7 +6,6 @@ import com.dghysc.hy.user.model.Role;
 import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.user.repo.RoleRepository;
 import com.dghysc.hy.util.TestUtil;
-import net.bytebuddy.utility.RandomString;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -73,8 +72,8 @@ public class RoleControllerTest {
         System.out.println(role);
         JSONObject body = new JSONObject();
 
-        body.put("role", RandomString.make());
-        body.put("name", RandomString.make());
+        body.put("role", testUtil.nextString());
+        body.put("name", testUtil.nextString());
 
         HttpEntity<JSONObject> request = new HttpEntity<>(body, headers);
 
@@ -103,8 +102,8 @@ public class RoleControllerTest {
         }
 
         body.put("id", id);
-        body.put("role", RandomString.make());
-        body.put("name", RandomString.make());
+        body.put("role", testUtil.nextString());
+        body.put("name", testUtil.nextString());
         body.put("users", users);
         body.put("menus", menus);
 

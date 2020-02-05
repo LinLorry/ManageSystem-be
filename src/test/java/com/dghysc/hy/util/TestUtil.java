@@ -16,6 +16,7 @@ import com.dghysc.hy.work.model.Process;
 import com.dghysc.hy.work.model.Work;
 import com.dghysc.hy.work.repo.ProcessRepository;
 import com.dghysc.hy.work.repo.WorkRepository;
+import net.bytebuddy.utility.RandomString;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.repository.CrudRepository;
@@ -40,13 +41,15 @@ public class TestUtil extends Random {
     @Autowired
     private TokenUtil tokenUtil;
 
-    private final UserRepository userRepository;
-
-    private Map<Class, CrudRepository> map;
-
     private User user;
 
     private Iterator<User> userIterator;
+
+    private final RandomString randomString = new RandomString();
+
+    private final Map<Class, CrudRepository> map;
+
+    private final UserRepository userRepository;
 
     public TestUtil(
             UserRepository userRepository,
@@ -150,5 +153,9 @@ public class TestUtil extends Random {
 
     public User getUser() {
         return user;
+    }
+
+    public String nextString() {
+        return randomString.nextString();
     }
 }

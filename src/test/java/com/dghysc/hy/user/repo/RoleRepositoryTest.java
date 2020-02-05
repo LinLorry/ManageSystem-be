@@ -3,7 +3,6 @@ package com.dghysc.hy.user.repo;
 import com.dghysc.hy.user.model.Role;
 import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.util.TestUtil;
-import net.bytebuddy.utility.RandomString;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,8 +39,8 @@ public class RoleRepositoryTest {
 
     @Test
     public void save() throws Exception {
-        String roleStr = RandomString.make();
-        String name = RandomString.make();
+        String roleStr = testUtil.nextString();
+        String name = testUtil.nextString();
         Timestamp now = new Timestamp(System.currentTimeMillis());
         User user = userRepository.findById(testUtil.nextId(User.class))
                 .orElseThrow(EntityNotFoundException::new);
@@ -64,8 +63,8 @@ public class RoleRepositoryTest {
     @Transactional
     public void update() throws Exception {
         Role role = roleRepository.getOne(testUtil.nextId(Role.class));
-        String name = RandomString.make();
-        String roleStr = RandomString.make();
+        String name = testUtil.nextString();
+        String roleStr = testUtil.nextString();
         Timestamp now = new Timestamp(System.currentTimeMillis());
         User user = userRepository.findById(testUtil.nextId(User.class))
                 .orElseThrow(EntityNotFoundException::new);

@@ -3,7 +3,6 @@ package com.dghysc.hy.work;
 import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.util.TestUtil;
 import com.dghysc.hy.work.repo.WorkRepository;
-import net.bytebuddy.utility.RandomString;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -42,8 +41,8 @@ public class WorkControllerTest {
         URI uri = new URI(url);
 
         JSONObject requestBody = new JSONObject();
-        requestBody.put("name", RandomString.make());
-        requestBody.put("comment", RandomString.make());
+        requestBody.put("name", testUtil.nextString());
+        requestBody.put("comment", testUtil.nextString());
 
         HttpEntity<JSONObject> request = new HttpEntity<>(requestBody, testUtil.getTokenHeader());
 
@@ -60,8 +59,8 @@ public class WorkControllerTest {
 
         JSONObject requestBody = new JSONObject();
         requestBody.put("id", random.nextInt(number));
-        requestBody.put("name", RandomString.make());
-        requestBody.put("comment", RandomString.make());
+        requestBody.put("name", testUtil.nextString());
+        requestBody.put("comment", testUtil.nextString());
 
         HttpEntity<JSONObject> request = new HttpEntity<>(requestBody, testUtil.getTokenHeader());
 
