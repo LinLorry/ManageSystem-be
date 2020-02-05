@@ -30,6 +30,13 @@ public class WechatUser implements Serializable {
     @JoinColumn
     private User user;
 
+    public WechatUser() {
+    }
+
+    public WechatUser(String id) {
+        this.id = id;
+    }
+
     public String getId() {
         return id;
     }

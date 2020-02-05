@@ -1,6 +1,7 @@
 package com.dghysc.hy.wechat;
 
 import com.dghysc.hy.exception.DuplicateUserException;
+import com.dghysc.hy.exception.WechatUserExistException;
 import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.util.TestUtil;
 import com.dghysc.hy.wechat.model.WechatUser;
@@ -63,7 +64,7 @@ public class WechatUserServiceTest {
 
         try {
             wechatUser = wechatUserService.addUserByWechatUser(id);
-        } catch (RuntimeException e) {
+        } catch (WechatUserExistException e) {
             wechatUser = wechatUserService.loadById(id);
         }
 

@@ -1,8 +1,7 @@
 package com.dghysc.hy.wechat;
 
 import com.alibaba.fastjson.JSONObject;
-import com.dghysc.hy.exception.DuplicateUserException;
-import com.dghysc.hy.exception.UserNoFoundException;
+import com.dghysc.hy.exception.*;
 import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.user.repo.UserRepository;
 import com.dghysc.hy.wechat.model.WechatUser;
@@ -14,6 +13,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.persistence.EntityNotFoundException;
@@ -28,7 +28,7 @@ import java.util.Optional;
  */
 @Service
 public class WechatUserService {
-    // TODO perfect exception.
+
     private final String urlBase;
 
     private final RestTemplate restTemplate = new RestTemplate();
@@ -60,12 +60,12 @@ public class WechatUserService {
         return wechatUserRepository.save(wechatUser);
     }
 
-    WechatUser addUserByWechatUser(@NotNull String id) {
+    WechatUser addUserByWechatUser(@NotNull String id) throws WechatUserExistException {
         WechatUser wechatUser = wechatUserRepository.findById(id)
                 .orElseThrow(EntityNotFoundException::new);
 
         if (wechatUser.getUser() != null) {
-            throw new RuntimeException();
+            throw new WechatUserExistException();
         }
 
         wechatUser.setUser(new User());
@@ -82,7 +82,8 @@ public class WechatUserService {
     }
 
     WechatUser updateUser(@NotNull String id, @Nullable Long userId) {
-        WechatUser wechatUser = wechatUserRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+        WechatUser wechatUser = wechatUserRepository.findById(id)
+                .orElseThrow(EntityNotFoundException::new);
 
         if (wechatUserRepository.existsByUserId(userId)) {
             throw new DuplicateUserException();
@@ -98,32 +99,33 @@ public class WechatUserService {
         return wechatUserRepository.save(wechatUser);
     }
 
-    WechatUser loadByCode(String code) throws Exception {
+    WechatUser loadByCode(String code)
+            throws WechatServiceDownException, WechatUserCodeWrongException {
         final String url = urlBase + code;
-        ResponseEntity<JSONObject> responseEntity = restTemplate.exchange(
-                url, HttpMethod.GET, null, JSONObject.class);
+        ResponseEntity<JSONObject> responseEntity;
+        try {
+            responseEntity = restTemplate.exchange(
+                    url, HttpMethod.GET, null, JSONObject.class);
+        } catch (RestClientException e) {
+            throw new WechatServiceDownException();
+        }
+
         long now = System.currentTimeMillis();
 
         if (!responseEntity.getStatusCode().is2xxSuccessful()) {
-            throw new Exception();
+            throw new WechatServiceDownException();
         }
 
         JSONObject response = Optional.ofNullable(responseEntity.getBody())
-                .orElseThrow(Exception::new);
+                .orElseThrow(WechatServiceDownException::new);
 
         String id = Optional.ofNullable(response.getString("openid"))
-                .orElseThrow(Exception::new);
+                .orElseThrow(WechatUserCodeWrongException::new);
+
         String accessToken = response.getString("access_token");
         long expiresIn = response.getLongValue("expires_in") * 1000L;
 
-        WechatUser wechatUser;
-        if (wechatUserRepository.existsById(id)) {
-            wechatUser = wechatUserRepository.findById(id)
-                    .orElseThrow(EntityNotFoundException::new);
-        } else {
-            wechatUser = new WechatUser();
-            wechatUser.setId(id);
-        }
+        WechatUser wechatUser = wechatUserRepository.findById(id).orElse(new WechatUser(id));
 
         wechatUser.setAccessToken(accessToken);
         wechatUser.setTokenExpiresTime(new Timestamp(now + expiresIn));

@@ -3,6 +3,7 @@ package com.dghysc.hy.wechat;
 import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.exception.WechatConfigWrongException;
 import com.dghysc.hy.exception.WechatServiceDownException;
+import com.dghysc.hy.exception.WechatUserCodeWrongException;
 import com.dghysc.hy.util.TokenUtil;
 import com.dghysc.hy.wechat.model.WechatUser;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,6 +11,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 /**
  * The Wechat Controller
@@ -68,27 +70,39 @@ public class WechatController {
 
     @GetMapping("/login/")
     public void login(@RequestParam(name = "code") String code,
-                        HttpServletResponse response)
-            throws Exception {
-        WechatUser wechatUser = wechatUserService.loadByCode(code);
+                      HttpServletResponse response)
+            throws IOException {
+        try {
+            WechatUser wechatUser = wechatUserService.loadByCode(code);
 
-        if (wechatUser.getUser() == null) {
-            response.sendRedirect(infoBaseUrl);
-        } else {
-            response.sendRedirect(
-                    loginBaseUrl + "?token=" + tokenUtil.generateToken(wechatUser.getUser())
-            );
+            if (wechatUser.getUser() == null) {
+                response.sendRedirect(infoBaseUrl);
+            } else {
+                response.sendRedirect(
+                        loginBaseUrl + "?token=" + tokenUtil.generateToken(wechatUser.getUser())
+                );
+            }
+        } catch (WechatServiceDownException e) {
+            response.sendError(0, "微信服务异常，请稍后重试");
+        } catch (WechatUserCodeWrongException e) {
+            response.sendError(0, "Code invalid.");
         }
     }
 
     @GetMapping("/info/{name}/")
     public void submit(@PathVariable String name,
                        @RequestParam(name = "code") String code,
-                       HttpServletResponse response) throws Exception {
-        WechatUser wechatUser = wechatUserService.loadByCode(code);
+                       HttpServletResponse response) throws IOException {
+        try {
+            WechatUser wechatUser = wechatUserService.loadByCode(code);
 
-        wechatUser = wechatUserService.update(wechatUser.getId(), name);
+            wechatUser = wechatUserService.update(wechatUser.getId(), name);
 
-        response.sendRedirect(successUrl + "?name=" + wechatUser.getName());
+            response.sendRedirect(successUrl + "?name=" + wechatUser.getName());
+        } catch (WechatServiceDownException e) {
+            response.sendError(0, "微信服务异常，请稍后重试");
+        } catch (WechatUserCodeWrongException e) {
+            response.sendError(0, "Code invalid.");
+        }
     }
 }
