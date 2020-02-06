@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.net.URLEncoder;
 
 /**
  * The Wechat Controller
@@ -26,8 +27,6 @@ public class WechatController {
 
     private final String infoBaseUrl;
 
-    private final String successUrl;
-
     private final TokenUtil tokenUtil;
 
     private final WechatServer wechatServer;
@@ -37,13 +36,11 @@ public class WechatController {
     public WechatController(
             @Value("${manage.loginUrl}") String loginBaseUrl,
             @Value("${manage.wechat.infoUrl}") String infoBaseUrl,
-            @Value("${manage.wechat.successUrl}") String successUrl,
             TokenUtil tokenUtil, WechatServer wechatServer,
             WechatUserService wechatUserService
     ) {
         this.loginBaseUrl = loginBaseUrl;
         this.infoBaseUrl = infoBaseUrl;
-        this.successUrl = successUrl;
         this.tokenUtil = tokenUtil;
         this.wechatServer = wechatServer;
         this.wechatUserService = wechatUserService;
@@ -68,14 +65,18 @@ public class WechatController {
         return response;
     }
 
-    @GetMapping("/login/")
+    @GetMapping("/login")
     public void login(@RequestParam(name = "code") String code,
                       HttpServletResponse response)
             throws IOException, WechatServiceDownException, WechatUserCodeWrongException {
         WechatUser wechatUser = wechatUserService.loadByCode(code);
 
         if (wechatUser.getUser() == null) {
-            response.sendRedirect(infoBaseUrl);
+            String url = infoBaseUrl;
+            if (wechatUser.getName() != null) {
+                url += "?name=" + URLEncoder.encode(wechatUser.getName(), "utf-8");
+            }
+            response.sendRedirect(url);
         } else {
             response.sendRedirect(
                     loginBaseUrl + "?token=" + tokenUtil.generateToken(wechatUser.getUser())
@@ -83,7 +84,7 @@ public class WechatController {
         }
     }
 
-    @GetMapping("/info/{name}/")
+    @GetMapping("/info/{name}")
     public void submit(@PathVariable String name,
                        @RequestParam(name = "code") String code,
                        HttpServletResponse response)
@@ -92,7 +93,7 @@ public class WechatController {
 
         wechatUser = wechatUserService.update(wechatUser.getId(), name);
 
-        response.sendRedirect(successUrl + "?name=" + wechatUser.getName());
+        response.sendRedirect(infoBaseUrl + "?name=" + URLEncoder.encode(wechatUser.getName(), "utf-8"));
     }
 
     @ExceptionHandler(value = WechatServiceDownException.class)
