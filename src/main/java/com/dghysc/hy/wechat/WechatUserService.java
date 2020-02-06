@@ -102,10 +102,10 @@ public class WechatUserService {
     WechatUser loadByCode(String code)
             throws WechatServiceDownException, WechatUserCodeWrongException {
         final String url = urlBase + code;
-        ResponseEntity<JSONObject> responseEntity;
+        ResponseEntity<String> responseEntity;
         try {
             responseEntity = restTemplate.exchange(
-                    url, HttpMethod.GET, null, JSONObject.class);
+                    url, HttpMethod.GET, null, String.class);
         } catch (RestClientException e) {
             throw new WechatServiceDownException();
         }
@@ -116,8 +116,10 @@ public class WechatUserService {
             throw new WechatServiceDownException();
         }
 
-        JSONObject response = Optional.ofNullable(responseEntity.getBody())
-                .orElseThrow(WechatServiceDownException::new);
+        JSONObject response = JSONObject.parseObject(
+                Optional.ofNullable(responseEntity.getBody())
+                        .orElseThrow(WechatServiceDownException::new)
+        );
 
         String id = Optional.ofNullable(response.getString("openid"))
                 .orElseThrow(WechatUserCodeWrongException::new);
