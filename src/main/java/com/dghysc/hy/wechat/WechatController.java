@@ -2,17 +2,20 @@ package com.dghysc.hy.wechat;
 
 import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.exception.*;
+import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.util.TokenUtil;
 import com.dghysc.hy.wechat.model.WechatUser;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.util.Optional;
 
 /**
  * The Wechat Controller
@@ -49,8 +52,8 @@ public class WechatController {
     @GetMapping
     public JSONObject getWechatUser(
             @RequestParam(required = false) String id,
-            @RequestParam(required = false) Integer pageNumber,
-            @RequestParam(required = false) Integer pageSize) {
+            @RequestParam(required = false, defaultValue = "0") Integer pageNumber,
+            @RequestParam(required = false, defaultValue = "20") Integer pageSize) {
         JSONObject response = new JSONObject();
 
         if (id != null) {
@@ -74,6 +77,35 @@ public class WechatController {
             response.put("data", data);
             response.put("message", "获取微信用户列表成功");
             response.put("status", 1);
+        }
+
+        return response;
+    }
+
+    @PostMapping
+    public JSONObject addOrUpdateWechatUser(@RequestBody JSONObject request)
+            throws MissingServletRequestParameterException {
+        JSONObject response = new JSONObject();
+        String id = Optional.ofNullable(request.getString("id"))
+                .orElseThrow(() -> new MissingServletRequestParameterException("id", "str"));
+        Long userId = request.getLong("userId");
+
+        User user = new User();
+        user.setId(userId);
+
+        response.put("status", 1);
+
+        try {
+            response.put("data", wechatUserService.addOrUpdateUser(id, user));
+        } catch (EntityNotFoundException e) {
+            response.put("status", 0);
+            response.put("message", "Id为" + id + "的微信用户不存在");
+        } catch (DuplicateUserException e) {
+            response.put("status", 0);
+            response.put("message", "Id为" + userId + "的用户已经被绑定");
+        } catch (UserNoFoundException e) {
+            response.put("status", 0);
+            response.put("message", "Id为" + userId + "的用户不存在");
         }
 
         return response;
