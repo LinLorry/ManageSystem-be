@@ -13,7 +13,7 @@ import java.sql.Timestamp;
  */
 @Entity
 public class WechatUser implements Serializable {
-
+    // TODO wechat user info update.
     private static final long serialVersionUID = 1L;
 
     @Id
@@ -25,6 +25,8 @@ public class WechatUser implements Serializable {
     private String accessToken;
 
     private Timestamp tokenExpiresTime;
+
+    private String refreshToken;
 
     @OneToOne(cascade = CascadeType.PERSIST)
     @JoinColumn
@@ -59,6 +61,14 @@ public class WechatUser implements Serializable {
 
     public void setAccessToken(String accessToken) {
         this.accessToken = accessToken;
+    }
+
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
     }
 
     public User getUser() {

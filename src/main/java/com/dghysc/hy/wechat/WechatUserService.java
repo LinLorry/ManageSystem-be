@@ -124,12 +124,14 @@ public class WechatUserService {
         String id = Optional.ofNullable(response.getString("openid"))
                 .orElseThrow(WechatUserCodeWrongException::new);
 
-        String accessToken = response.getString("access_token");
-        long expiresIn = response.getLongValue("expires_in") * 1000L;
-
         WechatUser wechatUser = wechatUserRepository.findById(id).orElse(new WechatUser(id));
 
+        String accessToken = response.getString("access_token");
+        String refreshToken = response.getString("refresh_token");
+        long expiresIn = response.getLongValue("expires_in") * 1000L;
+
         wechatUser.setAccessToken(accessToken);
+        wechatUser.setRefreshToken(refreshToken);
         wechatUser.setTokenExpiresTime(new Timestamp(now + expiresIn));
 
         wechatUserRepository.save(wechatUser);
