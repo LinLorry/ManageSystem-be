@@ -1,15 +1,15 @@
 package com.dghysc.hy.wechat;
 
 import com.alibaba.fastjson.JSONObject;
-import com.dghysc.hy.exception.WechatConfigWrongException;
-import com.dghysc.hy.exception.WechatServiceDownException;
-import com.dghysc.hy.exception.WechatUserCodeWrongException;
+import com.dghysc.hy.exception.*;
 import com.dghysc.hy.util.TokenUtil;
 import com.dghysc.hy.wechat.model.WechatUser;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -44,6 +44,39 @@ public class WechatController {
         this.tokenUtil = tokenUtil;
         this.wechatServer = wechatServer;
         this.wechatUserService = wechatUserService;
+    }
+
+    @GetMapping
+    public JSONObject getWechatUser(
+            @RequestParam(required = false) String id,
+            @RequestParam(required = false) Integer pageNumber,
+            @RequestParam(required = false) Integer pageSize) {
+        JSONObject response = new JSONObject();
+
+        if (id != null) {
+            try {
+                response.put("data", wechatUserService.loadById(id));
+                response.put("status", 1);
+                response.put("message", "获取微信用户详细信息成功");
+            } catch (EntityNotFoundException e) {
+                response.put("status", 0);
+                response.put("message", "Id为" + id + "的微信用户不存在");
+            }
+        } else {
+            JSONObject data = new JSONObject();
+
+            Page<WechatUser> wechatUsers = wechatUserService.loadAll(pageNumber, pageSize);
+
+            data.put("size", pageSize);
+            data.put("total", wechatUsers.getTotalPages());
+            data.put("wechatUsers", wechatUsers.getContent());
+
+            response.put("data", data);
+            response.put("message", "获取微信用户列表成功");
+            response.put("status", 1);
+        }
+
+        return response;
     }
 
     @GetMapping("/refreshToken")
