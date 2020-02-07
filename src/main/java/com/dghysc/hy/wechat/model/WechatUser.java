@@ -1,6 +1,7 @@
 package com.dghysc.hy.wechat.model;
 
 import com.dghysc.hy.user.model.User;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -22,10 +23,13 @@ public class WechatUser implements Serializable {
     @Column(length = 32)
     private String name;
 
+    @JsonIgnore
     private String accessToken;
 
+    @JsonIgnore
     private Timestamp tokenExpiresTime;
 
+    @JsonIgnore
     private String refreshToken;
 
     @OneToOne(cascade = CascadeType.PERSIST)
