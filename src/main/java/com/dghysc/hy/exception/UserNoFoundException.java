@@ -1,4 +1,4 @@
 package com.dghysc.hy.exception;
 
-public class UserNoFoundException extends RuntimeException {
+public class UserNoFoundException extends Exception {
 }
