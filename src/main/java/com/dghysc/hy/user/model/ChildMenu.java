@@ -1,10 +1,16 @@
 package com.dghysc.hy.user.model;
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.sql.Timestamp;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -13,12 +19,13 @@ import java.util.Set;
  * @author lin864464995@163.com
  */
 @Entity
+@Table(name = "child_menu")
 public class ChildMenu implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
     @Column(updatable = false)
-    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @Column(unique = true, length = 32, nullable = false)
@@ -27,14 +34,40 @@ public class ChildMenu implements Serializable {
     @Column(unique = true, length = 64, nullable = false)
     private String url;
 
+    @Column(nullable = false)
+    private Integer location;
+
+    @Column(nullable = false, updatable = false)
+    private Timestamp createTime;
+
     @JsonIgnore
     @ManyToOne(optional = false)
+    @JoinColumn(nullable = false, updatable = false)
+    @NotFound(action = NotFoundAction.IGNORE)
+    private User createUser;
+
+    @Column(nullable = false)
+    private Timestamp updateTime;
+
+    @JsonIgnore
+    @ManyToOne(optional = false)
+    @JoinColumn(nullable = false)
+    @NotFound(action = NotFoundAction.IGNORE)
+    private User updateUser;
+
+    @JsonIgnore
+    @ManyToOne(optional = false)
+    @JoinColumn(nullable = false)
     private ParentMenu parent;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "menu", orphanRemoval = true,
-            cascade = {CascadeType.REMOVE, CascadeType.PERSIST, CascadeType.MERGE})
-    private Set<RoleMenu> roleMenuSet = new HashSet<>();
+    @ManyToMany
+    @JoinTable(
+            name = "role_menu",
+            joinColumns = @JoinColumn(name = "menu_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id")
+    )
+    private Set<Role> roles = new HashSet<>();
 
     public Integer getId() {
         return id;
@@ -60,6 +93,46 @@ public class ChildMenu implements Serializable {
         this.url = url;
     }
 
+    public Integer getLocation() {
+        return location;
+    }
+
+    public void setLocation(Integer location) {
+        this.location = location;
+    }
+
+    public Timestamp getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(Timestamp createTime) {
+        this.createTime = createTime;
+    }
+
+    public User getCreateUser() {
+        return createUser;
+    }
+
+    public void setCreateUser(User createUser) {
+        this.createUser = createUser;
+    }
+
+    public Timestamp getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(Timestamp updateTime) {
+        this.updateTime = updateTime;
+    }
+
+    public User getUpdateUser() {
+        return updateUser;
+    }
+
+    public void setUpdateUser(User updateUser) {
+        this.updateUser = updateUser;
+    }
+
     public ParentMenu getParent() {
         return parent;
     }
@@ -68,7 +141,19 @@ public class ChildMenu implements Serializable {
         this.parent = parent;
     }
 
-    public Set<RoleMenu> getRoleMenuSet() {
-        return roleMenuSet;
+    public Set<Role> getRoles() {
+        return roles;
+    }
+
+    @JsonAnyGetter
+    public Map<String, Object> getInfo() {
+        Map<String, Object> map = new HashMap<>();
+
+        map.put("creatorName", createUser.getName());
+        map.put("creatorId", createUser.getId());
+        map.put("updaterName", updateUser.getName());
+        map.put("updaterId", updateUser.getId());
+
+        return map;
     }
 }

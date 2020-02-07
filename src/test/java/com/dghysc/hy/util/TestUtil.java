@@ -18,6 +18,7 @@ import com.dghysc.hy.work.model.Process;
 import com.dghysc.hy.work.model.Work;
 import com.dghysc.hy.work.repo.ProcessRepository;
 import com.dghysc.hy.work.repo.WorkRepository;
+import net.bytebuddy.utility.RandomString;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.repository.CrudRepository;
@@ -26,9 +27,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 
@@ -41,22 +42,26 @@ public class TestUtil extends Random {
     @Autowired
     private TokenUtil tokenUtil;
 
-    private final UserRepository userRepository;
-
-    private Map<Class, CrudRepository> map;
-
     private User user;
 
     private Iterator<User> userIterator;
 
-    public TestUtil(UserRepository userRepository,
-                    RoleRepository roleRepository,
-                    ParentMenuRepository parentMenuRepository,
-                    ChildMenuRepository childMenuRepository,
-                    WechatUserRepository wechatUserRepository,
-                    ProcessRepository processRepository,
-                    WorkRepository workRepository,
-                    ProductRepository productRepository) {
+    private final RandomString randomString = new RandomString();
+
+    private final Map<Class, CrudRepository> map;
+
+    private final UserRepository userRepository;
+
+    public TestUtil(
+            UserRepository userRepository,
+            RoleRepository roleRepository,
+            ParentMenuRepository parentMenuRepository,
+            WechatUserRepository wechatUserRepository,
+            ChildMenuRepository childMenuRepository,
+            ProcessRepository processRepository,
+            WorkRepository workRepository,
+            ProductRepository productRepository
+    ) {
 
         this.map = new HashMap<>();
         this.userRepository = userRepository;
@@ -86,13 +91,10 @@ public class TestUtil extends Random {
         return headers;
     }
 
-    public<T> T nextId(Class aClass) throws
-            NoSuchMethodException, IllegalAccessException,
-            InvocationTargetException {
-        if (!map.containsKey(aClass)) {
-            throw new NoRepositoryException();
-        }
-        CrudRepository repository = map.get(aClass);
+    public <T, E> T nextId(Class<E> aClass) {
+        CrudRepository<E, T> repository = Optional
+                .ofNullable(map.get(aClass))
+                .orElseThrow(NoRepositoryException::new);
 
         long count = repository.count();
 
@@ -102,17 +104,22 @@ public class TestUtil extends Random {
 
         long randomNumber = Math.abs(nextLong()) % (count + 1);
 
-        Iterator iterator = repository.findAll().iterator();
+        Iterator<E> iterator = repository.findAll().iterator();
 
         while (--randomNumber > 0) {
             iterator.next();
         }
         Object obj = iterator.next();
-        Method method = obj.getClass().getMethod("getId");
-
-        return (T) method.invoke(obj);
+        try {
+            Method method = obj.getClass().getMethod("getId");
+            return (T) method.invoke(obj);
+        } catch (Exception e) {
+            throw new RuntimeException("This class: " + aClass.toString() +
+                    " don't have getId method.");
+        }
     }
 
+    @Transactional(readOnly = true)
     public void setAuthorities(Long userId, String... authorities) {
         user = userRepository.findById(userId).orElseThrow(EntityNotFoundException::new);
 
@@ -151,5 +158,9 @@ public class TestUtil extends Random {
 
     public User getUser() {
         return user;
+    }
+
+    public String nextString() {
+        return randomString.nextString();
     }
 }

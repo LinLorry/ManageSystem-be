@@ -1,11 +1,7 @@
 package com.dghysc.hy.user.repo;
 
-import com.dghysc.hy.user.model.ChildMenu;
-import com.dghysc.hy.user.model.ParentMenu;
-import com.dghysc.hy.user.model.Role;
-import com.dghysc.hy.user.model.RoleMenu;
+import com.dghysc.hy.user.model.*;
 import com.dghysc.hy.util.TestUtil;
-import net.bytebuddy.utility.RandomString;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,19 +10,26 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityNotFoundException;
+import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.Set;
 
 import static org.junit.Assert.*;
 
+@SpringBootTest
 @RunWith(SpringRunner.class)
-@SpringBootTest()
 public class ChildMenuRepositoryTest {
 
     private Integer id;
 
+    private User user;
+
     @Autowired
     private TestUtil testUtil;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     private RoleRepository roleRepository;
@@ -38,11 +41,12 @@ public class ChildMenuRepositoryTest {
     private ChildMenuRepository childMenuRepository;
 
     @Before
-    @Transactional
-    public void initTest() throws Exception {
+    public void initTest() {
+        user = userRepository.findById(testUtil.nextId(User.class))
+                .orElseThrow(EntityNotFoundException::new);
         if (parentMenuRepository.count() == 0) {
             ParentMenu parentMenu = new ParentMenu();
-            parentMenu.setName(RandomString.make());
+            parentMenu.setName(testUtil.nextString());
 
             parentMenuRepository.save(parentMenu);
         }
@@ -54,169 +58,180 @@ public class ChildMenuRepositoryTest {
         id = testUtil.nextId(ChildMenu.class);
     }
 
-    private void beforeRole() throws Exception {
+    private void beforeRole() {
         ChildMenu childMenu = childMenuRepository.getOne(id);
-        if (childMenu.getRoleMenuSet().size() == 0) {
+        if (childMenu.getRoles().size() == 0) {
             addRole();
         }
     }
 
     @Test
-    @Transactional
-    public void save() throws Exception {
+    public void save() {
+        String name = testUtil.nextString();
+        String url = "/" + testUtil.nextString();
+        Integer location = testUtil.nextInt();
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        User user = this.user;
         ChildMenu childMenu = new ChildMenu();
 
-        childMenu.setName(RandomString.make());
-        childMenu.setUrl("/" + RandomString.make());
+        childMenu.setName(name);
+        childMenu.setUrl(url);
+        childMenu.setLocation(location);
+        childMenu.setCreateTime(now);
+        childMenu.setCreateUser(user);
+        childMenu.setUpdateTime(now);
+        childMenu.setUpdateUser(user);
 
         parentMenuRepository.findById(
                 testUtil.nextId(ParentMenu.class)
         ).ifPresent(childMenu::setParent);
 
-        Set<RoleMenu> roleMenuSet = childMenu.getRoleMenuSet();
+        Set<Role> roles = childMenu.getRoles();
 
-        while (roleMenuSet.size() < 3 &&
-                roleMenuSet.size() != roleRepository.count()) {
-            RoleMenu roleMenu = new RoleMenu(
-                    roleRepository.getOne(testUtil.nextId(Role.class)),
-                    childMenu
-            );
-
-            roleMenuSet.add(roleMenu);
+        while (roles.size() < 3 &&
+                roles.size() != roleRepository.count()) {
+            roles.add(roleRepository.getOne(testUtil.nextId(Role.class)));
         }
 
         childMenuRepository.saveAndFlush(childMenu);
 
         assertNotNull(childMenu.getId());
+        assertEquals(user.getId(), childMenu.getCreateUser().getId());
+        assertEquals(now, childMenu.getCreateTime());
     }
 
     @Test
-    @Transactional
     public void update() {
         Integer id = this.id;
-        String name = RandomString.make();
-        String url = "/" + RandomString.make();
+        String name = testUtil.nextString();
+        String url = "/" + testUtil.nextString();
+        Integer location = testUtil.nextInt();
+        Timestamp now = new Timestamp(System.currentTimeMillis() / 1000 * 1000);
+        User user = this.user;
 
-        ChildMenu childMenu = childMenuRepository.getOne(id);
+        ChildMenu childMenu = childMenuRepository.findById(id)
+                .orElseThrow(EntityNotFoundException::new);
 
         childMenu.setName(name);
         childMenu.setUrl(url);
+        childMenu.setLocation(location);
+        childMenu.setUpdateTime(now);
+        childMenu.setUpdateUser(user);
 
         childMenuRepository.saveAndFlush(childMenu);
 
-        childMenu = childMenuRepository.getOne(id);
+        childMenu = childMenuRepository.findById(id)
+                .orElseThrow(EntityNotFoundException::new);
 
         assertEquals(name, childMenu.getName());
         assertEquals(url, childMenu.getUrl());
+        assertEquals(now, childMenu.getUpdateTime());
+        assertEquals(user.getId(), childMenu.getUpdateUser().getId());
     }
 
     @Test
-    @Transactional
-    public void updateParent() throws Exception {
+    public void updateParent() {
         Integer childId = this.id;
         Integer parentId = testUtil.nextId(ParentMenu.class);
 
-        ChildMenu childMenu = childMenuRepository.getOne(childId);
-        ParentMenu parentMenu = parentMenuRepository.getOne(parentId);
+        ChildMenu childMenu = childMenuRepository.findById(childId)
+                .orElseThrow(EntityNotFoundException::new);
+        ParentMenu parentMenu = parentMenuRepository.findById(parentId)
+                .orElseThrow(EntityNotFoundException::new);
 
         childMenu.setParent(parentMenu);
 
         childMenuRepository.saveAndFlush(childMenu);
 
-        childMenu = childMenuRepository.getOne(childId);
+        childMenu = childMenuRepository.findById(childId)
+                .orElseThrow(EntityNotFoundException::new);
 
         assertEquals(childMenu.getParent().getId(), parentMenu.getId());
     }
 
     @Transactional
-    public void addRole() throws Exception {
+    public void addRole() {
         Integer id = this.id;
 
         ChildMenu childMenu = childMenuRepository.getOne(id);
 
-        Set<RoleMenu> roleMenuSet = childMenu.getRoleMenuSet();
-        Set<RoleMenu> tmp = new HashSet<>();
-        final int beforeCount = roleMenuSet.size();
+        Set<Role> roles = childMenu.getRoles();
+        Set<Role> tmp = new HashSet<>();
 
-        while (roleMenuSet.size() < beforeCount + 3 &&
-                roleMenuSet.size() != roleRepository.count()) {
-            RoleMenu roleMenu = new RoleMenu(
-                    roleRepository.getOne(testUtil.nextId(Role.class)),
-                    childMenu
-            );
+        final int beforeCount = roles.size();
 
-            roleMenuSet.add(roleMenu);
-            tmp.add(roleMenu);
+        while (roles.size() < beforeCount + 3 &&
+                roles.size() != roleRepository.count()) {
+            Role role = roleRepository.getOne(testUtil.nextId(Role.class));
+            roles.add(role);
+            tmp.add(role);
         }
 
         roleRepository.flush();
         childMenuRepository.saveAndFlush(childMenu);
 
         childMenu = childMenuRepository.getOne(id);
-        assertTrue(childMenu.getRoleMenuSet().containsAll(tmp));
+        assertTrue(childMenu.getRoles().containsAll(tmp));
 
         this.id = id;
     }
 
     @Test
     @Transactional
-    public void removeRole() throws Exception {
+    public void removeRole() {
         beforeRole();
         Integer id = this.id;
         ChildMenu childMenu = childMenuRepository.getOne(id);
 
-        Set<RoleMenu> roleMenuSet = childMenu.getRoleMenuSet();
-
-        RoleMenu roleMenu = roleMenuSet.iterator().next();
-
-        roleMenuSet.remove(roleMenu);
+        Set<Role> roles = childMenu.getRoles();
+        Role role = roles.iterator().next();
+        roles.remove(role);
 
         childMenuRepository.saveAndFlush(childMenu);
 
         childMenu = childMenuRepository.getOne(id);
-        assertFalse(childMenu.getRoleMenuSet().contains(roleMenu));
+        assertFalse(childMenu.getRoles().contains(role));
     }
 
     @Test
     @Transactional
-    public void updateRole() throws Exception {
+    public void updateRole() {
         beforeRole();
         Integer id = this.id;
 
         ChildMenu childMenu = childMenuRepository.getOne(id);
 
-        Set<RoleMenu> roleMenuSet = childMenu.getRoleMenuSet();
+        Set<Role> roles = childMenu.getRoles();
 
-        RoleMenu oldRoleMenu = roleMenuSet.iterator().next();
-        RoleMenu newRoleMenu = new RoleMenu(null, childMenu);
+        Role oldRole = roles.iterator().next();
+        Role newRole;
 
         do {
-            roleRepository.findById(
-                    testUtil.nextId(Role.class)
-            ).ifPresent(newRoleMenu::setRole);
-        }
-        while (roleMenuSet.contains(newRoleMenu) &&
-                roleMenuSet.size() != roleRepository.count());
+            newRole = roleRepository.getOne(testUtil.nextId(Role.class));
+        } while (newRole.equals(oldRole) &&
+                roles.size() != roleRepository.count());
 
-        roleMenuSet.add(newRoleMenu);
-        roleMenuSet.remove(oldRoleMenu);
+        roles.add(newRole);
+        roles.remove(oldRole);
 
-        roleRepository.flush();
         childMenuRepository.saveAndFlush(childMenu);
 
         childMenu = childMenuRepository.getOne(id);
 
-        if (!newRoleMenu.equals(oldRoleMenu)) {
-            assertTrue(childMenu.getRoleMenuSet().contains(newRoleMenu));
+        if (!newRole.equals(oldRole)) {
+            assertTrue(childMenu.getRoles().contains(newRole));
         }
-        assertFalse(childMenu.getRoleMenuSet().contains(oldRoleMenu));
+        assertFalse(childMenu.getRoles().contains(oldRole));
     }
 
     @Test
     public void delete() {
         Integer id = this.id;
 
-        ChildMenu childMenu = childMenuRepository.getOne(id);
+        ChildMenu childMenu = childMenuRepository.findById(id)
+                .orElseThrow(EntityNotFoundException::new);
+
+        System.out.println(childMenu.getUpdateUser().getId());
 
         childMenuRepository.delete(childMenu);
 

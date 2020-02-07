@@ -1,26 +1,33 @@
 package com.dghysc.hy.user.model;
 
+import com.dghysc.hy.util.EntityUtil;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
+import org.springframework.security.core.GrantedAuthority;
 
 import javax.persistence.*;
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
  * The Role Model
+ *
  * @author lorry
  * @author lin864464995@163.com
  */
 @Entity
-public class Role implements Serializable {
+public class Role implements GrantedAuthority, Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @Id
     @Column(updatable = false)
-    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @Column(unique = true, length = 32)
@@ -42,20 +49,32 @@ public class Role implements Serializable {
     @JsonIgnore
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false, updatable = false)
+    @NotFound(action = NotFoundAction.IGNORE)
     private User createUser;
 
     @JsonIgnore
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false)
+    @NotFound(action = NotFoundAction.IGNORE)
     private User updateUser;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "role")
-    private Set<UserRole> userRoleSet = new HashSet<>();
+    @ManyToMany
+    @JoinTable(
+            name = "user_role",
+            joinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id")
+    )
+    private Set<User> users = new HashSet<>();
 
     @JsonIgnore
-    @OneToMany(mappedBy = "role")
-    private Set<RoleMenu> roleMenuSet = new HashSet<>();
+    @ManyToMany
+    @JoinTable(
+            name = "role_menu",
+            joinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "menu_id", referencedColumnName = "id")
+    )
+    private Set<ChildMenu> menus = new HashSet<>();
 
     public Integer getId() {
         return id;
@@ -121,11 +140,22 @@ public class Role implements Serializable {
         this.updateUser = updateUser;
     }
 
-    public Set<UserRole> getUserRoleSet() {
-        return userRoleSet;
+    public Set<User> getUsers() {
+        return users;
     }
 
-    public Set<RoleMenu> getRoleMenuSet() {
-        return roleMenuSet;
+    public Set<ChildMenu> getMenus() {
+        return menus;
+    }
+
+    @Override
+    @JsonIgnore
+    public String getAuthority() {
+        return role;
+    }
+
+    @JsonAnyGetter
+    public Map<String, Object> getInfo() {
+        return EntityUtil.getCreateAndUpdateInfo(createUser, updateUser);
     }
 }
