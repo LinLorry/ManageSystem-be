@@ -54,7 +54,7 @@ public class ParentMenuRepositoryTest {
         ParentMenu parentMenu = new ParentMenu();
 
         parentMenu.setName(name);
-        parentMenu.setUrl(url);
+        parentMenu.setIcon(url);
         parentMenu.setLocation(location);
         parentMenu.setCreateTime(now);
         parentMenu.setCreateUser(user);
@@ -83,7 +83,7 @@ public class ParentMenuRepositoryTest {
                 .orElseThrow(EntityNotFoundException::new);
 
         parentMenu.setName(name);
-        parentMenu.setUrl(url);
+        parentMenu.setIcon(url);
         parentMenu.setLocation(location);
         parentMenu.setUpdateUser(user);
         parentMenu.setUpdateTime(now);

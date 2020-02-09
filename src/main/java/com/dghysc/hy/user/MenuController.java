@@ -45,17 +45,17 @@ public class MenuController {
 
         Integer id = request.getInteger("id");
         String name = request.getString("name");
-        String url = request.getString("url");
+        String icon = request.getString("icon");
         Integer location = request.getInteger("location");
 
         try {
             ParentMenu parentMenu;
 
             if (id == null) {
-                parentMenu = menuService.addParent(name, url, location);
+                parentMenu = menuService.addParent(name, icon, location);
                 response.put("message", "创建父菜单成功");
             } else {
-                parentMenu = menuService.updateParent(id, name, url, location);
+                parentMenu = menuService.updateParent(id, name, icon, location);
                 response.put("message", "更新父菜单成功");
             }
             menuService.refreshMenuMap();
@@ -70,6 +70,8 @@ public class MenuController {
             response.put("status", 0);
             if (name == null) {
                 response.put("message", "缺少父菜单名字");
+            } else if (icon == null) {
+                response.put("message", "缺少父菜单图标信息");
             } else if (location == null) {
                 response.put("message", "缺少父菜单位置信息");
             }
