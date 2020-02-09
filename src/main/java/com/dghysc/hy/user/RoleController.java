@@ -13,7 +13,8 @@ import java.util.List;
  * @author lorry
  * @author lin864464995@163.com
  */
-@RestController("/api/role")
+@RestController
+@RequestMapping("/api/role")
 @PreAuthorize("hasRole('ADMIN')")
 public class RoleController {
 
