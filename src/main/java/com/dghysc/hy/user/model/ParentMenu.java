@@ -1,12 +1,12 @@
 package com.dghysc.hy.user.model;
 
+import com.dghysc.hy.util.EntityUtil;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
 import java.io.Serializable;
 import java.sql.Timestamp;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -123,13 +123,6 @@ public class ParentMenu implements Serializable {
 
     @JsonAnyGetter
     public Map<String, Object> getInfo() {
-        Map<String, Object> map = new HashMap<>();
-
-        map.put("creatorName", createUser.getName());
-        map.put("creatorId", createUser.getId());
-        map.put("updaterName", updateUser.getName());
-        map.put("updaterId", updateUser.getId());
-
-        return map;
+        return EntityUtil.getCreateAndUpdateInfo(getCreateUser(), getUpdateUser());
     }
 }
