@@ -143,9 +143,10 @@ public class MenuService {
      *
      * @param id the parent menu id.
      * @return the parent menu.
-     * @throws EntityNotFoundException if not parent menu id is {@code id}.
+     * @throws EntityNotFoundException  if not parent menu id is {@code id}.
+     * @throws IllegalArgumentException if {@code id} is {@literal null}.
      */
-    ParentMenu loadParentMenuById(Integer id) {
+    ParentMenu loadParentMenuById(@NotNull Integer id) {
         return parentMenuRepository.findById(id).orElseThrow(EntityNotFoundException::new);
     }
 
@@ -168,7 +169,7 @@ public class MenuService {
      * @param roleIds  the id of roles can get child menu.
      * @return the child menu.
      */
-    public ChildMenu addChild(
+    ChildMenu addChild(
             @NotNull String name, @NotNull String url,
             @NotNull Integer location, @NotNull Integer parentId,
             @Nullable Iterable<Integer> roleIds
@@ -286,9 +287,11 @@ public class MenuService {
      *
      * @param id the child menu id.
      * @return the child menu.
+     * @throws EntityNotFoundException if not child menu id is {@code id}.
+     * @throws IllegalArgumentException if {@code id} is {@literal null}.
      */
     ChildMenu loadChildMenuById(@NotNull Integer id) {
-        return childMenuRepository.findById(id).orElse(null);
+        return childMenuRepository.findById(id).orElseThrow(EntityNotFoundException::new);
     }
 
     /**
@@ -307,6 +310,8 @@ public class MenuService {
      * @return the menus can be access under {@code roles}.
      */
     public Collection<JSONObject> getMenus(Collection<? extends GrantedAuthority> roles) {
+        if (roles == null) return new ArrayList<>();
+
         Map<ParentMenu, Set<ChildMenu>> parentTmp = new HashMap<>();
 
         Map<ParentMenu, JSONObject> parentMenuJSONObjectMap = new HashMap<>();
