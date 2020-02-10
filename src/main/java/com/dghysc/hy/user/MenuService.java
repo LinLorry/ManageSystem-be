@@ -46,6 +46,14 @@ public class MenuService {
         this.childMenuRepository = childMenuRepository;
     }
 
+    /**
+     * Add Parent Menu Service
+     *
+     * @param name     the name of the parent menu.
+     * @param icon     the icon of the parent menu.
+     * @param location the location of the parent menu.
+     * @return the parent menu.
+     */
     ParentMenu addParent(@NotNull String name, @NotNull String icon, @NotNull Integer location) {
         Timestamp now = new Timestamp(System.currentTimeMillis());
         User creator = SecurityUtil.getUser();
@@ -63,6 +71,15 @@ public class MenuService {
         return parentMenuRepository.save(parentMenu);
     }
 
+    /**
+     * Update Parent Menu Service
+     *
+     * @param id       the parent menu id.
+     * @param name     the parent menu name.
+     * @param icon     the parent menu icon.
+     * @param location the parent menu location.
+     * @return the updated parent menu.
+     */
     ParentMenu updateParent(
             @NotNull Integer id, @Nullable String name,
             @Nullable String icon, @Nullable Integer location
@@ -84,6 +101,12 @@ public class MenuService {
         return parentMenuRepository.save(parentMenu);
     }
 
+    /**
+     * Update Parent Menus Location Service
+     *
+     * @param data a map of parent menu id and it location.
+     * @return the update results.
+     */
     List<ParentMenu> updateParentsLocation(@NotNull Map<Integer, Integer> data) {
         Timestamp now = new Timestamp(System.currentTimeMillis());
         User user = SecurityUtil.getUser();
@@ -106,18 +129,45 @@ public class MenuService {
         return parentMenus;
     }
 
+    /**
+     * Remove Parent Menu By Id Service
+     *
+     * @param id the parent menu id.
+     */
     void removeParentById(@NotNull Integer id) {
         Optional.of(id).ifPresent(parentMenuRepository::deleteById);
     }
 
+    /**
+     * Load Parent Menu By Id Service
+     *
+     * @param id the parent menu id.
+     * @return the parent menu.
+     * @throws EntityNotFoundException if not parent menu id is {@code id}.
+     */
     ParentMenu loadParentMenuById(Integer id) {
         return parentMenuRepository.findById(id).orElseThrow(EntityNotFoundException::new);
     }
 
+    /**
+     * Load All Parent Menus Service
+     *
+     * @return the list of all parent menus.
+     */
     List<ParentMenu> loadAllParentMenus() {
         return parentMenuRepository.findAll();
     }
 
+    /**
+     * Add Child Menu Service
+     *
+     * @param name     the name of child menu.
+     * @param url      the url of child menu.
+     * @param location the location of child menu.
+     * @param parentId the parent menu id of child menu.
+     * @param roleIds  the id of roles can get child menu.
+     * @return the child menu.
+     */
     public ChildMenu addChild(
             @NotNull String name, @NotNull String url,
             @NotNull Integer location, @NotNull Integer parentId,
@@ -139,6 +189,17 @@ public class MenuService {
         return addOrUpdate(childMenu, name, url, location, parentId, roleIds);
     }
 
+    /**
+     * Update Child Menu Service
+     *
+     * @param id       the child menu id.
+     * @param name     the child menu name.
+     * @param url      the child menu url.
+     * @param location the child menu location.
+     * @param parentId the child menu parent menu id.
+     * @param roleIds  the id of roles can get child menu.
+     * @return the child menu.
+     */
     @Transactional
     public ChildMenu updateChild(
             @NotNull Integer id, @Nullable String name,
@@ -183,6 +244,12 @@ public class MenuService {
         return childMenuRepository.save(childMenu);
     }
 
+    /**
+     * Update Child Menus Location Service.
+     *
+     * @param data a map of child menu id and it location.
+     * @return the update results.
+     */
     List<ChildMenu> updateChildrenLocation(@NotNull Map<Integer, Integer> data) {
         Timestamp now = new Timestamp(System.currentTimeMillis());
         User user = SecurityUtil.getUser();
@@ -205,18 +272,40 @@ public class MenuService {
         return childMenus;
     }
 
+    /**
+     * Remove Child Menu By Id Service
+     *
+     * @param id the child menu id.
+     */
     void removeChildById(@NotNull Integer id) {
         Optional.of(id).ifPresent(childMenuRepository::deleteById);
     }
 
+    /**
+     * Load Child Menu By Id Service
+     *
+     * @param id the child menu id.
+     * @return the child menu.
+     */
     ChildMenu loadChildMenuById(@NotNull Integer id) {
         return childMenuRepository.findById(id).orElse(null);
     }
 
+    /**
+     * Load All Child Menus Service
+     *
+     * @return the list of all child menus.
+     */
     List<ChildMenu> loadAllChildMenus() {
         return childMenuRepository.findAll();
     }
 
+    /**
+     * Get Menus Service
+     *
+     * @param roles according those get menus.
+     * @return the menus can be access under {@code roles}.
+     */
     public Collection<JSONObject> getMenus(Collection<? extends GrantedAuthority> roles) {
         Map<ParentMenu, Set<ChildMenu>> parentTmp = new HashMap<>();
 
@@ -240,10 +329,12 @@ public class MenuService {
             parentMenuJSONObjectMap.get(key).put("children", children);
         });
 
-
         return parentMenuJSONObjectMap.values();
     }
 
+    /**
+     * Refresh Static Menu Map Service
+     */
     @Transactional(readOnly = true)
     public void refreshMenuMap() {
         menus.clear();
