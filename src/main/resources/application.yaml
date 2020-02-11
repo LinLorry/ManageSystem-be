@@ -24,15 +24,12 @@ spring:
     static-locations: classpath:/static/order
 ---
 manage:
-  loginUrl: ${LOGIN_URL:/login}
   authentication:
     name: ${AUTHENTICATION_NAME:manage}
   secret:
     token: ${TOKEN_SECRET:secret}
     password: ${PWD_SALT:salt}
   wechat:
-    infoUrl: ${WECHAT_INFO_URL:/wechat/info}
-    successUrl: ${WECHAT_SUCCESS_URL:/wechat/success}
     appId: ${WECHAT_APPID:appid}
     secret: ${WECHAT_SECRET:secret}
     accessTokenURL: ${WECHAT_ACCESS_TOKEN_URL:https://api.weixin.qq.com/cgi-bin/token}

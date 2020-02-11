@@ -5,7 +5,6 @@ import com.dghysc.hy.exception.*;
 import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.util.TokenUtil;
 import com.dghysc.hy.wechat.model.WechatUser;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -14,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.net.URLEncoder;
 import java.util.Optional;
 
 /**
@@ -26,10 +24,6 @@ import java.util.Optional;
 @RequestMapping("/api/wechat")
 public class WechatController {
 
-    private final String loginBaseUrl;
-
-    private final String infoBaseUrl;
-
     private final TokenUtil tokenUtil;
 
     private final WechatServer wechatServer;
@@ -37,13 +31,9 @@ public class WechatController {
     private final WechatUserService wechatUserService;
 
     public WechatController(
-            @Value("${manage.loginUrl}") String loginBaseUrl,
-            @Value("${manage.wechat.infoUrl}") String infoBaseUrl,
             TokenUtil tokenUtil, WechatServer wechatServer,
             WechatUserService wechatUserService
     ) {
-        this.loginBaseUrl = loginBaseUrl;
-        this.infoBaseUrl = infoBaseUrl;
         this.tokenUtil = tokenUtil;
         this.wechatServer = wechatServer;
         this.wechatUserService = wechatUserService;
@@ -131,34 +121,38 @@ public class WechatController {
     }
 
     @GetMapping("/login")
-    public void login(@RequestParam(name = "code") String code,
-                      HttpServletResponse response)
-            throws IOException, WechatServiceDownException, WechatUserCodeWrongException {
+    public JSONObject login(@RequestParam(name = "code") String code)
+            throws WechatServiceDownException, WechatUserCodeWrongException {
+        JSONObject response = new JSONObject();
+
         WechatUser wechatUser = wechatUserService.loadByCode(code);
+        response.put("status", 1);
+        response.put("data", wechatUser);
 
         if (wechatUser.getUser() == null) {
-            String url = infoBaseUrl;
-            if (wechatUser.getName() != null) {
-                url += "?name=" + URLEncoder.encode(wechatUser.getName(), "utf-8");
-            }
-            response.sendRedirect(url);
+            response.put("message", "还未注册");
         } else {
-            response.sendRedirect(
-                    loginBaseUrl + "?token=" + tokenUtil.generateToken(wechatUser.getUser())
-            );
+            response.put("message", "登陆成功");
+            response.put("token", tokenUtil.generateToken(wechatUser.getUser()));
         }
+
+        return response;
     }
 
     @GetMapping("/info/{name}")
-    public void submit(@PathVariable String name,
-                       @RequestParam(name = "code") String code,
-                       HttpServletResponse response)
-            throws IOException, WechatServiceDownException, WechatUserCodeWrongException {
+    public JSONObject submit(@PathVariable String name,
+                             @RequestParam(name = "code") String code)
+            throws WechatServiceDownException, WechatUserCodeWrongException {
+        JSONObject response = new JSONObject();
         WechatUser wechatUser = wechatUserService.loadByCode(code);
 
         wechatUser = wechatUserService.update(wechatUser.getId(), name);
 
-        response.sendRedirect(infoBaseUrl + "?name=" + URLEncoder.encode(wechatUser.getName(), "utf-8"));
+        response.put("status", 1);
+        response.put("message", "获取个人信息成功");
+        response.put("data", wechatUser);
+
+        return response;
     }
 
     @ExceptionHandler(value = WechatServiceDownException.class)
