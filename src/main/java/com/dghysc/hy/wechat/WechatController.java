@@ -139,11 +139,17 @@ public class WechatController {
         return response;
     }
 
-    @GetMapping("/info/{name}")
-    public JSONObject submit(@PathVariable String name,
-                             @RequestParam(name = "code") String code)
-            throws WechatServiceDownException, WechatUserCodeWrongException {
+    @PostMapping("/info")
+    public JSONObject submit(@RequestBody JSONObject request)
+            throws WechatServiceDownException, WechatUserCodeWrongException,
+            MissingServletRequestParameterException {
         JSONObject response = new JSONObject();
+
+        String code = Optional.ofNullable(request.getString("code"))
+                .orElseThrow(() -> new MissingServletRequestParameterException("code", "str"));
+        String name = Optional.ofNullable(request.getString("name"))
+                .orElseThrow(() -> new MissingServletRequestParameterException("name", "str"));
+
         WechatUser wechatUser = wechatUserService.loadByCode(code);
 
         wechatUser = wechatUserService.update(wechatUser.getId(), name);
