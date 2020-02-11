@@ -11,51 +11,100 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.persistence.EntityNotFoundException;
 import javax.validation.constraints.NotNull;
+import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.util.Optional;
 
 /**
  * The Wechat User Service
+ *
  * @author lorry
  * @author lin864464995@163.com
  */
 @Service
 public class WechatUserService {
 
-    private final String urlBase;
+    private final String wechatUserAccessTokenUrlBase;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final UriComponentsBuilder wechatUserInfoUriBuilderBase;
+
+    private final RestTemplate restTemplate;
 
     private final UserRepository userRepository;
 
     private final WechatUserRepository wechatUserRepository;
 
     public WechatUserService(
-            @Value("${manage.wechat.userAccessTokenURL}") String url,
+            @Value("${manage.wechat.userAccessTokenURL}") String userAccessTokenUrl,
+            @Value("${manage.wechat.userInfoURL}") String userInfoUrl,
             UserRepository userRepository,
             WechatUserRepository wechatUserRepository,
             WechatServer wechatServer) {
         this.userRepository = userRepository;
         this.wechatUserRepository = wechatUserRepository;
+        this.restTemplate = new RestTemplate();
+        this.restTemplate.getMessageConverters().set(1, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
-        urlBase = url +
+        wechatUserInfoUriBuilderBase = UriComponentsBuilder.fromHttpUrl(userInfoUrl)
+                .queryParam("lang", "zh_CN");
+
+        wechatUserAccessTokenUrlBase = userAccessTokenUrl +
                 "?appid=" + wechatServer.getAppId() +
                 "&secret=" + wechatServer.getSecret() +
                 "&grant_type=authorization_code&code=";
     }
 
-    WechatUser update(@NotNull String id, @NotNull String name) {
+    WechatUser update(@NotNull String id, @NotNull String name)
+            throws WechatServiceDownException {
         WechatUser wechatUser = wechatUserRepository.findById(id)
                 .orElseThrow(EntityNotFoundException::new);
 
         Optional.of(name).ifPresent(wechatUser::setName);
+
+        if (wechatUser.getTokenExpiresTime().getTime() < System.currentTimeMillis()) {
+            // TODO Refresh access token.
+        }
+
+        UriComponentsBuilder builder = wechatUserInfoUriBuilderBase.cloneBuilder()
+                .queryParam("openid", wechatUser.getId())
+                .queryParam("access_token", wechatUser.getAccessToken());
+
+        ResponseEntity<String> responseEntity;
+        try {
+            responseEntity = restTemplate.exchange(
+                    builder.toUriString(), HttpMethod.GET, null, String.class);
+        } catch (RestClientException e) {
+            wechatUserRepository.save(wechatUser);
+            throw new WechatServiceDownException();
+        }
+
+        if (!responseEntity.getStatusCode().is2xxSuccessful()) {
+            wechatUserRepository.save(wechatUser);
+            throw new WechatServiceDownException();
+        }
+
+        JSONObject response = JSONObject.parseObject(
+                Optional.ofNullable(responseEntity.getBody())
+                        .orElseThrow(WechatServiceDownException::new)
+        );
+
+        if (response.getString("errcode") == null) {
+            wechatUser.setNickname(response.getString("nickname"));
+            wechatUser.setSex(response.getInteger("sex"));
+            wechatUser.setProvince(response.getString("province"));
+            wechatUser.setCity(response.getString("city"));
+            wechatUser.setCountry(response.getString("country"));
+            wechatUser.setHeadImgUrl(response.getString("headimgurl"));
+        }
 
         return wechatUserRepository.save(wechatUser);
     }
@@ -80,7 +129,8 @@ public class WechatUserService {
 
     WechatUser loadByCode(String code)
             throws WechatServiceDownException, WechatUserCodeWrongException {
-        final String url = urlBase + code;
+        final String url = wechatUserAccessTokenUrlBase + code;
+
         ResponseEntity<String> responseEntity;
         try {
             responseEntity = restTemplate.exchange(
