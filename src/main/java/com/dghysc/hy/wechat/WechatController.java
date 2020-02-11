@@ -142,7 +142,7 @@ public class WechatController {
     @PostMapping("/info")
     public JSONObject submit(@RequestBody JSONObject request)
             throws WechatServiceDownException, WechatUserCodeWrongException,
-            MissingServletRequestParameterException {
+            WechatRefreshTokenExpireException, MissingServletRequestParameterException {
         JSONObject response = new JSONObject();
 
         String code = Optional.ofNullable(request.getString("code"))

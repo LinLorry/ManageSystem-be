@@ -35,6 +35,8 @@ public class WechatUserService {
 
     private final String wechatUserAccessTokenUrlBase;
 
+    private final String wechatUserRefreshAccessTokenUrlBase;
+
     private final UriComponentsBuilder wechatUserInfoUriBuilderBase;
 
     private final RestTemplate restTemplate;
@@ -45,6 +47,7 @@ public class WechatUserService {
 
     public WechatUserService(
             @Value("${manage.wechat.userAccessTokenURL}") String userAccessTokenUrl,
+            @Value("${manage.wechat.refreshAccessTokenURL}") String refreshAccessTokenUrl,
             @Value("${manage.wechat.userInfoURL}") String userInfoUrl,
             UserRepository userRepository,
             WechatUserRepository wechatUserRepository,
@@ -54,24 +57,29 @@ public class WechatUserService {
         this.restTemplate = new RestTemplate();
         this.restTemplate.getMessageConverters().set(1, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
-        wechatUserInfoUriBuilderBase = UriComponentsBuilder.fromHttpUrl(userInfoUrl)
-                .queryParam("lang", "zh_CN");
-
         wechatUserAccessTokenUrlBase = userAccessTokenUrl +
                 "?appid=" + wechatServer.getAppId() +
                 "&secret=" + wechatServer.getSecret() +
                 "&grant_type=authorization_code&code=";
+
+        wechatUserRefreshAccessTokenUrlBase = refreshAccessTokenUrl +
+                "?appid=" + wechatServer.getAppId() +
+                "&grant_type=refresh_token&refresh_token=";
+
+        wechatUserInfoUriBuilderBase = UriComponentsBuilder.fromHttpUrl(userInfoUrl)
+                .queryParam("lang", "zh_CN");
+
     }
 
     WechatUser update(@NotNull String id, @NotNull String name)
-            throws WechatServiceDownException {
+            throws WechatServiceDownException, WechatRefreshTokenExpireException {
         WechatUser wechatUser = wechatUserRepository.findById(id)
                 .orElseThrow(EntityNotFoundException::new);
 
         Optional.of(name).ifPresent(wechatUser::setName);
 
-        if (wechatUser.getTokenExpiresTime().getTime() < System.currentTimeMillis()) {
-            // TODO Refresh access token.
+        if (wechatUser.getTokenExpiresTime().getTime() > System.currentTimeMillis()) {
+            wechatUser = refreshAccessToken(wechatUser);
         }
 
         UriComponentsBuilder builder = wechatUserInfoUriBuilderBase.cloneBuilder()
@@ -178,5 +186,43 @@ public class WechatUserService {
 
     Page<WechatUser> loadAllByName(String name, Integer pageNumber, Integer pageSize) {
         return wechatUserRepository.findAllByName(name, PageRequest.of(pageNumber, pageSize));
+    }
+
+    WechatUser refreshAccessToken(WechatUser wechatUser)
+            throws WechatServiceDownException, WechatRefreshTokenExpireException {
+        final String url = wechatUserRefreshAccessTokenUrlBase + wechatUser.getRefreshToken();
+
+        ResponseEntity<String> responseEntity;
+        try {
+            responseEntity = restTemplate.exchange(
+                    url, HttpMethod.GET, null, String.class);
+        } catch (RestClientException e) {
+            throw new WechatServiceDownException();
+        }
+
+        long now = System.currentTimeMillis();
+
+        if (!responseEntity.getStatusCode().is2xxSuccessful()) {
+            throw new WechatServiceDownException();
+        }
+
+        JSONObject response = JSONObject.parseObject(
+                Optional.ofNullable(responseEntity.getBody())
+                        .orElseThrow(WechatServiceDownException::new)
+        );
+
+        if (response.getString("errcode") != null) {
+            throw new WechatRefreshTokenExpireException();
+        }
+
+        String accessToken = response.getString("access_token");
+        String refreshToken = response.getString("refresh_token");
+        long expiresIn = response.getLongValue("expires_in") * 1000L;
+
+        wechatUser.setAccessToken(accessToken);
+        wechatUser.setRefreshToken(refreshToken);
+        wechatUser.setTokenExpiresTime(new Timestamp(now + expiresIn));
+
+        return wechatUserRepository.save(wechatUser);
     }
 }
