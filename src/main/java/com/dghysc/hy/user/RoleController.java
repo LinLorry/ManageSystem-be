@@ -20,8 +20,11 @@ public class RoleController {
 
     private final RoleService roleService;
 
-    public RoleController(RoleService roleService) {
+    private final MenuService menuService;
+
+    public RoleController(RoleService roleService, MenuService menuService) {
         this.roleService = roleService;
+        this.menuService = menuService;
     }
 
     @PostMapping
@@ -46,6 +49,8 @@ public class RoleController {
                 role = roleService.update(id, roleStr, name, userIds, menuIds);
                 response.put("message", "Update role success");
             }
+
+            menuService.refreshMenuMap();
 
             response.put("status", 1);
             response.put("data", role);
@@ -95,6 +100,7 @@ public class RoleController {
             if (roleService.delete(id)) {
                 response.put("status", 1);
                 response.put("message", "Delete role success.");
+                menuService.refreshMenuMap();
             } else {
                 response.put("status", 0);
                 response.put("message", "Delete role fail.");
