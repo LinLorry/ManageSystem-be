@@ -1,12 +1,12 @@
 package com.dghysc.hy.user.model;
 
+import com.dghysc.hy.util.EntityUtil;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
 import java.io.Serializable;
 import java.sql.Timestamp;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -24,11 +24,11 @@ public class ParentMenu implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(unique = true, length = 16)
+    @Column(nullable = false, unique = true, length = 16)
     private String name;
 
-    @Column(length = 64)
-    private String url;
+    @Column(nullable = false, length = 32)
+    private String icon;
 
     @Column(nullable = false)
     private Integer location;
@@ -69,12 +69,12 @@ public class ParentMenu implements Serializable {
         this.name = name;
     }
 
-    public String getUrl() {
-        return url;
+    public String getIcon() {
+        return icon;
     }
 
-    public void setUrl(String url) {
-        this.url = url;
+    public void setIcon(String url) {
+        this.icon = url;
     }
 
     public Integer getLocation() {
@@ -123,13 +123,6 @@ public class ParentMenu implements Serializable {
 
     @JsonAnyGetter
     public Map<String, Object> getInfo() {
-        Map<String, Object> map = new HashMap<>();
-
-        map.put("creatorName", createUser.getName());
-        map.put("creatorId", createUser.getId());
-        map.put("updaterName", updateUser.getName());
-        map.put("updaterId", updateUser.getId());
-
-        return map;
+        return EntityUtil.getCreateAndUpdateInfo(getCreateUser(), getUpdateUser());
     }
 }

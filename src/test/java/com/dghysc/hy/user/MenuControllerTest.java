@@ -82,7 +82,7 @@ public class MenuControllerTest {
 
         JSONObject body = new JSONObject();
         body.put("name", testUtil.nextString());
-        body.put("url", testUtil.nextString());
+        body.put("icon", testUtil.nextString());
         body.put("location", testUtil.nextInt());
 
         HttpEntity<JSONObject> request = new HttpEntity<>(body, headers);
@@ -103,7 +103,7 @@ public class MenuControllerTest {
         JSONObject body = new JSONObject();
         body.put("id", testUtil.nextId(ParentMenu.class));
         body.put("name", testUtil.nextString());
-        body.put("url", testUtil.nextString());
+        body.put("icon", testUtil.nextString());
         body.put("location", testUtil.nextInt());
 
         HttpEntity<JSONObject> request = new HttpEntity<>(body, headers);
