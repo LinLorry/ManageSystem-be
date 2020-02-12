@@ -24,6 +24,8 @@ import static org.junit.Assert.*;
 @RunWith(SpringRunner.class)
 public class RoleServiceTest {
 
+    private Integer roleId;
+
     @Autowired
     public TestUtil testUtil;
 
@@ -39,9 +41,14 @@ public class RoleServiceTest {
     @Before
     public void initTest() {
         testUtil.setAuthorities("ROLE_ADMIN");
-        if (roleRepository.count() == 0) {
+
+        if (roleRepository.count() < 2) {
             add();
         }
+
+        do {
+            roleId = testUtil.nextId(Role.class);
+        } while (roleId != 1);
     }
 
     @Test
@@ -59,7 +66,7 @@ public class RoleServiceTest {
 
     @Test
     public void update() {
-        Integer id = testUtil.nextId(Role.class);
+        Integer id = roleId;
         String roleStr = testUtil.nextString();
         String name = testUtil.nextString();
         List<Long> userId = new ArrayList<>();
@@ -79,7 +86,7 @@ public class RoleServiceTest {
 
     @Test
     public void loadById() {
-        Integer id = testUtil.nextId(Role.class);
+        Integer id = roleId;
         Role role = roleRepository.findById(id)
                 .orElseThrow(EntityNotFoundException::new);
 
@@ -101,7 +108,7 @@ public class RoleServiceTest {
 
     @Test
     public void delete() {
-        Integer id = testUtil.nextId(Role.class);
+        Integer id = roleId;
         System.out.println(id);
         Role role = roleRepository.findById(id).orElseThrow(EntityNotFoundException::new);
 
