@@ -1,5 +1,6 @@
 package com.dghysc.hy.user;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.user.model.Role;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -42,10 +43,14 @@ public class RoleController {
                 role = roleService.add(roleStr, name);
                 response.put("message", "Create role success.");
             } else {
-                List<Long> userIds = request.getJSONArray("users")
-                        .toJavaList(Long.TYPE);
-                List<Integer> menuIds = request.getJSONArray("menus")
-                        .toJavaList(Integer.TYPE);
+                JSONArray jsonUserIds = request.getJSONArray("users");
+                JSONArray jsonMenuIds = request.getJSONArray("menus");
+
+                List<Long> userIds = jsonUserIds == null ? null :
+                        jsonUserIds.toJavaList(Long.TYPE);
+                List<Integer> menuIds = jsonMenuIds == null ? null :
+                        jsonMenuIds.toJavaList(Integer.TYPE);
+
                 role = roleService.update(id, roleStr, name, userIds, menuIds);
                 response.put("message", "Update role success");
             }

@@ -1,5 +1,6 @@
 package com.dghysc.hy.user;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.user.model.ChildMenu;
 import com.dghysc.hy.user.model.ParentMenu;
@@ -155,7 +156,9 @@ public class MenuController {
         String url = request.getString("url");
         Integer location = request.getInteger("location");
         Integer parentId = request.getInteger("parentId");
-        List<Integer> roleIds = request.getJSONArray("roles").toJavaList(Integer.TYPE);
+        JSONArray roles = request.getJSONArray("roles");
+        List<Integer> roleIds = roles == null ? null :
+                roles.toJavaList(Integer.TYPE);
 
         try {
             ChildMenu childMenu;
