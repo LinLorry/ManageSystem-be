@@ -317,7 +317,8 @@ public class MenuService {
         Map<ParentMenu, JSONObject> parentMenuJSONObjectMap = new HashMap<>();
 
         roles.forEach(role -> {
-            Map<ParentMenu, Pair<JSONObject, Set<ChildMenu>>> map = menus.get(role.getAuthority());
+            Map<ParentMenu, Pair<JSONObject, Set<ChildMenu>>> map = Optional
+                    .ofNullable(menus.get(role.getAuthority())).orElse(new HashMap<>());
             map.forEach((key, value) -> {
                 parentMenuJSONObjectMap.putIfAbsent(key, (JSONObject) value.getFirst().clone());
                 parentTmp.putIfAbsent(key, new HashSet<>());
