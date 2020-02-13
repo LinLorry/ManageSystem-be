@@ -54,14 +54,16 @@ public class MenuService {
      * @param location the location of the parent menu.
      * @return the parent menu.
      */
-    ParentMenu addParent(@NotNull String name, @NotNull String icon, @NotNull Integer location) {
+    ParentMenu addParent(@NotNull String name, @NotNull String icon,
+                         @Nullable Integer location) {
         Timestamp now = new Timestamp(System.currentTimeMillis());
         User creator = SecurityUtil.getUser();
 
         ParentMenu parentMenu = new ParentMenu();
         Optional.of(name).ifPresent(parentMenu::setName);
         Optional.of(icon).ifPresent(parentMenu::setIcon);
-        Optional.of(location).ifPresent(parentMenu::setLocation);
+        Optional.ofNullable(location).ifPresentOrElse(parentMenu::setLocation,
+                () -> parentMenu.setLocation(0));
 
         parentMenu.setCreateTime(now);
         parentMenu.setCreateUser(creator);
@@ -171,11 +173,13 @@ public class MenuService {
      */
     ChildMenu addChild(
             @NotNull String name, @NotNull String url,
-            @NotNull Integer location, @NotNull Integer parentId,
+            @Nullable Integer location, @NotNull Integer parentId,
             @Nullable Iterable<Integer> roleIds
     ) {
-        if (name == null || url == null || parentId == null || location == null) {
+        if (name == null || url == null || parentId == null) {
             throw new NullPointerException();
+        } else if (location == null) {
+            location = 0;
         }
 
         Timestamp now = new Timestamp(System.currentTimeMillis());
