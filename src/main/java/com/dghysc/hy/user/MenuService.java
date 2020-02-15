@@ -32,10 +32,10 @@ public class MenuService {
 
     private final ChildMenuRepository childMenuRepository;
 
-    private static Map<ChildMenu, JSONObject> childData = new HashMap<>();
+    private static Map<ChildMenu, JSONObject> childData;
 
     private static Map<String, Map<ParentMenu,
-            Pair<JSONObject, Set<ChildMenu>>>> menus = new HashMap<>();
+            Pair<JSONObject, Set<ChildMenu>>>> menus;
 
     public MenuService(
             RoleRepository roleRepository,
@@ -328,6 +328,9 @@ public class MenuService {
      */
     public Collection<JSONObject> getMenus(Collection<? extends GrantedAuthority> roles) {
         if (roles == null) return new ArrayList<>();
+        Map<ChildMenu, JSONObject> childData = MenuService.childData;
+        Map<String, Map<ParentMenu,
+                Pair<JSONObject, Set<ChildMenu>>>> menus = MenuService.menus;
 
         Map<ParentMenu, Set<ChildMenu>> parentTmp = new HashMap<>();
 
@@ -360,8 +363,9 @@ public class MenuService {
      */
     @Transactional(readOnly = true)
     public void refreshMenuMap() {
-        menus.clear();
-        childData.clear();
+        Map<ChildMenu, JSONObject> childData = new HashMap<>();
+        Map<String, Map<ParentMenu,
+                Pair<JSONObject, Set<ChildMenu>>>> menus = new HashMap<>();
 
         roleRepository.findAll().forEach(role -> {
             Map<ParentMenu, Pair<JSONObject, Set<ChildMenu>>> parentTmp = new HashMap<>();
@@ -390,5 +394,8 @@ public class MenuService {
 
             menus.put(role.getAuthority(), parentTmp);
         });
+
+        MenuService.childData = childData;
+        MenuService.menus = menus;
     }
 }
