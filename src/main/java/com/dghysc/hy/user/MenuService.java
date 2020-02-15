@@ -306,6 +306,21 @@ public class MenuService {
     }
 
     /**
+     * Load Child Menu With Its Roles
+     * @param id the child menu id
+     * @return the child menu can get it roles.
+     */
+    @Transactional(readOnly = true)
+    public ChildMenu loadChildWithRoles(@NotNull Integer id) {
+        ChildMenu childMenu = childMenuRepository.findById(id)
+                .orElseThrow(EntityNotFoundException::new);
+
+        childMenu.getRoles().size();
+
+        return childMenu;
+    }
+
+    /**
      * Get Menus Service
      *
      * @param roles according those get menus.

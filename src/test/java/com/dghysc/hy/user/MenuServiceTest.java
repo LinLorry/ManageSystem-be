@@ -294,4 +294,11 @@ public class MenuServiceTest {
     public void loadAllChildMenus() {
         assertEquals(childMenuRepository.count(), menuService.loadAllChildMenus().size());
     }
+
+    @Test
+    public void loadChildRoles() {
+        ChildMenu childMenu = menuService.loadChildWithRoles(childId);
+
+        System.out.println(childMenu.getRoles());
+    }
 }
