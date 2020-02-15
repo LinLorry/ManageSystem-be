@@ -1,3 +1,0 @@
-[submodule "fe"]
-	path = src/main/resources/static
-	url = https://github.com/LinLorry/Manage-fe.git
