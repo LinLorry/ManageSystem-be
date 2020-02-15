@@ -204,11 +204,13 @@ public class MenuController {
             response.put("message", "获取所有子菜单成功！");
             response.put("data", menuService.loadAllChildMenus());
         } else {
-            ChildMenu childMenu = menuService.loadChildMenuById(id);
+            ChildMenu childMenu = menuService.loadChildWithRoles(id);
             if (childMenu != null) {
+                JSONObject data = getChildMenuInfo(childMenu);
+
                 response.put("status", 1);
                 response.put("message", "获取子菜单成功！");
-                response.put("data", childMenu);
+                response.put("data", data);
             } else {
                 response.put("status", 0);
                 response.put("message", "Id为：" + id + "的子菜单不存在");
@@ -257,5 +259,18 @@ public class MenuController {
             response.put("message", "更新子菜单位置失败");
         }
         return response;
+    }
+
+    private JSONObject getChildMenuInfo(ChildMenu childMenu) {
+        JSONObject data = new JSONObject();
+
+        data.put("id", childMenu.getId());
+        data.put("url", childMenu.getId());
+        data.put("name", childMenu.getName());
+        data.put("location", childMenu.getLocation());
+        data.put("roles", childMenu.getRoles());
+        data.putAll(childMenu.getInfo());
+
+        return data;
     }
 }
