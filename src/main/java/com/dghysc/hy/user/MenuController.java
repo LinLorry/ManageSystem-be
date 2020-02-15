@@ -95,7 +95,7 @@ public class MenuController {
             if (parentMenu != null) {
                 response.put("status", 1);
                 response.put("message", "获取父菜单成功");
-                response.put("data", menuService.loadParentMenuById(id));
+                response.put("data", parentMenu);
             } else {
                 response.put("status", 0);
                 response.put("message", "Id为：" + id + "的父菜单不存在");

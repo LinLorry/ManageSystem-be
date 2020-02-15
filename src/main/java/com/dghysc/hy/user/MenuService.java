@@ -145,11 +145,10 @@ public class MenuService {
      *
      * @param id the parent menu id.
      * @return the parent menu.
-     * @throws EntityNotFoundException  if not parent menu id is {@code id}.
      * @throws IllegalArgumentException if {@code id} is {@literal null}.
      */
     ParentMenu loadParentMenuById(@NotNull Integer id) {
-        return parentMenuRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+        return parentMenuRepository.findById(id).orElse(null);
     }
 
     /**
@@ -291,11 +290,10 @@ public class MenuService {
      *
      * @param id the child menu id.
      * @return the child menu.
-     * @throws EntityNotFoundException if not child menu id is {@code id}.
      * @throws IllegalArgumentException if {@code id} is {@literal null}.
      */
     ChildMenu loadChildMenuById(@NotNull Integer id) {
-        return childMenuRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+        return childMenuRepository.findById(id).orElse(null);
     }
 
     /**
