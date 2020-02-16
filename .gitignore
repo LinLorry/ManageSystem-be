@@ -1,4 +1,11 @@
-.idea/
-.settings
+# Build reuslt
 target/
+
+# Local env files
+.env
+
+# Editor directories and files
+.idea
+.vscode
+.settings
 Manage.iml
