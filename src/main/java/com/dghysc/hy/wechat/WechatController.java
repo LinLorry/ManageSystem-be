@@ -75,6 +75,26 @@ public class WechatController {
         return response;
     }
 
+    /**
+     * Update Wechat User Api
+     * @param request {
+     *     "id": the wechat user id: str[not null],
+     *     "disable": disable this user: bool,
+     *     "userId": the user id: long,
+     *     "roles": [
+     *         id, ...
+     *     ]: the role id list
+     * }
+     * @return if success return {
+     *     "status": 1,
+     *     "message": message: str,
+     *     "data": wechat user data: object
+     * } else return {
+     *     "status": 0,
+     *     "message": error message: str
+     * }
+     * @throws MissingServletRequestParameterException if id is null.
+     */
     @PostMapping("/user")
     @PreAuthorize("hasRole('ADMIN')")
     public JSONObject updateWechatUser(@RequestBody JSONObject request)
@@ -82,7 +102,7 @@ public class WechatController {
         JSONObject response = new JSONObject();
         String id = Optional.ofNullable(request.getString("id"))
                 .orElseThrow(() -> new MissingServletRequestParameterException("id", "str"));
-        Boolean disable = request.getBoolean("disable");
+        boolean disable = request.getBooleanValue("disable");
         Long userId = request.getLong("userId");
 
         try {
@@ -91,7 +111,12 @@ public class WechatController {
                 response.put("status", 1);
                 response.put("message", "禁用该用户成功");
             } else {
-                response.put("data", wechatUserService.addOrUpdateUser(id, userId));
+                JSONArray roles = request.getJSONArray("roles");
+                List<Integer> roleIds = roles == null ? new ArrayList<>() : roles.toJavaList(Integer.TYPE);
+
+                WechatUser wechatUser = wechatUserService.addOrUpdateUser(id, userId);
+                wechatUserService.updateRole(wechatUser.getId(), roleIds);
+                response.put("data", wechatUser);
                 response.put("status", 1);
                 response.put("message", "更新微信用户成功");
             }

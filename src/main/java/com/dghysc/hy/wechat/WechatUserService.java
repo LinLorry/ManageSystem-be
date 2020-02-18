@@ -3,6 +3,7 @@ package com.dghysc.hy.wechat;
 import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.exception.*;
 import com.dghysc.hy.user.model.User;
+import com.dghysc.hy.user.repo.RoleRepository;
 import com.dghysc.hy.user.repo.UserRepository;
 import com.dghysc.hy.wechat.model.WechatUser;
 import com.dghysc.hy.wechat.repo.WechatUserRepository;
@@ -14,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -22,6 +24,7 @@ import javax.persistence.EntityNotFoundException;
 import javax.validation.constraints.NotNull;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -43,6 +46,8 @@ public class WechatUserService {
 
     private final UserRepository userRepository;
 
+    private final RoleRepository roleRepository;
+
     private final WechatUserRepository wechatUserRepository;
 
     public WechatUserService(
@@ -50,9 +55,11 @@ public class WechatUserService {
             @Value("${manage.wechat.refreshAccessTokenURL}") String refreshAccessTokenUrl,
             @Value("${manage.wechat.userInfoURL}") String userInfoUrl,
             UserRepository userRepository,
+            RoleRepository roleRepository,
             WechatUserRepository wechatUserRepository,
             WechatServer wechatServer) {
         this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
         this.wechatUserRepository = wechatUserRepository;
         this.restTemplate = new RestTemplate();
         this.restTemplate.getMessageConverters().set(1, new StringHttpMessageConverter(StandardCharsets.UTF_8));
@@ -122,6 +129,7 @@ public class WechatUserService {
      * @param id the wechat user id.
      * @param userId the userId, if is null, create new user.
      * @return the wechat user.
+     * @throws EntityNotFoundException  if not wechat user id is {@code id}.
      * @throws DuplicateUserException if have wechat user's user id is {@code id}, throw this exception.
      * @throws UserNoFoundException if not {@code user id} not exist throw this exception.
      */
@@ -149,6 +157,25 @@ public class WechatUserService {
         wechatUser.setUser(user);
 
         return wechatUserRepository.save(wechatUser);
+    }
+
+    /**
+     * Update Wechat User Roles
+     * @param id the wechat user id.
+     * @param roleIds the roles id.
+     * @throws EntityNotFoundException  if not wechat user id is {@code id}.
+     * @throws IllegalArgumentException if {@code id} or {@code roleIds} is {@literal null}.
+     */
+    @Transactional
+    public void updateRole(@NotNull String id, @NotNull List<Integer> roleIds) {
+        WechatUser wechatUser = wechatUserRepository.findById(id)
+                .orElseThrow(EntityNotFoundException::new);
+
+        wechatUser.getUser().getAuthorities()
+                .removeIf(role -> !roleIds.contains(role.getId()));
+        wechatUser.getUser().getAuthorities().addAll(
+                roleRepository.findAllById(roleIds));
+        userRepository.save(wechatUser.getUser());
     }
 
     /**
