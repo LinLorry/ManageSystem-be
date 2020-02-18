@@ -135,6 +135,25 @@ public class WechatUserService {
         return wechatUserRepository.save(wechatUser);
     }
 
+    /**
+     * Disable Wechat User Service
+     * @param id the wechat user id.
+     * @return the wechat user.
+     * @throws EntityNotFoundException if the wechat user don't exist.
+     * @throws IllegalArgumentException if {@code id} is {@literal null}.
+     */
+    WechatUser disable(@NotNull String id) {
+        WechatUser wechatUser = wechatUserRepository.findById(id)
+                .orElseThrow(EntityNotFoundException::new);
+
+        if (wechatUser.getUser() != null) {
+            wechatUser.setOldUserId(wechatUser.getUser().getId());
+            wechatUser.setUser(null);
+
+            return wechatUserRepository.save(wechatUser);
+        } else return wechatUser;
+    }
+
     WechatUser loadByCode(String code)
             throws WechatServiceDownException, WechatUserCodeWrongException {
         final String url = wechatUserAccessTokenUrlBase + code;

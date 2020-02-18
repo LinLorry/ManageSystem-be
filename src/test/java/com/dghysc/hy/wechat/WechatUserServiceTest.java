@@ -48,7 +48,16 @@ public class WechatUserServiceTest {
     }
 
     @Test
-    public void loadByName() throws Exception {
+    public void disable() {
+        String id = testUtil.nextId(WechatUser.class);
+
+        WechatUser wechatUser = wechatUserService.disable(id);
+
+        assertNull(wechatUser.getUser());
+    }
+
+    @Test
+    public void loadByName() {
         String id = testUtil.nextId(WechatUser.class);
         WechatUser wechatUser = wechatUserRepository.findById(id)
                 .orElseThrow(EntityNotFoundException::new);

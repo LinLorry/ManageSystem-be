@@ -48,6 +48,9 @@ public class WechatUser implements Serializable {
     @JoinColumn
     private User user;
 
+    @JsonIgnore
+    private Long oldUserId;
+
     public WechatUser() {
     }
 
@@ -127,6 +130,14 @@ public class WechatUser implements Serializable {
         this.accessToken = accessToken;
     }
 
+    public Timestamp getTokenExpiresTime() {
+        return tokenExpiresTime;
+    }
+
+    public void setTokenExpiresTime(Timestamp tokenFailureTime) {
+        this.tokenExpiresTime = tokenFailureTime;
+    }
+
     public String getRefreshToken() {
         return refreshToken;
     }
@@ -143,11 +154,11 @@ public class WechatUser implements Serializable {
         this.user = user;
     }
 
-    public Timestamp getTokenExpiresTime() {
-        return tokenExpiresTime;
+    public Long getOldUserId() {
+        return oldUserId;
     }
 
-    public void setTokenExpiresTime(Timestamp tokenFailureTime) {
-        this.tokenExpiresTime = tokenFailureTime;
+    public void setOldUserId(Long oldUserId) {
+        this.oldUserId = oldUserId;
     }
 }
