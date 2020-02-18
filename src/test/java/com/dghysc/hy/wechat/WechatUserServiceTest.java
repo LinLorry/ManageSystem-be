@@ -1,5 +1,7 @@
 package com.dghysc.hy.wechat;
 
+import com.dghysc.hy.exception.DuplicateUserException;
+import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.util.TestUtil;
 import com.dghysc.hy.wechat.model.WechatUser;
 import com.dghysc.hy.wechat.repo.WechatUserRepository;
@@ -45,6 +47,23 @@ public class WechatUserServiceTest {
 
         WechatUser wechatUser = wechatUserService.update(id, name);
         assertEquals(name, wechatUser.getName());
+    }
+
+    @Test
+    public void addOrUpdateUser() throws Exception {
+        String id = testUtil.nextId(WechatUser.class);
+        Long userId = testUtil.nextId(User.class);
+        WechatUser wechatUser;
+
+        try {
+            wechatUser = wechatUserService.addOrUpdateUser(id, userId);
+
+            assertEquals(wechatUser.getUser().getId(), userId);
+        } catch (DuplicateUserException e) {
+            wechatUser = wechatUserService.addOrUpdateUser(id, null);
+        }
+
+        assertNotNull(wechatUser.getUser());
     }
 
     @Test

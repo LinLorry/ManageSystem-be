@@ -1,8 +1,8 @@
 package com.dghysc.hy.wechat;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.exception.*;
-import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.util.TokenUtil;
 import com.dghysc.hy.wechat.model.WechatUser;
 import org.springframework.data.domain.Page;
@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -80,15 +82,19 @@ public class WechatController {
         JSONObject response = new JSONObject();
         String id = Optional.ofNullable(request.getString("id"))
                 .orElseThrow(() -> new MissingServletRequestParameterException("id", "str"));
+        Boolean disable = request.getBoolean("disable");
         Long userId = request.getLong("userId");
 
-        User user = new User();
-        user.setId(userId);
-
-        response.put("status", 1);
-
         try {
-            response.put("data", wechatUserService.addOrUpdateUser(id, user));
+            if (disable) {
+                response.put("data", wechatUserService.disable(id));
+                response.put("status", 1);
+                response.put("message", "禁用该用户成功");
+            } else {
+                response.put("data", wechatUserService.addOrUpdateUser(id, userId));
+                response.put("status", 1);
+                response.put("message", "更新微信用户成功");
+            }
         } catch (EntityNotFoundException e) {
             response.put("status", 0);
             response.put("message", "Id为" + id + "的微信用户不存在");

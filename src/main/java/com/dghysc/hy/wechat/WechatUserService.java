@@ -117,20 +117,36 @@ public class WechatUserService {
         return wechatUserRepository.save(wechatUser);
     }
 
-    WechatUser addOrUpdateUser(@NotNull String id, @Nullable User user)
+    /**
+     * Add or Update WechatUser User
+     * @param id the wechat user id.
+     * @param userId the userId, if is null, create new user.
+     * @return the wechat user.
+     * @throws DuplicateUserException if have wechat user's user id is {@code id}, throw this exception.
+     * @throws UserNoFoundException if not {@code user id} not exist throw this exception.
+     */
+    WechatUser addOrUpdateUser(@NotNull String id, @Nullable Long userId)
             throws DuplicateUserException, UserNoFoundException {
         WechatUser wechatUser = wechatUserRepository.findById(id)
                 .orElseThrow(EntityNotFoundException::new);
 
-        if (user == null) {
-            wechatUser.setUser(null);
-        } else if (user.getId() == null) {
-            wechatUser.setUser(user);
-        } else if (wechatUserRepository.existsByUserId(user.getId())) {
+        if (userId == null) {
+            if (wechatUser.getUser() != null) {
+                return wechatUser;
+            }
+            wechatUser.setUser(new User());
+        } else if (wechatUser.getUser() != null &&
+                wechatUser.getUser().getId().equals(userId)) {
+            return wechatUser;
+        } else if (wechatUserRepository.existsByUserId(userId)) {
             throw new DuplicateUserException();
-        } else if (userRepository.existsById(user.getId())) {
-            wechatUser.setUser(user);
-        } else throw new UserNoFoundException();
+        } else if (!userRepository.existsById(userId)) {
+            throw new UserNoFoundException();
+        }
+
+        User user = new User();
+        user.setId(userId);
+        wechatUser.setUser(user);
 
         return wechatUserRepository.save(wechatUser);
     }
