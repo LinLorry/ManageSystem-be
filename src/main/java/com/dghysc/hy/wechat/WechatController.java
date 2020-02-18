@@ -39,7 +39,8 @@ public class WechatController {
         this.wechatUserService = wechatUserService;
     }
 
-    @GetMapping
+    @GetMapping("/user")
+    @PreAuthorize("hasRole('ADMIN')")
     public JSONObject getWechatUser(
             @RequestParam(required = false) String id,
             @RequestParam(required = false, defaultValue = "0") Integer pageNumber,
@@ -72,8 +73,9 @@ public class WechatController {
         return response;
     }
 
-    @PostMapping
-    public JSONObject addOrUpdateWechatUser(@RequestBody JSONObject request)
+    @PostMapping("/user")
+    @PreAuthorize("hasRole('ADMIN')")
+    public JSONObject updateWechatUser(@RequestBody JSONObject request)
             throws MissingServletRequestParameterException {
         JSONObject response = new JSONObject();
         String id = Optional.ofNullable(request.getString("id"))
