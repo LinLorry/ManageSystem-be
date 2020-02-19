@@ -2,8 +2,8 @@ package com.dghysc.hy.work;
 
 import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.util.TestUtil;
+import com.dghysc.hy.work.model.Work;
 import com.dghysc.hy.work.repo.WorkRepository;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +17,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Random;
+
+import static org.junit.Assert.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -36,38 +38,45 @@ public class WorkControllerTest {
     private WorkRepository workRepository;
 
     @Test
-    public void create() throws URISyntaxException {
-        final String url = baseUrl + "/create";
-        URI uri = new URI(url);
-
+    public void create() {
         JSONObject requestBody = new JSONObject();
         requestBody.put("name", testUtil.nextString());
         requestBody.put("comment", testUtil.nextString());
 
         HttpEntity<JSONObject> request = new HttpEntity<>(requestBody, testUtil.getTokenHeader());
 
-        ResponseEntity<JSONObject> response = restTemplate.postForEntity(uri, request, JSONObject.class);
+        ResponseEntity<JSONObject> responseEntity = restTemplate.exchange(
+                baseUrl, HttpMethod.POST, request, JSONObject.class
+        );
 
-        Assert.assertEquals(200, response.getStatusCodeValue());
+        JSONObject response = responseEntity.getBody();
+        System.out.println(response);
+
+        assertEquals(200, responseEntity.getStatusCodeValue());
+        assertNotNull(response);
+        assertEquals(1, response.getIntValue("status"));
     }
 
     @Test
-    public void update() throws URISyntaxException {
-        final String url = baseUrl + "/update";
-        final int number = (int) workRepository.count();
-        URI uri = new URI(url);
-
+    public void update() {
         JSONObject requestBody = new JSONObject();
-        requestBody.put("id", random.nextInt(number));
+
+        requestBody.put("id", testUtil.nextId(Work.class));
         requestBody.put("name", testUtil.nextString());
         requestBody.put("comment", testUtil.nextString());
 
         HttpEntity<JSONObject> request = new HttpEntity<>(requestBody, testUtil.getTokenHeader());
 
-        ResponseEntity<JSONObject> response = restTemplate.postForEntity(uri, request, JSONObject.class);
+        ResponseEntity<JSONObject> responseEntity = restTemplate.exchange(
+                baseUrl, HttpMethod.POST, request, JSONObject.class
+        );
 
-        System.out.println(response.getBody());
-        Assert.assertEquals(200, response.getStatusCodeValue());
+        JSONObject response = responseEntity.getBody();
+        System.out.println(response);
+
+        assertEquals(200, responseEntity.getStatusCodeValue());
+        assertNotNull(response);
+        assertEquals(1, response.getIntValue("status"));
     }
 
     @Test
@@ -82,7 +91,7 @@ public class WorkControllerTest {
                 .exchange(uri, HttpMethod.GET, request, JSONObject.class);
 
         System.out.println(response.getBody());
-        Assert.assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCodeValue());
     }
 
     @Test
@@ -100,6 +109,6 @@ public class WorkControllerTest {
                 .exchange(uri, HttpMethod.DELETE, request, JSONObject.class);
 
         System.out.println(response.getBody());
-        Assert.assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCodeValue());
     }
 }
