@@ -84,6 +84,7 @@ public class WorkController {
      *     "status": 1,
      *     "message": "获取生产流程成功",
      *     "data": {
+     *         "size": page size: int
      *         "total": page total number: int,
      *         "works": works: array
      *     }
@@ -110,6 +111,7 @@ public class WorkController {
 
             JSONObject data = new JSONObject();
             Page<Work> page = workService.load(likeMap, pageNumber, pageSize);
+            data.put("size", page.getSize());
             data.put("total", page.getTotalPages());
             data.put("works", page.getContent());
 
