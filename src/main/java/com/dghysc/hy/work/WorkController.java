@@ -117,7 +117,14 @@ public class WorkController {
 
             response.put("data", data);
         } else {
-            response.put("data", workService.loadById(id));
+            try {
+                response.put("data", workService.loadById(id));
+            } catch (EntityNotFoundException e) {
+                response.put("status", 0);
+                response.put("message", "Id为" + id + "的生产流程不存在");
+                return response;
+            }
+
         }
 
         response.put("status", 1);
