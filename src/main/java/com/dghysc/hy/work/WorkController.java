@@ -3,6 +3,7 @@ package com.dghysc.hy.work;
 import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.work.model.Work;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -124,25 +125,30 @@ public class WorkController {
     }
 
     /**
-     * Delete Work Api.
-     * @param request {
-     *     "id": the work id: Long
-     * }
-     * @return {
+     * Delete Work Api
+     * @param id the work id.
+     * @return if delete success return {
      *     "status": 1,
-     *     "message": "Delete work success."
+     *     "message": "删除生产流程成功"
+     * } else return {
+     *     "status": 1,
+     *     "message": error message: str
      * }
      */
     @DeleteMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public JSONObject delete(@RequestBody JSONObject request) {
+    public JSONObject delete(@RequestParam Integer id) {
         JSONObject response = new JSONObject();
 
-        Integer id = Objects.requireNonNull(request.getInteger("id"));
-        workService.removeById(id);
+        try {
+            workService.removeById(id);
 
-        response.put("status", 1);
-        response.put("message", "Delete work success.");
+            response.put("status", 1);
+            response.put("message", "删除生产流程成功");
+        } catch (EmptyResultDataAccessException e) {
+            response.put("status", 0);
+            response.put("message", "Id为" + id + "的生产流程不存在");
+        }
 
         return response;
     }
