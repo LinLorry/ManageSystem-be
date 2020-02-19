@@ -1,19 +1,14 @@
 package com.dghysc.hy.work;
 
 import com.alibaba.fastjson.JSONObject;
-import com.dghysc.hy.util.SecurityUtil;
 import com.dghysc.hy.work.model.Work;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import javax.transaction.Transactional;
-import java.sql.Timestamp;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Objects;
+import javax.persistence.EntityNotFoundException;
+import java.util.*;
 
 /**
  * Work Controller
@@ -31,97 +26,47 @@ public class WorkController {
     }
 
     /**
-     * Create Work Api
+     * Add Or Update Work Api
      * @param request {
-     *     "name": work name: String[must],
-     *     "comment": work comment: String
+     *     "id": the work id: int,
+     *     "name": the work name: str,
+     *     "comment": the work comment: str
      * }
-     * @return create work success return {
+     * @return if add or update success return {
      *     "status": 1,
-     *     "message": "Create work success."
-     *     "data": {
-     *         "id": work id: Integer,
-     *         "name": work name: String,
-     *         "comment": work comment: String,
-     *         "createTime": work create time: Timestamp,
-     *         "updateTime": work update time: Timestamp
-     *     }
+     *     "message": message: str,
+     *     "data": work data: object
+     * } else return {
+     *     "status": 0,
+     *     "message": error message: str
      * }
      */
-    @ResponseBody
-    @PostMapping("/create")
-    public JSONObject create(@RequestBody JSONObject request) {
+    @PostMapping
+    public JSONObject createOrUpdate(@RequestBody JSONObject request) {
         JSONObject response = new JSONObject();
 
-        String name = request.getString("name");
-        String comment = request.getString("comment");
-
-        Work work = new Work(name,
-                SecurityUtil.getUser(), new Timestamp(System.currentTimeMillis()));
-        work.setComment(comment);
-        try {
-            response.put("data", workService.addOrUpdate(work));
-            response.put("status", 1);
-            response.put("message", "Create work success.");
-        } catch (DataIntegrityViolationException e) {
-            if (!workService.checkByName(name)) {
-                throw e;
-            }
-
-            response.put("status", 0);
-            response.put("message", "Work name exist.");
-        }
-
-        return response;
-    }
-
-    /**
-     * Update Work Api
-     * @param request {
-     *     "id": work id: Integer
-     *     "name": work name: String,
-     *     "comment": work comment: String
-     * }
-     * @return if update success return {
-     *     "status": 1,
-     *     "message": "Update work success."
-     *     "data": {
-     *         "id": work id: Integer,
-     *         "name": work name: String,
-     *         "comment": work comment: String,
-     *         "createTime": work create time: Timestamp,
-     *         "updateTime": work update time: Timestamp
-     *     }
-     * }
-     */
-    @ResponseBody
-    @PostMapping("/update")
-    @Transactional
-    public JSONObject update(@RequestBody JSONObject request) {
-        JSONObject response = new JSONObject();
+        Integer id = request.getInteger("id");
         String name = request.getString("name");
         String comment = request.getString("comment");
 
         try {
-            Work work = workService.loadById(request.getInteger("id"));
-
-            work.setName(name);
-            work.setComment(comment);
-            work.setUpdateUser(SecurityUtil.getUser());
-            work.setUpdateTime(new Timestamp(System.currentTimeMillis()));
-
-            response.put("data", workService.addOrUpdate(work));
-            response.put("status", 1);
-            response.put("message", "Update work success.");
-        } catch (NoSuchElementException e) {
-            response.put("status", 0);
-            response.put("message", "No such work.");
-        } catch (DataIntegrityViolationException e) {
-            if (!workService.checkByName(name)) {
-                throw e;
+            if (id == null) {
+                response.put("data", workService.add(name, comment));
+                response.put("message", "创建生产流程成功");
+            } else {
+                response.put("data", workService.update(id, name, comment));
+                response.put("message", "更新生产流程成功");
             }
+            response.put("status", 1);
+        } catch (NullPointerException e) {
             response.put("status", 0);
-            response.put("message", "Work name exist.");
+            response.put("message", "");
+        } catch (DataIntegrityViolationException e) {
+            response.put("status", 0);
+            response.put("message", "名称为" + name + "的生产流程已存在");
+        } catch (EntityNotFoundException e) {
+            response.put("status", 0);
+            response.put("message", "Id为" + id + "的生产流程不存在");
         }
 
         return response;

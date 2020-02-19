@@ -34,15 +34,6 @@ public class WorkService {
     }
 
     /**
-     * Add Or Update Work
-     * @param work the work will be add.
-     * @return the work have be add.
-     */
-    Work addOrUpdate(Work work) {
-        return workRepository.save(work);
-    }
-
-    /**
      * Add A Work
      *
      * @param name    the work name.
@@ -130,15 +121,6 @@ public class WorkService {
             return optionalWork.get();
         }
         throw new NoSuchElementException("There's no Work with id " + id);
-    }
-
-    /**
-     * Check Work By Name
-     * @param name the work name.
-     * @return if name is exist return true else return false.
-     */
-    boolean checkByName(String name) {
-        return workRepository.existsByName(name);
     }
 
     /**
