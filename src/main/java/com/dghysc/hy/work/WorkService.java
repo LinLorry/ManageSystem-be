@@ -110,14 +110,11 @@ public class WorkService {
      * Load Work By Id
      * @param id the work id.
      * @return the work.
-     * @throws NoSuchElementException if work not exist throw this exception.
+     * @throws EntityNotFoundException if work id is {@code id} not exist.
      */
-    public Work loadById(Integer id) throws NoSuchElementException {
-        Optional<Work> optionalWork = workRepository.findById(id);
-        if (optionalWork.isPresent()) {
-            return optionalWork.get();
-        }
-        throw new NoSuchElementException("There's no Work with id " + id);
+    public Work loadById(Integer id) {
+        return workRepository.findById(id)
+                .orElseThrow(EntityNotFoundException::new);
     }
 
     /**
