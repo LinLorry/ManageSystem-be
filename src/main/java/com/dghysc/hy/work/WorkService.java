@@ -90,19 +90,16 @@ public class WorkService {
 
     /**
      * Load Work By Id, Name, Comment
-     * @param equalMap {
-     *     "the work field": value have to equal
-     * }
      * @param likeMap {
      *     "the work field": value will be equal by "%value%"
      * }
      * @param pageNumber page number.
+     * @param pageSize page size.
      * @return the page of query result.
      */
-    Page<Work> load(Map<String, Object> equalMap, Map<String, Object> likeMap,
+    Page<Work> load(Map<String, Object> likeMap,
                     Integer pageNumber, Integer pageSize) {
         SpecificationUtil specificationUtil = new SpecificationUtil();
-        specificationUtil.addEqualMap(equalMap);
         specificationUtil.addLikeMap(likeMap);
 
         Specification<Work> specification = specificationUtil.getSpecification();

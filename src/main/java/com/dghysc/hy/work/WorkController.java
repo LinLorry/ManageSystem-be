@@ -73,30 +73,27 @@ public class WorkController {
     }
 
     /**
-     * Find Work Api
+     * Get Work Or Works Api.
      * @param id the work id.
      * @param name the name work contains.
      * @param comment the comment work contains.
      * @param pageNumber the page number.
-     * @return {
+     * @param pageSize the page size.
+     * @return if id is null return {
      *     "status": 1,
-     *     "message": "Get work success.",
+     *     "message": "获取生产流程成功",
      *     "data": {
-     *         "total": page total number: Integer,
-     *         "works": [
-     *             {
-     *                 "id": work id: Integer,
-     *                 "name": work name: String,
-     *                 "comment": work comment: String,
-     *                 "createTime": work create time: Timestamp,
-     *                 "updateTime": work update time: Timestamp
-     *             },
-     *             ...
-     *         ]
+     *         "total": page total number: int,
+     *         "works": works: array
+     *     }
+     * } else if id is not null return {
+     *     "status": 1,
+     *     "message": "获取生产流程成功",
+     *     "data": work data: object
      * }
      */
     @GetMapping
-    public JSONObject find(
+    public JSONObject get(
             @RequestParam(required = false) Integer id,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String comment,
@@ -104,21 +101,24 @@ public class WorkController {
             @RequestParam(defaultValue = "20") Integer pageSize) {
         JSONObject response = new JSONObject();
 
-        Map<String, Object> equalMap = new HashMap<>();
-        Map<String, Object> likeMap = new HashMap<>();
+        if (id == null) {
+            Map<String, Object> likeMap = new HashMap<>();
 
-        Optional.ofNullable(id).ifPresent(value -> equalMap.put("id", value));
-        Optional.ofNullable(name).ifPresent(value -> likeMap.put("name", value));
-        Optional.ofNullable(comment).ifPresent(value -> likeMap.put("comment", value));
+            Optional.ofNullable(name).ifPresent(value -> likeMap.put("name", value));
+            Optional.ofNullable(comment).ifPresent(value -> likeMap.put("comment", value));
 
-        JSONObject data = new JSONObject();
-        Page<Work> page = workService.load(equalMap, likeMap, pageNumber, pageSize);
-        data.put("total", page.getTotalPages());
-        data.put("works", page.getContent());
+            JSONObject data = new JSONObject();
+            Page<Work> page = workService.load(likeMap, pageNumber, pageSize);
+            data.put("total", page.getTotalPages());
+            data.put("works", page.getContent());
 
-        response.put("data", data);
+            response.put("data", data);
+        } else {
+            response.put("data", workService.loadById(id));
+        }
+
         response.put("status", 1);
-        response.put("message", "Get work success.");
+        response.put("message", "获取生产流程成功");
 
         return response;
     }
