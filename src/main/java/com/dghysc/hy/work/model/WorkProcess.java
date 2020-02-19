@@ -1,12 +1,15 @@
 package com.dghysc.hy.work.model;
 
 import com.dghysc.hy.user.model.User;
+import com.dghysc.hy.util.EntityUtil;
 import com.fasterxml.jackson.annotation.*;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 
 import javax.persistence.*;
 import java.io.Serializable;
 import java.sql.Timestamp;
-import java.util.HashMap;
+import java.util.Map;
 
 /**
  * The Work Process Model
@@ -14,29 +17,40 @@ import java.util.HashMap;
  * @author lin864464995@163.com
  */
 @Entity
+@Table(name = "work_process")
 @IdClass(WorkProcessKey.class)
 @JsonIgnoreProperties({"work", "process"})
 public class WorkProcess implements Serializable {
 
     @Id
+    @ManyToOne
+    @JoinColumn(name = "work_id", referencedColumnName = "id")
     private Work work;
 
     @Id
+    @ManyToOne
+    @JoinColumn(name = "process_id", referencedColumnName = "id")
     private Process process;
 
     private Integer sequenceNumber;
 
-    @JsonIgnore
-    @ManyToOne
-    private User createUser;
-
+    @Column(nullable = false, updatable = false)
     private Timestamp createTime;
 
     @JsonIgnore
-    @ManyToOne
-    private User updateUser;
+    @ManyToOne(optional = false)
+    @JoinColumn(nullable = false, updatable = false)
+    @NotFound(action = NotFoundAction.IGNORE)
+    private User createUser;
 
+    @Column(nullable = false)
     private Timestamp updateTime;
+
+    @JsonIgnore
+    @ManyToOne(optional = false)
+    @JoinColumn(nullable = false)
+    @NotFound(action = NotFoundAction.IGNORE)
+    private User updateUser;
 
     public WorkProcess() {
     }
@@ -103,8 +117,9 @@ public class WorkProcess implements Serializable {
     }
 
     @JsonAnyGetter
-    public HashMap<String, Object> getInfo() {
-        HashMap<String, Object> map = new HashMap<>();
+    public Map<String, Object> getInfo() {
+
+        Map<String, Object> map = EntityUtil.getCreateAndUpdateInfo(createUser, updateUser);
 
         map.put("workId", work.getId());
         map.put("workName", work.getName());
