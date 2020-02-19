@@ -100,26 +100,19 @@ public class WorkController {
             @RequestParam(required = false) Integer id,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String comment,
-            @RequestParam(defaultValue = "0") Integer pageNumber) {
+            @RequestParam(defaultValue = "0") Integer pageNumber,
+            @RequestParam(defaultValue = "20") Integer pageSize) {
         JSONObject response = new JSONObject();
 
         Map<String, Object> equalMap = new HashMap<>();
         Map<String, Object> likeMap = new HashMap<>();
 
-        if (id != null) {
-            equalMap.put("id", id);
-        }
-
-        if (name != null) {
-            likeMap.put("name", name);
-        }
-
-        if (comment != null) {
-            likeMap.put("comment", comment);
-        }
+        Optional.ofNullable(id).ifPresent(value -> equalMap.put("id", value));
+        Optional.ofNullable(name).ifPresent(value -> likeMap.put("name", value));
+        Optional.ofNullable(comment).ifPresent(value -> likeMap.put("comment", value));
 
         JSONObject data = new JSONObject();
-        Page<Work> page = workService.load(equalMap, likeMap, pageNumber);
+        Page<Work> page = workService.load(equalMap, likeMap, pageNumber, pageSize);
         data.put("total", page.getTotalPages());
         data.put("works", page.getContent());
 

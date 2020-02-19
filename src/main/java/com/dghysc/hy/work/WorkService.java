@@ -99,14 +99,14 @@ public class WorkService {
      * @param pageNumber page number.
      * @return the page of query result.
      */
-    Page<Work> load(Map<String, Object> equalMap,
-                    Map<String, Object> likeMap, Integer pageNumber) {
+    Page<Work> load(Map<String, Object> equalMap, Map<String, Object> likeMap,
+                    Integer pageNumber, Integer pageSize) {
         SpecificationUtil specificationUtil = new SpecificationUtil();
         specificationUtil.addEqualMap(equalMap);
         specificationUtil.addLikeMap(likeMap);
 
         Specification<Work> specification = specificationUtil.getSpecification();
-        return workRepository.findAll(specification, PageRequest.of(pageNumber, 20));
+        return workRepository.findAll(specification, PageRequest.of(pageNumber, pageSize));
     }
 
     /**
