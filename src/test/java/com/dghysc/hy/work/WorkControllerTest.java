@@ -80,18 +80,30 @@ public class WorkControllerTest {
     }
 
     @Test
-    public void find() throws URISyntaxException {
-        final String url = baseUrl + "/find";
-
-        URI uri = new URI(url);
-
+    public void get() {
         HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
 
-        ResponseEntity<JSONObject> response = restTemplate
-                .exchange(uri, HttpMethod.GET, request, JSONObject.class);
+        ResponseEntity<JSONObject> responseEntity = restTemplate
+                .exchange(baseUrl, HttpMethod.GET, request, JSONObject.class);
 
-        System.out.println(response.getBody());
-        assertEquals(200, response.getStatusCodeValue());
+        JSONObject response = responseEntity.getBody();
+        System.out.println(response);
+
+        assertEquals(200, responseEntity.getStatusCodeValue());
+        assertNotNull(response);
+        assertEquals(1, response.getIntValue("status"));
+
+        String url = baseUrl + "?id=" + testUtil.nextId(Work.class);
+
+        responseEntity = restTemplate
+                .exchange(url, HttpMethod.GET, request, JSONObject.class);
+
+        response = responseEntity.getBody();
+        System.out.println(response);
+
+        assertEquals(200, responseEntity.getStatusCodeValue());
+        assertNotNull(response);
+        assertEquals(1, response.getIntValue("status"));
     }
 
     @Test
