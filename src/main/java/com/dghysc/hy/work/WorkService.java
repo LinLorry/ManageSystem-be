@@ -1,14 +1,20 @@
 package com.dghysc.hy.work;
 
+import com.dghysc.hy.user.model.User;
+import com.dghysc.hy.util.SecurityUtil;
 import com.dghysc.hy.util.SpecificationUtil;
 import com.dghysc.hy.work.model.Work;
 import com.dghysc.hy.work.repo.WorkRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
+import javax.validation.constraints.NotNull;
+import java.sql.Timestamp;
 import java.util.*;
 
 /**
@@ -32,6 +38,33 @@ public class WorkService {
      * @return the work have be add.
      */
     Work addOrUpdate(Work work) {
+        return workRepository.save(work);
+    }
+
+    /**
+     * Add A Work
+     *
+     * @param name    the work name.
+     * @param comment the work comment.
+     * @return the work.
+     * @throws DataIntegrityViolationException if the have work name is {@code name}.
+     * @throws NullPointerException            if {@code name} is {@literal null}.
+     */
+    Work add(@NotNull String name, @Nullable String comment) {
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        User creator = SecurityUtil.getUser();
+
+        Work work = new Work();
+
+        Optional.of(name).ifPresent(work::setName);
+        Optional.ofNullable(comment).ifPresent(work::setComment);
+
+        work.setCreateTime(now);
+        work.setUpdateTime(now);
+
+        work.setCreateUser(creator);
+        work.setUpdateUser(creator);
+
         return workRepository.save(work);
     }
 
