@@ -21,7 +21,7 @@ public class SpecificationUtil {
     }
 
     public void addEqualMap(Map<String, Object> map) {
-        equalMap.putAll(map);
+        Optional.ofNullable(map).ifPresent(equalMap::putAll);
     }
 
     public void addLikeMap(String key, Object value) {
@@ -29,7 +29,7 @@ public class SpecificationUtil {
     }
 
     public void addLikeMap(Map<String, Object> map) {
-        likeMap.putAll(map);
+        Optional.ofNullable(map).ifPresent(likeMap::putAll);
     }
 
     public void addGreaterDateMap(String key, Date date) {
