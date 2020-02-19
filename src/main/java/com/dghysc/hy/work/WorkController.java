@@ -95,8 +95,7 @@ public class WorkController {
      *         ]
      * }
      */
-    @ResponseBody
-    @GetMapping("/find")
+    @GetMapping
     public JSONObject find(
             @RequestParam(required = false) Integer id,
             @RequestParam(required = false) String name,
@@ -141,8 +140,7 @@ public class WorkController {
      *     "message": "Delete work success."
      * }
      */
-    @ResponseBody
-    @DeleteMapping("/delete")
+    @DeleteMapping
     @PreAuthorize("hasRole('ADMIN')")
     public JSONObject delete(@RequestBody JSONObject request) {
         JSONObject response = new JSONObject();
