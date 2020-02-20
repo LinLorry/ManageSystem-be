@@ -107,13 +107,15 @@ public class ProcessService {
 
     /**
      * Load Process By Id
+     *
      * @param id the process id.
      * @return the process.
-     * @throws NoSuchElementException if process not exist throw this exception.
+     * @throws EntityNotFoundException  if process id is {@code id} not exist.
+     * @throws IllegalArgumentException if {@code id} is {@literal null}.
      */
-    Process loadById(Integer id) throws NoSuchElementException {
+    public Process loadById(Integer id) {
         return processRepository.findById(id)
-                .orElseThrow(NoSuchElementException::new);
+                .orElseThrow(EntityNotFoundException::new);
     }
 
     /**
