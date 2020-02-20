@@ -1,18 +1,15 @@
 package com.dghysc.hy.work;
 
 import com.alibaba.fastjson.JSONObject;
-import com.dghysc.hy.util.SecurityUtil;
 import com.dghysc.hy.work.model.Process;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import javax.transaction.Transactional;
-import java.sql.Timestamp;
+import javax.persistence.EntityNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Objects;
 
 /**
@@ -31,98 +28,47 @@ public class ProcessController {
     }
 
     /**
-     * Create Process Api
+     * Add Or Update Process Api
      * @param request {
-     *     "name": process name: String[must],
-     *     "comment": process comment: String
+     *     "id": the process id: int,
+     *     "name": the process name: str,
+     *     "comment": the process comment: str
      * }
-     * @return create process success return {
+     * @return if add or update success return {
      *     "status": 1,
-     *     "message": "Create process success."
-     *     "data": {
-     *         "id": process id: Integer,
-     *         "name": process name: String,
-     *         "comment": process comment: String,
-     *         "createTime": process create time: Timestamp,
-     *         "updateTime": process update time: Timestamp
-     *     }
+     *     "message": message: str,
+     *     "data": process data: object
+     * } else return {
+     *     "status": 0,
+     *     "message": error message: str
      * }
      */
-    @ResponseBody
-    @RequestMapping("/create")
-    public JSONObject create(@RequestBody JSONObject request) {
+    @PostMapping
+    public JSONObject createOrUpdate(@RequestBody JSONObject request) {
         JSONObject response = new JSONObject();
 
-        String name = request.getString("name");
-        String comment = request.getString("comment");
-
-        Process process = new Process(name,
-                SecurityUtil.getUser(), new Timestamp(System.currentTimeMillis()));
-        process.setComment(comment);
-
-        try {
-            response.put("data", processService.addOrUpdate(process));
-            response.put("status", 1);
-            response.put("message", "Create process success.");
-        } catch (DataIntegrityViolationException e) {
-            if (!processService.checkByName(name)) {
-                throw e;
-            }
-
-            response.put("status", 0);
-            response.put("message", "Process name exist.");
-        }
-
-        return response;
-    }
-
-    /**
-     * Update Process Api
-     * @param request {
-     *     "id": process id: Integer
-     *     "name": process name: String,
-     *     "comment": process comment: String
-     * }
-     * @return if update success return {
-     *     "status": 1,
-     *     "message": "Update process success."
-     *     "data": {
-     *         "id": process id: Integer,
-     *         "name": process name: String,
-     *         "comment": process comment: String,
-     *         "createTime": process create time: Timestamp,
-     *         "updateTime": process update time: Timestamp
-     *     }
-     * }
-     */
-    @ResponseBody
-    @RequestMapping("/update")
-    @Transactional
-    public JSONObject update(@RequestBody JSONObject request) {
-        JSONObject response = new JSONObject();
+        Integer id = request.getInteger("id");
         String name = request.getString("name");
         String comment = request.getString("comment");
 
         try {
-            Process process = processService.loadById(request.getInteger("id"));
-
-            process.setName(name);
-            process.setComment(comment);
-            process.setUpdateUser(SecurityUtil.getUser());
-            process.setUpdateTime(new Timestamp(System.currentTimeMillis()));
-
-            response.put("data", processService.addOrUpdate(process));
-            response.put("status", 1);
-            response.put("message", "Update process success.");
-        } catch (NoSuchElementException e) {
-            response.put("status", 0);
-            response.put("message", "No such process.");
-        } catch (DataIntegrityViolationException e) {
-            if (!processService.checkByName(name)) {
-                throw e;
+            if (id == null) {
+                response.put("data", processService.add(name, comment));
+                response.put("message", "创建工序成功");
+            } else {
+                response.put("data", processService.update(id, name, comment));
+                response.put("message", "更新工序成功");
             }
+            response.put("status", 1);
+        } catch (NullPointerException e) {
             response.put("status", 0);
-            response.put("message", "Process name exist.");
+            response.put("message", "");
+        } catch (DataIntegrityViolationException e) {
+            response.put("status", 0);
+            response.put("message", "名称为" + name + "的工序已存在");
+        } catch (EntityNotFoundException e) {
+            response.put("status", 0);
+            response.put("message", "Id为" + id + "的工序不存在");
         }
 
         return response;

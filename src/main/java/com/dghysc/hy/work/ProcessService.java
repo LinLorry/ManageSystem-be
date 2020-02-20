@@ -33,15 +33,6 @@ public class ProcessService {
     }
 
     /**
-     * Add Or Update Process
-     * @param process the process will be add.
-     * @return the process have be add.
-     */
-    Process addOrUpdate(Process process) {
-        return processRepository.save(process);
-    }
-
-    /**
      * Add A Process
      *
      * @param name    the process name.
@@ -127,15 +118,6 @@ public class ProcessService {
     Process loadById(Integer id) throws NoSuchElementException {
         return processRepository.findById(id)
                 .orElseThrow(NoSuchElementException::new);
-    }
-
-    /**
-     * Check Process By Name
-     * @param name the process name.
-     * @return if name is exist return true else return false.
-     */
-    boolean checkByName(String name) {
-        return processRepository.existsByName(name);
     }
 
     /**
