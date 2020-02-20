@@ -11,6 +11,7 @@ import javax.persistence.EntityNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Process Controller
@@ -73,62 +74,62 @@ public class ProcessController {
 
         return response;
     }
-
+    
     /**
-     * Find Process Api
+     * Get Process Or Processs Api.
      * @param id the process id.
      * @param name the name process contains.
      * @param comment the comment process contains.
      * @param pageNumber the page number.
-     * @return {
+     * @param pageSize the page size.
+     * @return if id is null return {
      *     "status": 1,
-     *     "message": "Get process success.",
+     *     "message": "获取工序成功",
      *     "data": {
-     *         "total": page total number: Integer,
-     *         "processes": [
-     *             {
-     *                 "id": process id: Integer,
-     *                 "name": process name: String,
-     *                 "comment": process comment: String,
-     *                 "createTime": process create time: Timestamp,
-     *                 "updateTime": process update time: Timestamp
-     *             },
-     *             ...
-     *         ]
+     *         "size": page size: int
+     *         "total": page total number: int,
+     *         "processes": processes: array
+     *     }
+     * } else if id is not null return {
+     *     "status": 1,
+     *     "message": "获取工序成功",
+     *     "data": process data: object
      * }
      */
-    @ResponseBody
-    @GetMapping("/find")
-    public JSONObject find(
+    @GetMapping
+    public JSONObject get(
             @RequestParam(required = false) Integer id,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String comment,
-            @RequestParam(defaultValue = "0") Integer pageNumber) {
+            @RequestParam(defaultValue = "0") Integer pageNumber,
+            @RequestParam(defaultValue = "20") Integer pageSize) {
         JSONObject response = new JSONObject();
 
-        Map<String, Object> equalMap = new HashMap<>();
-        Map<String, Object> likeMap = new HashMap<>();
+        if (id == null) {
+            Map<String, Object> likeMap = new HashMap<>();
 
-        if (id != null) {
-            equalMap.put("id", id);
+            Optional.ofNullable(name).ifPresent(value -> likeMap.put("name", value));
+            Optional.ofNullable(comment).ifPresent(value -> likeMap.put("comment", value));
+
+            JSONObject data = new JSONObject();
+            Page<Process> page = processService.load(likeMap, pageNumber, pageSize);
+            data.put("size", page.getSize());
+            data.put("total", page.getTotalPages());
+            data.put("processes", page.getContent());
+
+            response.put("data", data);
+        } else {
+            try {
+                response.put("data", processService.loadById(id));
+            } catch (EntityNotFoundException e) {
+                response.put("status", 0);
+                response.put("message", "Id为" + id + "的工序不存在");
+                return response;
+            }
         }
 
-        if (name != null) {
-            likeMap.put("name", name);
-        }
-
-        if (comment != null) {
-            likeMap.put("comment", comment);
-        }
-
-        JSONObject data = new JSONObject();
-        Page<Process> page = processService.load(equalMap, likeMap, pageNumber);
-        data.put("total", page.getTotalPages());
-        data.put("processes", page.getContent());
-
-        response.put("data", data);
         response.put("status", 1);
-        response.put("message", "Get process success.");
+        response.put("message", "获取工序成功");
 
         return response;
     }
