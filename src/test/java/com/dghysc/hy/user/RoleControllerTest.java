@@ -48,9 +48,10 @@ public class RoleControllerTest {
     @Before
     public void initTest() {
         if (headers == null) {
-            testUtil.setAuthorities(1L, "ROLE_ADMIN");
-            headers = testUtil.getTokenHeader();
+            testUtil.setAuthorities("ROLE_ADMIN");
         }
+
+        headers = testUtil.getTokenHeader();
 
         if (roleRepository.count() == 1) {
             create();

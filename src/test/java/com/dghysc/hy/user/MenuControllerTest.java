@@ -52,9 +52,10 @@ public class MenuControllerTest {
     @Before
     public void initTest() {
         if (headers == null) {
-            testUtil.setAuthorities(1L, "ROLE_ADMIN");
-            headers = testUtil.getTokenHeader();
+            testUtil.setAuthorities("ROLE_ADMIN");
         }
+
+        headers = testUtil.getTokenHeader();
 
         if (parentMenuRepository.count() == 0) {
             createParent();

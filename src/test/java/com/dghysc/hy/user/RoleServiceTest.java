@@ -55,12 +55,13 @@ public class RoleServiceTest {
     public void add() {
         String roleStr = testUtil.nextString();
         String name = testUtil.nextString();
+        User user = testUtil.getUser();
 
         Role role = roleService.add(roleStr, name);
         assertNotNull(role.getId());
         assertEquals(roleStr, role.getRole());
         assertEquals(name, role.getName());
-        assertEquals(testUtil.getUser().getId(), role.getCreateUser().getId());
+        assertEquals(user.getId(), role.getCreateUser().getId());
         assertTrue(System.currentTimeMillis() >= role.getCreateTime().getTime());
     }
 
@@ -75,11 +76,13 @@ public class RoleServiceTest {
         userId.add(testUtil.nextId(User.class));
         menuId.add(testUtil.nextId(ChildMenu.class));
 
+        User user = testUtil.getUser();
+
         Role role = roleService.update(id, roleStr, name, userId, menuId);
         assertEquals(id, role.getId());
         assertEquals(roleStr, role.getRole());
         assertEquals(name, role.getName());
-        assertEquals(testUtil.getUser().getId(), role.getUpdateUser().getId());
+        assertEquals(user.getId(), role.getUpdateUser().getId());
         assertTrue(System.currentTimeMillis() >= role.getUpdateTime().getTime());
         assertTrue(System.currentTimeMillis() >= role.getCreateTime().getTime());
     }

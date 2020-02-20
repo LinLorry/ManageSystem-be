@@ -22,7 +22,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,13 +41,17 @@ public class TestUtil extends Random {
 
     private User user;
 
+    private Role role;
+
     private Iterator<User> userIterator;
 
     private final RandomString randomString = new RandomString();
 
-    private final Map<Class, CrudRepository> map;
+    private final Map<Class<?>, CrudRepository<?, ?>> map;
 
     private final UserRepository userRepository;
+
+    private final RoleRepository roleRepository;
 
     public TestUtil(
             UserRepository userRepository,
@@ -62,6 +65,7 @@ public class TestUtil extends Random {
 
         this.map = new HashMap<>();
         this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
 
         map.put(User.class, userRepository);
         map.put(Role.class, roleRepository);
@@ -75,7 +79,15 @@ public class TestUtil extends Random {
     }
 
     public HttpHeaders getTokenHeader() {
-        if (user == null) setAuthorities();
+        if (userIterator == null || !userIterator.hasNext()) {
+            if (role != null) {
+                userIterator = role.getUsers().iterator();
+            } else {
+                userIterator = userRepository.findAll().iterator();
+            }
+        }
+
+        user = userIterator.next();
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization",
@@ -86,8 +98,8 @@ public class TestUtil extends Random {
         return headers;
     }
 
-    public <T, E> T nextId(Class<E> aClass) {
-        CrudRepository<E, T> repository = Optional
+    public <T> T nextId(Class<?> aClass) {
+        CrudRepository<?, ?> repository =Optional
                 .ofNullable(map.get(aClass))
                 .orElseThrow(NoRepositoryException::new);
 
@@ -99,7 +111,7 @@ public class TestUtil extends Random {
 
         long randomNumber = Math.abs(nextLong()) % (count + 1);
 
-        Iterator<E> iterator = repository.findAll().iterator();
+        Iterator<?> iterator = repository.findAll().iterator();
 
         while (--randomNumber > 0) {
             iterator.next();
@@ -115,40 +127,41 @@ public class TestUtil extends Random {
     }
 
     @Transactional(readOnly = true)
-    public void setAuthorities(Long userId, String... authorities) {
-        user = userRepository.findById(userId).orElseThrow(EntityNotFoundException::new);
+    public void setAuthorities() {
+        if (userIterator == null || !userIterator.hasNext()) {
+            Iterable<User> users = userRepository.findAll();
 
-        List<GrantedAuthority> authorityList = new ArrayList<>();
-
-        for (String authority : authorities) {
-            authorityList.add((GrantedAuthority) () -> authority);
-        }
-
-        authorityList.addAll(user.getAuthorities());
-
-        SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken(
-                        user, null, authorityList));
-    }
-
-    public void setAuthorities(String... authorities) {
-        if (userRepository.count() == 0) {
-            throw new EntityNotFoundException();
-        } else if (userIterator == null || !userIterator.hasNext()) {
-            userIterator = userRepository.findAll().iterator();
+            users.forEach(User::getAuthorities);
+            userIterator = users.iterator();
         }
 
         user = userIterator.next();
 
-        List<GrantedAuthority> authorityList = new ArrayList<>();
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        user, null, user.getAuthorities()));
+    }
 
-        for (String authority : authorities) {
-            authorityList.add((GrantedAuthority) () -> authority);
+    @Transactional(readOnly = true)
+    public void setAuthorities(String authority) {
+        if (role == null || !role.getRole().equals(authority)) {
+            role = roleRepository.findByRole(authority)
+                    .orElseThrow(EntityNotFoundException::new);
+            if (role.getUsers().size() == 0) {
+                throw new EntityNotFoundException();
+            }
+            role.getUsers().forEach(User::getAuthorities);
+
+            userIterator = role.getUsers().iterator();
+        } else if (!userIterator.hasNext()) {
+            userIterator = role.getUsers().iterator();
         }
+
+        user = userIterator.next();
 
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(
-                        user, null, authorityList));
+                        user, null, user.getAuthorities()));
     }
 
     public User getUser() {
