@@ -2,8 +2,7 @@ package com.dghysc.hy.work;
 
 import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.util.TestUtil;
-import com.dghysc.hy.work.repo.ProcessRepository;
-import org.junit.Assert;
+import com.dghysc.hy.work.model.Process;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,9 +13,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Random;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -24,84 +22,95 @@ public class ProcessControllerTest {
 
     private static final String baseUrl = "/api/process";
 
-    private static final Random random = new Random();
-
     @Autowired
     private TestRestTemplate restTemplate;
 
     @Autowired
     private TestUtil testUtil;
 
-    @Autowired
-    private ProcessRepository processRepository;
-
     @Test
-    public void create() throws URISyntaxException {
-        final String url = baseUrl + "/create";
-        URI uri = new URI(url);
-
+    public void create() {
         JSONObject requestBody = new JSONObject();
         requestBody.put("name", testUtil.nextString());
         requestBody.put("comment", testUtil.nextString());
 
         HttpEntity<JSONObject> request = new HttpEntity<>(requestBody, testUtil.getTokenHeader());
 
-        ResponseEntity<JSONObject> response = restTemplate.postForEntity(uri, request, JSONObject.class);
+        ResponseEntity<JSONObject> responseEntity = restTemplate.exchange(
+                baseUrl, HttpMethod.POST, request, JSONObject.class
+        );
 
-        System.out.println(response.getBody());
-        Assert.assertEquals(200, response.getStatusCodeValue());
+        JSONObject response = responseEntity.getBody();
+        System.out.println(response);
+
+        assertEquals(200, responseEntity.getStatusCodeValue());
+        assertNotNull(response);
+        assertEquals(1, response.getIntValue("status"));
     }
 
     @Test
-    public void update() throws URISyntaxException {
-        final String url = baseUrl + "/update";
-        final int number = (int) processRepository.count();
-
-        URI uri = new URI(url);
-
+    public void update() {
         JSONObject requestBody = new JSONObject();
-        requestBody.put("id", random.nextInt(number));
+
+        requestBody.put("id", testUtil.nextId(Process.class));
         requestBody.put("name", testUtil.nextString());
         requestBody.put("comment", testUtil.nextString());
 
         HttpEntity<JSONObject> request = new HttpEntity<>(requestBody, testUtil.getTokenHeader());
 
-        ResponseEntity<JSONObject> response = restTemplate.postForEntity(uri, request, JSONObject.class);
+        ResponseEntity<JSONObject> responseEntity = restTemplate.exchange(
+                baseUrl, HttpMethod.POST, request, JSONObject.class
+        );
 
-        System.out.println(response.getBody());
-        Assert.assertEquals(200, response.getStatusCodeValue());
+        JSONObject response = responseEntity.getBody();
+        System.out.println(response);
+
+        assertEquals(200, responseEntity.getStatusCodeValue());
+        assertNotNull(response);
+        assertEquals(1, response.getIntValue("status"));
     }
 
     @Test
-    public void find() throws URISyntaxException {
-        final String url = baseUrl + "/find";
+    public void get() {
+        HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
 
-        URI uri = new URI(url);
+        ResponseEntity<JSONObject> responseEntity = restTemplate
+                .exchange(baseUrl, HttpMethod.GET, request, JSONObject.class);
+
+        JSONObject response = responseEntity.getBody();
+        System.out.println(response);
+
+        assertEquals(200, responseEntity.getStatusCodeValue());
+        assertNotNull(response);
+        assertEquals(1, response.getIntValue("status"));
+
+        String url = baseUrl + "?id=" + testUtil.nextId(Process.class);
+
+        responseEntity = restTemplate
+                .exchange(url, HttpMethod.GET, request, JSONObject.class);
+
+        response = responseEntity.getBody();
+        System.out.println(response);
+
+        assertEquals(200, responseEntity.getStatusCodeValue());
+        assertNotNull(response);
+        assertEquals(1, response.getIntValue("status"));
+    }
+
+    @Test
+    public void delete() {
+        final String url = baseUrl + "?id=" + testUtil.nextId(Process.class);
 
         HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
 
-        ResponseEntity<JSONObject> response = restTemplate
-                .exchange(uri, HttpMethod.GET, request, JSONObject.class);
+        ResponseEntity<JSONObject> responseEntity = restTemplate
+                .exchange(url, HttpMethod.DELETE, request, JSONObject.class);
 
-        System.out.println(response.getBody());
-        Assert.assertEquals(200, response.getStatusCodeValue());
-    }
+        JSONObject response = responseEntity.getBody();
 
-    @Test
-    public void delete() throws URISyntaxException {
-        final String url = baseUrl + "/delete";
-        final int number = (int) processRepository.count();
-        URI uri = new URI(url);
-
-        JSONObject requestBody = new JSONObject();
-        requestBody.put("id", random.nextInt(number));
-
-        HttpEntity<JSONObject> request = new HttpEntity<>(requestBody, testUtil.getTokenHeader());
-
-        ResponseEntity<JSONObject> response = restTemplate
-                .exchange(uri, HttpMethod.DELETE, request, JSONObject.class);
-
-        System.out.println(response.getBody());
-        Assert.assertEquals(200, response.getStatusCodeValue());
+        System.out.println(response);
+        assertEquals(200, responseEntity.getStatusCodeValue());
+        assertNotNull(response);
+        assertEquals(1, response.getIntValue("status"));
     }
 }
