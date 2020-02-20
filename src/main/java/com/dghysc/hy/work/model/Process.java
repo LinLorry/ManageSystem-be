@@ -86,20 +86,20 @@ public class Process {
         this.comment = comment;
     }
 
-    public User getCreateUser() {
-        return createUser;
-    }
-
     public Timestamp getCreateTime() {
         return createTime;
     }
 
-    public User getUpdateUser() {
-        return updateUser;
+    public void setCreateTime(Timestamp createTime) {
+        this.createTime = createTime;
     }
 
-    public void setUpdateUser(User updateUser) {
-        this.updateUser = updateUser;
+    public User getCreateUser() {
+        return createUser;
+    }
+
+    public void setCreateUser(User createUser) {
+        this.createUser = createUser;
     }
 
     public Timestamp getUpdateTime() {
@@ -108,6 +108,14 @@ public class Process {
 
     public void setUpdateTime(Timestamp updateTime) {
         this.updateTime = updateTime;
+    }
+
+    public User getUpdateUser() {
+        return updateUser;
+    }
+
+    public void setUpdateUser(User updateUser) {
+        this.updateUser = updateUser;
     }
 
     public Set<WorkProcess> getWorkProcesses() {
