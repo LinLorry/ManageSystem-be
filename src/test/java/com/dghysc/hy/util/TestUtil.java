@@ -12,6 +12,8 @@ import com.dghysc.hy.user.repo.ChildMenuRepository;
 import com.dghysc.hy.user.repo.ParentMenuRepository;
 import com.dghysc.hy.user.repo.RoleRepository;
 import com.dghysc.hy.user.repo.UserRepository;
+import com.dghysc.hy.wechat.model.WechatUser;
+import com.dghysc.hy.wechat.repo.WechatUserRepository;
 import com.dghysc.hy.work.model.Process;
 import com.dghysc.hy.work.model.Work;
 import com.dghysc.hy.work.repo.ProcessRepository;
@@ -57,6 +59,7 @@ public class TestUtil extends Random {
             UserRepository userRepository,
             RoleRepository roleRepository,
             ParentMenuRepository parentMenuRepository,
+            WechatUserRepository wechatUserRepository,
             ChildMenuRepository childMenuRepository,
             ProcessRepository processRepository,
             WorkRepository workRepository,
@@ -71,6 +74,8 @@ public class TestUtil extends Random {
         map.put(Role.class, roleRepository);
         map.put(ParentMenu.class, parentMenuRepository);
         map.put(ChildMenu.class, childMenuRepository);
+
+        map.put(WechatUser.class, wechatUserRepository);
 
         map.put(Process.class, processRepository);
         map.put(Work.class, workRepository);
