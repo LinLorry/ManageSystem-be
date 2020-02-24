@@ -4,6 +4,9 @@ import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.util.SecurityUtil;
 import com.dghysc.hy.util.SpecificationUtil;
 import com.dghysc.hy.work.model.Work;
+import com.dghysc.hy.work.model.Process;
+import com.dghysc.hy.work.model.WorkProcess;
+import com.dghysc.hy.work.repo.ProcessRepository;
 import com.dghysc.hy.work.repo.WorkRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -12,11 +15,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
 import javax.validation.constraints.NotNull;
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Work Service
@@ -28,9 +33,11 @@ public class WorkService {
 
     private final WorkRepository workRepository;
 
+    private final ProcessRepository processRepository;
 
-    public WorkService(WorkRepository workRepository) {
+    public WorkService(WorkRepository workRepository, ProcessRepository processRepository) {
         this.workRepository = workRepository;
+        this.processRepository = processRepository;
     }
 
     /**
@@ -84,6 +91,52 @@ public class WorkService {
         work.setUpdateTime(now);
 
         work.setUpdateUser(creator);
+
+        return workRepository.save(work);
+    }
+
+    /**
+     * Update Work Processes Service
+     * @param id thw work id.
+     * @param processIds the processes id, this sequence is the work processes sequence.
+     * @return the work.
+     */
+    @Transactional
+    public Work updateProcesses(@NotNull Integer id, @NotNull List<Integer> processIds) {
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        User user = SecurityUtil.getUser();
+
+        Work work = workRepository.findById(id)
+                .orElseThrow(EntityNotFoundException::new);
+        Set<WorkProcess> workProcesses = work.getWorkProcesses();
+
+        Map<Integer, Integer> map = new HashMap<>();
+
+        for (int i = 0; i < processIds.size(); i++) {
+            final int value = processIds.get(i);
+            AtomicBoolean flag = new AtomicBoolean(false);
+            int finalI = i;
+            workProcesses.forEach(workProcess -> {
+                if (workProcess.getProcess().getId().equals(value)) {
+                    workProcess.setSequenceNumber(finalI);
+                    workProcess.setUpdateTime(now);
+                    workProcess.setUpdateUser(user);
+                    flag.set(true);
+                }
+            });
+
+            if (!flag.get()) {
+                map.put(value, i);
+            }
+        }
+
+        workProcesses.removeIf(workProcess -> !processIds.contains(workProcess.getProcess().getId()));
+
+        Iterable<Process> processes = processRepository.findAllById(map.keySet());
+        processes.forEach(process ->
+                workProcesses.add(new WorkProcess(work, process, map.get(process.getId()), user, now))
+        );
+        processRepository.flush();
 
         return workRepository.save(work);
     }

@@ -53,7 +53,8 @@ public class Work implements Serializable {
     private User updateUser;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "work")
+    @OneToMany(mappedBy = "work", orphanRemoval = true,
+            cascade = { CascadeType.REMOVE, CascadeType.MERGE, CascadeType.PERSIST })
     private Set<WorkProcess> workProcesses = new HashSet<>();
 
     @JsonIgnore
