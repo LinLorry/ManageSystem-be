@@ -11,9 +11,7 @@ import org.hibernate.annotations.NotFoundAction;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.sql.Timestamp;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * The Work Model
@@ -60,6 +58,9 @@ public class Work implements Serializable {
     @JsonIgnore
     @OneToMany(mappedBy = "work", cascade = CascadeType.REMOVE)
     private Set<Product> productSet = new HashSet<>();
+
+    @Transient
+    private List<Map<String, Object>> processesReturn = null;
 
     public Work() {
     }
@@ -136,8 +137,33 @@ public class Work implements Serializable {
         return productSet;
     }
 
+    public void setProcessesReturn() {
+        processesReturn = new ArrayList<>(workProcesses.size());
+        workProcesses.forEach(workProcess -> {
+            Map<String, Object> one = new HashMap<>();
+            final Process process = workProcess.getProcess();
+
+            one.put("id", process.getId());
+            one.put("name", process.getName());
+            one.put("comment", process.getComment());
+
+            one.put("sequenceNumber", workProcess.getSequenceNumber());
+            processesReturn.add(one);
+        });
+    }
+
+    public List<Map<String, Object>> getProcessesReturn() {
+        return processesReturn;
+    }
+
     @JsonAnyGetter
     public Map<String, Object> getInfo() {
-        return EntityUtil.getCreateAndUpdateInfo(createUser, updateUser);
+        Map<String, Object> map = EntityUtil.getCreateAndUpdateInfo(createUser, updateUser);
+
+        if (processesReturn != null) {
+            map.put("processes", processesReturn);
+        }
+
+        return map;
     }
 }

@@ -131,15 +131,18 @@ public class WorkService {
         workProcesses.removeIf(workProcess -> !processIds.contains(workProcess.getProcess().getId()));
 
         Iterable<Process> processes = processRepository.findAllById(map.keySet());
+        Work finalWork = work;
         processes.forEach(process ->
-                workProcesses.add(new WorkProcess(work, process, map.get(process.getId())))
+                workProcesses.add(new WorkProcess(finalWork, process, map.get(process.getId())))
         );
         processRepository.flush();
 
         work.setUpdateUser(user);
         work.setUpdateTime(now);
+        work = workRepository.save(work);
+        work.setProcessesReturn();
 
-        return workRepository.save(work);
+        return work;
     }
 
     /**
