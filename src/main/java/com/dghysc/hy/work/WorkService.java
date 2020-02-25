@@ -119,8 +119,6 @@ public class WorkService {
             workProcesses.forEach(workProcess -> {
                 if (workProcess.getProcess().getId().equals(value)) {
                     workProcess.setSequenceNumber(finalI);
-                    workProcess.setUpdateTime(now);
-                    workProcess.setUpdateUser(user);
                     flag.set(true);
                 }
             });
@@ -134,9 +132,12 @@ public class WorkService {
 
         Iterable<Process> processes = processRepository.findAllById(map.keySet());
         processes.forEach(process ->
-                workProcesses.add(new WorkProcess(work, process, map.get(process.getId()), user, now))
+                workProcesses.add(new WorkProcess(work, process, map.get(process.getId())))
         );
         processRepository.flush();
+
+        work.setUpdateUser(user);
+        work.setUpdateTime(now);
 
         return workRepository.save(work);
     }

@@ -1,7 +1,6 @@
 package com.dghysc.hy.work;
 
 import com.alibaba.fastjson.JSONObject;
-import com.dghysc.hy.util.SecurityUtil;
 import com.dghysc.hy.work.model.Process;
 import com.dghysc.hy.work.model.Work;
 import com.dghysc.hy.work.model.WorkProcess;
@@ -13,7 +12,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
-import java.sql.Timestamp;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
@@ -82,10 +80,7 @@ public class WorkProcessController {
             }
 
             WorkProcess workProcess = new WorkProcess(
-                    work, process, sequenceNumber,
-                    SecurityUtil.getUser(),
-                    new Timestamp(System.currentTimeMillis())
-            );
+                    work, process, sequenceNumber);
             workProcessService.addOrUpdate(workProcess);
             response.put("data", workProcess);
             response.put("status", 1);
@@ -137,8 +132,6 @@ public class WorkProcessController {
         try {
             WorkProcess workProcess = workProcessService.loadByKey(key);
             workProcess.setSequenceNumber(sequenceNumber);
-            workProcess.setUpdateTime(new Timestamp(System.currentTimeMillis()));
-            workProcess.setUpdateUser(SecurityUtil.getUser());
 
             workProcessService.addOrUpdate(workProcess);
 

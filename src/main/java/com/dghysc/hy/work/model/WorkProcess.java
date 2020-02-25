@@ -1,15 +1,9 @@
 package com.dghysc.hy.work.model;
 
-import com.dghysc.hy.user.model.User;
-import com.dghysc.hy.util.EntityUtil;
 import com.fasterxml.jackson.annotation.*;
-import org.hibernate.annotations.NotFound;
-import org.hibernate.annotations.NotFoundAction;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.sql.Timestamp;
-import java.util.Map;
 
 /**
  * The Work Process Model
@@ -34,38 +28,13 @@ public class WorkProcess implements Serializable {
 
     private Integer sequenceNumber;
 
-    @Column(nullable = false, updatable = false)
-    private Timestamp createTime;
-
-    @JsonIgnore
-    @ManyToOne(optional = false)
-    @JoinColumn(nullable = false, updatable = false)
-    @NotFound(action = NotFoundAction.IGNORE)
-    private User createUser;
-
-    @Column(nullable = false)
-    private Timestamp updateTime;
-
-    @JsonIgnore
-    @ManyToOne(optional = false)
-    @JoinColumn(nullable = false)
-    @NotFound(action = NotFoundAction.IGNORE)
-    private User updateUser;
-
-    public WorkProcess() {
-    }
+    public WorkProcess() { }
 
     public WorkProcess(Work work, Process process,
-                       Integer sequenceNumber,
-                       User createUser,
-                       Timestamp createTime) {
+                       Integer sequenceNumber) {
         this.work = work;
         this.process = process;
         this.sequenceNumber = sequenceNumber;
-        this.createUser = createUser;
-        this.createTime = createTime;
-        this.updateUser = createUser;
-        this.updateTime = createTime;
     }
 
     public Work getWork() {
@@ -90,42 +59,5 @@ public class WorkProcess implements Serializable {
 
     public void setSequenceNumber(Integer sequenceNumber) {
         this.sequenceNumber = sequenceNumber;
-    }
-
-    public User getCreateUser() {
-        return createUser;
-    }
-
-    public Timestamp getCreateTime() {
-        return createTime;
-    }
-
-    public User getUpdateUser() {
-        return updateUser;
-    }
-
-    public void setUpdateUser(User updateUser) {
-        this.updateUser = updateUser;
-    }
-
-    public Timestamp getUpdateTime() {
-        return updateTime;
-    }
-
-    public void setUpdateTime(Timestamp updateTime) {
-        this.updateTime = updateTime;
-    }
-
-    @JsonAnyGetter
-    public Map<String, Object> getInfo() {
-
-        Map<String, Object> map = EntityUtil.getCreateAndUpdateInfo(createUser, updateUser);
-
-        map.put("workId", work.getId());
-        map.put("workName", work.getName());
-        map.put("processId", process.getId());
-        map.put("processName", process.getName());
-
-        return map;
     }
 }
