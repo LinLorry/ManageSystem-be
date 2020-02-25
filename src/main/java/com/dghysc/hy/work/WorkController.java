@@ -213,4 +213,36 @@ public class WorkController {
 
         return response;
     }
+
+    /**
+     * Get Work Processes Api
+     * @param id the work id.
+     * @return if get success return {
+     *      "status": 1,
+     *      "message": "更新流程工序成功",
+     *      "data": [
+     *          {
+     *              "id": the process id: int,
+     *              "name": the process name: str,
+     *              "comment": the process comment: str,
+     *              "sequence": the work process sequence: int
+     *          }, ...
+     *      ]
+     * }
+     */
+    @GetMapping("/processes")
+    public JSONObject getProcesses(@RequestParam Integer id) {
+        JSONObject response = new JSONObject();
+
+        try {
+            response.put("data", workService.loadWithProcessesById(id).getProcessesReturn());
+            response.put("status", 1);
+            response.put("message", "获取流程工序成功");
+        } catch (EntityNotFoundException e) {
+            response.put("status", 0);
+            response.put("message", "Id为" + id + "的工序不存在");
+        }
+
+        return response;
+    }
 }

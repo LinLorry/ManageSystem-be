@@ -175,6 +175,21 @@ public class WorkService {
     }
 
     /**
+     * Load Work With Processes By Id
+     * @param id the work id.
+     * @return the work with processes.
+     */
+    @Transactional
+    public Work loadWithProcessesById(@NotNull Integer id) {
+        Work work = workRepository.findById(id)
+                .orElseThrow(EntityNotFoundException::new);
+
+        work.setProcessesReturn();
+
+        return work;
+    }
+
+    /**
      * Remove Work By Id
      * @param id the work id.
      * @throws org.springframework.dao.EmptyResultDataAccessException
