@@ -2,12 +2,16 @@ package com.dghysc.hy.work.model;
 
 import com.dghysc.hy.product.model.Product;
 import com.dghysc.hy.user.model.User;
+import com.dghysc.hy.util.EntityUtil;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.sql.Timestamp;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * The Work Model
@@ -15,7 +19,10 @@ import java.util.Set;
  * @author lin864464995@163.com
  */
 @Entity
-public class Work {
+public class Work implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Integer id;
@@ -25,25 +32,35 @@ public class Work {
 
     private String comment;
 
-    @JsonIgnore
-    @ManyToOne
-    private User createUser;
-
+    @Column(nullable = false, updatable = false)
     private Timestamp createTime;
 
     @JsonIgnore
-    @ManyToOne
-    private User updateUser;
+    @ManyToOne(optional = false)
+    @JoinColumn(nullable = false, updatable = false)
+    @NotFound(action = NotFoundAction.IGNORE)
+    private User createUser;
 
+    @Column(nullable = false)
     private Timestamp updateTime;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "work", cascade = CascadeType.ALL)
+    @ManyToOne(optional = false)
+    @JoinColumn(nullable = false)
+    @NotFound(action = NotFoundAction.IGNORE)
+    private User updateUser;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "work", orphanRemoval = true,
+            cascade = { CascadeType.REMOVE, CascadeType.MERGE, CascadeType.PERSIST })
     private Set<WorkProcess> workProcesses = new HashSet<>();
 
     @JsonIgnore
     @OneToMany(mappedBy = "work", cascade = CascadeType.REMOVE)
     private Set<Product> productSet = new HashSet<>();
+
+    @Transient
+    private List<Map<String, Object>> processesReturn = null;
 
     public Work() {
     }
@@ -80,20 +97,20 @@ public class Work {
         this.comment = comment;
     }
 
-    public User getCreateUser() {
-        return createUser;
-    }
-
     public Timestamp getCreateTime() {
         return createTime;
     }
 
-    public User getUpdateUser() {
-        return updateUser;
+    public void setCreateTime(Timestamp createTime) {
+        this.createTime = createTime;
     }
 
-    public void setUpdateUser(User updateUser) {
-        this.updateUser = updateUser;
+    public User getCreateUser() {
+        return createUser;
+    }
+
+    public void setCreateUser(User createUser) {
+        this.createUser = createUser;
     }
 
     public Timestamp getUpdateTime() {
@@ -104,11 +121,43 @@ public class Work {
         this.updateTime = updateTime;
     }
 
+    public User getUpdateUser() {
+        return updateUser;
+    }
+
+    public void setUpdateUser(User updateUser) {
+        this.updateUser = updateUser;
+    }
+
     public Set<WorkProcess> getWorkProcesses() {
         return workProcesses;
     }
 
-    public void setWorkProcesses(Set<WorkProcess> workProcesses) {
-        this.workProcesses = workProcesses;
+    public Set<Product> getProductSet() {
+        return productSet;
+    }
+
+    public void setProcessesReturn() {
+        processesReturn = new ArrayList<>(workProcesses.size());
+        workProcesses.forEach(workProcess -> {
+            Map<String, Object> one = new HashMap<>();
+            final Process process = workProcess.getProcess();
+
+            one.put("id", process.getId());
+            one.put("name", process.getName());
+            one.put("comment", process.getComment());
+
+            one.put("sequenceNumber", workProcess.getSequenceNumber());
+            processesReturn.add(one);
+        });
+    }
+
+    public List<Map<String, Object>> getProcesses() {
+        return processesReturn;
+    }
+
+    @JsonAnyGetter
+    public Map<String, Object> getInfo() {
+        return EntityUtil.getCreateAndUpdateInfo(createUser, updateUser);
     }
 }

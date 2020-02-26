@@ -1,11 +1,16 @@
 package com.dghysc.hy.work.model;
 
 import com.dghysc.hy.user.model.User;
+import com.dghysc.hy.util.EntityUtil;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -24,20 +29,26 @@ public class Process {
 
     private String comment;
 
-    @JsonIgnore
-    @ManyToOne
-    private User createUser;
-
+    @Column(nullable = false, updatable = false)
     private Timestamp createTime;
 
     @JsonIgnore
-    @ManyToOne
-    private User updateUser;
+    @ManyToOne(optional = false)
+    @JoinColumn(nullable = false, updatable = false)
+    @NotFound(action = NotFoundAction.IGNORE)
+    private User createUser;
 
+    @Column(nullable = false)
     private Timestamp updateTime;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "process", cascade = CascadeType.ALL)
+    @ManyToOne(optional = false)
+    @JoinColumn(nullable = false)
+    @NotFound(action = NotFoundAction.IGNORE)
+    private User updateUser;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "process")
     private Set<WorkProcess> workProcesses = new HashSet<>();
 
     public Process() {
@@ -75,20 +86,20 @@ public class Process {
         this.comment = comment;
     }
 
-    public User getCreateUser() {
-        return createUser;
-    }
-
     public Timestamp getCreateTime() {
         return createTime;
     }
 
-    public User getUpdateUser() {
-        return updateUser;
+    public void setCreateTime(Timestamp createTime) {
+        this.createTime = createTime;
     }
 
-    public void setUpdateUser(User updateUser) {
-        this.updateUser = updateUser;
+    public User getCreateUser() {
+        return createUser;
+    }
+
+    public void setCreateUser(User createUser) {
+        this.createUser = createUser;
     }
 
     public Timestamp getUpdateTime() {
@@ -99,11 +110,20 @@ public class Process {
         this.updateTime = updateTime;
     }
 
+    public User getUpdateUser() {
+        return updateUser;
+    }
+
+    public void setUpdateUser(User updateUser) {
+        this.updateUser = updateUser;
+    }
+
     public Set<WorkProcess> getWorkProcesses() {
         return workProcesses;
     }
 
-    public void setWorkProcesses(Set<WorkProcess> workProcesses) {
-        this.workProcesses = workProcesses;
+    @JsonAnyGetter
+    public Map<String, Object> getInfo() {
+        return EntityUtil.getCreateAndUpdateInfo(createUser, updateUser);
     }
 }

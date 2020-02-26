@@ -1,8 +1,8 @@
 package com.dghysc.hy.work.repo;
 
 import com.dghysc.hy.work.model.Process;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -12,8 +12,5 @@ import org.springframework.stereotype.Repository;
  * @see org.springframework.data.repository.CrudRepository
  */
 @Repository
-public interface ProcessRepository extends CrudRepository<Process, Integer>, JpaSpecificationExecutor<Process> {
-    boolean existsByName(String name);
-
-    void deleteById(Integer id);
+public interface ProcessRepository extends JpaRepository<Process, Integer>, JpaSpecificationExecutor<Process> {
 }

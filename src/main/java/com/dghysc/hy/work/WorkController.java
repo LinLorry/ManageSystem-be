@@ -1,19 +1,17 @@
 package com.dghysc.hy.work;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.dghysc.hy.util.SecurityUtil;
 import com.dghysc.hy.work.model.Work;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
 
-import javax.transaction.Transactional;
-import java.sql.Timestamp;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Objects;
+import javax.persistence.EntityNotFoundException;
+import java.util.*;
 
 /**
  * Work Controller
@@ -31,182 +29,219 @@ public class WorkController {
     }
 
     /**
-     * Create Work Api
+     * Add Or Update Work Api
      * @param request {
-     *     "name": work name: String[must],
-     *     "comment": work comment: String
+     *     "id": the work id: int,
+     *     "name": the work name: str,
+     *     "comment": the work comment: str
      * }
-     * @return create work success return {
+     * @return if add or update success return {
      *     "status": 1,
-     *     "message": "Create work success."
-     *     "data": {
-     *         "id": work id: Integer,
-     *         "name": work name: String,
-     *         "comment": work comment: String,
-     *         "createTime": work create time: Timestamp,
-     *         "updateTime": work update time: Timestamp
-     *     }
+     *     "message": message: str,
+     *     "data": work data: object
+     * } else return {
+     *     "status": 0,
+     *     "message": error message: str
      * }
      */
-    @ResponseBody
-    @PostMapping("/create")
-    public JSONObject create(@RequestBody JSONObject request) {
+    @PostMapping
+    public JSONObject createOrUpdate(@RequestBody JSONObject request) {
         JSONObject response = new JSONObject();
 
+        Integer id = request.getInteger("id");
         String name = request.getString("name");
         String comment = request.getString("comment");
 
-        Work work = new Work(name,
-                SecurityUtil.getUser(), new Timestamp(System.currentTimeMillis()));
-        work.setComment(comment);
         try {
-            response.put("data", workService.addOrUpdate(work));
-            response.put("status", 1);
-            response.put("message", "Create work success.");
-        } catch (DataIntegrityViolationException e) {
-            if (!workService.checkByName(name)) {
-                throw e;
+            if (id == null) {
+                response.put("data", workService.add(name, comment));
+                response.put("message", "创建生产流程成功");
+            } else {
+                response.put("data", workService.update(id, name, comment));
+                response.put("message", "更新生产流程成功");
             }
-
+            response.put("status", 1);
+        } catch (NullPointerException e) {
             response.put("status", 0);
-            response.put("message", "Work name exist.");
+            response.put("message", "");
+        } catch (DataIntegrityViolationException e) {
+            response.put("status", 0);
+            response.put("message", "名称为" + name + "的生产流程已存在");
+        } catch (EntityNotFoundException e) {
+            response.put("status", 0);
+            response.put("message", "Id为" + id + "的生产流程不存在");
         }
 
         return response;
     }
 
     /**
-     * Update Work Api
-     * @param request {
-     *     "id": work id: Integer
-     *     "name": work name: String,
-     *     "comment": work comment: String
-     * }
-     * @return if update success return {
-     *     "status": 1,
-     *     "message": "Update work success."
-     *     "data": {
-     *         "id": work id: Integer,
-     *         "name": work name: String,
-     *         "comment": work comment: String,
-     *         "createTime": work create time: Timestamp,
-     *         "updateTime": work update time: Timestamp
-     *     }
-     * }
-     */
-    @ResponseBody
-    @PostMapping("/update")
-    @Transactional
-    public JSONObject update(@RequestBody JSONObject request) {
-        JSONObject response = new JSONObject();
-        String name = request.getString("name");
-        String comment = request.getString("comment");
-
-        try {
-            Work work = workService.loadById(request.getInteger("id"));
-
-            work.setName(name);
-            work.setComment(comment);
-            work.setUpdateUser(SecurityUtil.getUser());
-            work.setUpdateTime(new Timestamp(System.currentTimeMillis()));
-
-            response.put("data", workService.addOrUpdate(work));
-            response.put("status", 1);
-            response.put("message", "Update work success.");
-        } catch (NoSuchElementException e) {
-            response.put("status", 0);
-            response.put("message", "No such work.");
-        } catch (DataIntegrityViolationException e) {
-            if (!workService.checkByName(name)) {
-                throw e;
-            }
-            response.put("status", 0);
-            response.put("message", "Work name exist.");
-        }
-
-        return response;
-    }
-
-    /**
-     * Find Work Api
+     * Get Work Or Works Api.
      * @param id the work id.
      * @param name the name work contains.
      * @param comment the comment work contains.
      * @param pageNumber the page number.
-     * @return {
+     * @param pageSize the page size.
+     * @return if id is null return {
      *     "status": 1,
-     *     "message": "Get work success.",
+     *     "message": "获取生产流程成功",
      *     "data": {
-     *         "total": page total number: Integer,
-     *         "works": [
-     *             {
-     *                 "id": work id: Integer,
-     *                 "name": work name: String,
-     *                 "comment": work comment: String,
-     *                 "createTime": work create time: Timestamp,
-     *                 "updateTime": work update time: Timestamp
-     *             },
-     *             ...
-     *         ]
+     *         "size": page size: int
+     *         "total": page total number: int,
+     *         "works": works: array
+     *     }
+     * } else if id is not null return {
+     *     "status": 1,
+     *     "message": "获取生产流程成功",
+     *     "data": work data: object
      * }
      */
-    @ResponseBody
-    @GetMapping("/find")
-    public JSONObject find(
+    @GetMapping
+    public JSONObject get(
             @RequestParam(required = false) Integer id,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String comment,
-            @RequestParam(defaultValue = "0") Integer pageNumber) {
+            @RequestParam(defaultValue = "0") Integer pageNumber,
+            @RequestParam(defaultValue = "20") Integer pageSize) {
         JSONObject response = new JSONObject();
 
-        Map<String, Object> equalMap = new HashMap<>();
-        Map<String, Object> likeMap = new HashMap<>();
+        if (id == null) {
+            Map<String, Object> likeMap = new HashMap<>();
 
-        if (id != null) {
-            equalMap.put("id", id);
+            Optional.ofNullable(name).ifPresent(value -> likeMap.put("name", value));
+            Optional.ofNullable(comment).ifPresent(value -> likeMap.put("comment", value));
+
+            JSONObject data = new JSONObject();
+            Page<Work> page = workService.load(likeMap, pageNumber, pageSize);
+            data.put("size", page.getSize());
+            data.put("total", page.getTotalPages());
+            data.put("works", page.getContent());
+
+            response.put("data", data);
+        } else {
+            try {
+                response.put("data", workService.loadById(id));
+            } catch (EntityNotFoundException e) {
+                response.put("status", 1);
+                response.put("message", "Id为" + id + "的生产流程不存在");
+                return response;
+            }
+
         }
 
-        if (name != null) {
-            likeMap.put("name", name);
-        }
-
-        if (comment != null) {
-            likeMap.put("comment", comment);
-        }
-
-        JSONObject data = new JSONObject();
-        Page<Work> page = workService.load(equalMap, likeMap, pageNumber);
-        data.put("total", page.getTotalPages());
-        data.put("works", page.getContent());
-
-        response.put("data", data);
         response.put("status", 1);
-        response.put("message", "Get work success.");
+        response.put("message", "获取生产流程成功");
 
         return response;
     }
 
     /**
-     * Delete Work Api.
-     * @param request {
-     *     "id": the work id: Long
-     * }
-     * @return {
+     * Delete Work Api
+     * @param id the work id.
+     * @return if delete success return {
      *     "status": 1,
-     *     "message": "Delete work success."
+     *     "message": "删除生产流程成功"
+     * } else return {
+     *     "status": 1,
+     *     "message": error message: str
      * }
      */
-    @ResponseBody
-    @DeleteMapping("/delete")
+    @DeleteMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public JSONObject delete(@RequestBody JSONObject request) {
+    public JSONObject delete(@RequestParam Integer id) {
         JSONObject response = new JSONObject();
 
-        Integer id = Objects.requireNonNull(request.getInteger("id"));
-        workService.removeById(id);
+        try {
+            workService.removeById(id);
 
-        response.put("status", 1);
-        response.put("message", "Delete work success.");
+            response.put("status", 1);
+            response.put("message", "删除生产流程成功");
+        } catch (EmptyResultDataAccessException e) {
+            response.put("status", 0);
+            response.put("message", "Id为" + id + "的生产流程不存在");
+        }
+
+        return response;
+    }
+
+    /**
+     * Update Work Processes Api
+     * @param request {
+     *     "id": the work id,
+     *     "processes": [
+     *         process id, this sequence is the work process sequence: int
+     *     ]
+     * }
+     * @return if success return {
+     *     "status": 1,
+     *     "message": "更新流程工序成功",
+     *     "data": {
+     *         "id": work id: int,
+     *         "name": work name: str,
+     *         "comment": work comment: str,
+     *         "processes": [
+     *             {
+     *                 "id": the process id: int,
+     *                 "name": the process name: str,
+     *                 "comment": the process comment: str,
+     *                 "sequence": the work process sequence: int
+     *             }, ...
+     *         ]
+     *     }
+     * }
+     * @throws MissingServletRequestParameterException if id is null.
+     */
+    @PostMapping("/processes")
+    public JSONObject updateProcesses(@RequestBody JSONObject request)
+            throws MissingServletRequestParameterException {
+        JSONObject response = new JSONObject();
+
+        Integer id = Optional.ofNullable(request.getInteger("id"))
+                .orElseThrow(() -> new MissingServletRequestParameterException("id", "int"));
+
+        JSONArray data = request.getJSONArray("processes");
+        List<Integer> processIds = data == null ? new ArrayList<>() : data.toJavaList(Integer.TYPE);
+
+        try {
+            response.put("data", workService.updateProcesses(id, processIds));
+            response.put("status", 1);
+            response.put("message", "更新流程工序成功");
+        } catch (EntityNotFoundException e) {
+            response.put("status", 0);
+            response.put("message", "Id为" + id + "的生产流程不存在");
+        }
+
+        return response;
+    }
+
+    /**
+     * Get Work Processes Api
+     * @param id the work id.
+     * @return if get success return {
+     *      "status": 1,
+     *      "message": "更新流程工序成功",
+     *      "data": [
+     *          {
+     *              "id": the process id: int,
+     *              "name": the process name: str,
+     *              "comment": the process comment: str,
+     *              "sequence": the work process sequence: int
+     *          }, ...
+     *      ]
+     * }
+     */
+    @GetMapping("/processes")
+    public JSONObject getProcesses(@RequestParam Integer id) {
+        JSONObject response = new JSONObject();
+
+        try {
+            response.put("data", workService.loadWithProcessesById(id).getProcesses());
+            response.put("status", 1);
+            response.put("message", "获取流程工序成功");
+        } catch (EntityNotFoundException e) {
+            response.put("status", 0);
+            response.put("message", "Id为" + id + "的工序不存在");
+        }
 
         return response;
     }
