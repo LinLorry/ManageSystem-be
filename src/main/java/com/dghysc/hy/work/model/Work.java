@@ -152,18 +152,12 @@ public class Work implements Serializable {
         });
     }
 
-    public List<Map<String, Object>> getProcessesReturn() {
+    public List<Map<String, Object>> getProcesses() {
         return processesReturn;
     }
 
     @JsonAnyGetter
     public Map<String, Object> getInfo() {
-        Map<String, Object> map = EntityUtil.getCreateAndUpdateInfo(createUser, updateUser);
-
-        if (processesReturn != null) {
-            map.put("processes", processesReturn);
-        }
-
-        return map;
+        return EntityUtil.getCreateAndUpdateInfo(createUser, updateUser);
     }
 }

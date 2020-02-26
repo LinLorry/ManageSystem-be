@@ -235,7 +235,7 @@ public class WorkController {
         JSONObject response = new JSONObject();
 
         try {
-            response.put("data", workService.loadWithProcessesById(id).getProcessesReturn());
+            response.put("data", workService.loadWithProcessesById(id).getProcesses());
             response.put("status", 1);
             response.put("message", "获取流程工序成功");
         } catch (EntityNotFoundException e) {
