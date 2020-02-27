@@ -1,6 +1,7 @@
 package com.dghysc.hy.product;
 
 import com.dghysc.hy.product.model.Product;
+import com.dghysc.hy.product.rep.CompleteProductRepository;
 import com.dghysc.hy.product.rep.ProductRepository;
 import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.util.TestUtil;
@@ -30,6 +31,9 @@ public class ProductServiceTest {
 
     @Autowired
     public ProductRepository productRepository;
+
+    @Autowired
+    public CompleteProductRepository completeProductRepository;
 
     @Autowired
     public ProductService productService;
@@ -72,5 +76,15 @@ public class ProductServiceTest {
 
         assertEquals(id, product.getId());
         assertEquals(serial, product.getSerial());
+    }
+
+    @Test
+    public void complete() {
+        Long id = testUtil.nextId(Product.class);
+
+        productService.complete(id);
+
+        assertFalse(productRepository.existsById(id));
+        assertTrue(completeProductRepository.existsById(id));
     }
 }

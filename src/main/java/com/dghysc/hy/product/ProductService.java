@@ -1,6 +1,8 @@
 package com.dghysc.hy.product;
 
+import com.dghysc.hy.product.model.CompleteProduct;
 import com.dghysc.hy.product.model.Product;
+import com.dghysc.hy.product.rep.CompleteProductRepository;
 import com.dghysc.hy.product.rep.ProductRepository;
 import com.dghysc.hy.util.SecurityUtil;
 import com.dghysc.hy.util.SpecificationUtil;
@@ -31,10 +33,15 @@ public class ProductService {
 
     private final ProductRepository productRepository;
 
-    public ProductService(WorkRepository workRepository,
-                          ProductRepository productRepository) {
+    private final CompleteProductRepository completeProductRepository;
+
+    public ProductService(
+            WorkRepository workRepository,
+            ProductRepository productRepository,
+            CompleteProductRepository completeProductRepository) {
         this.workRepository = workRepository;
         this.productRepository = productRepository;
+        this.completeProductRepository = completeProductRepository;
     }
 
     /**
@@ -80,6 +87,23 @@ public class ProductService {
         Optional.ofNullable(endTime).ifPresent(product::setEndTime);
 
         return productRepository.save(product);
+    }
+
+    /**
+     * Complete Product
+     * @param id the product id.
+     * @return the complete product.
+     */
+    @Transactional
+    public CompleteProduct complete(@NotNull Long id) {
+        // TODO 判断生产流程是否完成
+        Product product = productRepository.findById(Optional.of(id).get())
+                .orElseThrow(EntityNotFoundException::new);
+
+        CompleteProduct completeProduct = completeProductRepository.save(new CompleteProduct(product, SecurityUtil.getUser()));
+        productRepository.deleteById(id);
+
+        return completeProduct;
     }
 
     /**
