@@ -15,27 +15,26 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * The Product Model
+ * The Complete Product Model
  * @author lorry
  * @author lin864464995@163.com
  */
 @Entity
-public class Product implements Serializable {
+public class CompleteProduct implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @Column(updatable = false)
-    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    @Column(nullable = false, updatable = false)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(unique = true, nullable = false, updatable = false)
     private String serial;
 
+    @Column(updatable = false)
     private Timestamp endTime;
 
-    @OneToMany(mappedBy = "product",
-            cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH})
+    @OneToMany(mappedBy = "product", cascade = CascadeType.DETACH)
     @JsonIgnore
     private Set<ProductProcess> productProcesses = new HashSet<>();
 
@@ -53,58 +52,53 @@ public class Product implements Serializable {
     @NotFound(action = NotFoundAction.IGNORE)
     private User createUser;
 
-    @Column(nullable = false)
+    @Column(nullable = false, updatable = false)
     private Timestamp updateTime;
 
     @JsonIgnore
     @ManyToOne(optional = false)
-    @JoinColumn(nullable = false)
+    @JoinColumn(nullable = false, updatable = false)
     @NotFound(action = NotFoundAction.IGNORE)
     private User updateUser;
 
-    public Product() { }
+    public CompleteProduct() { }
 
-    public Product(
-            @NotNull String serial, @NotNull Work work,
-            @NotNull User creator
-    ) {
-        this(serial, work, creator, new Timestamp(System.currentTimeMillis()));
+    public CompleteProduct(@NotNull Product product, @NotNull User finisher) {
+        this(product, finisher, new Timestamp(System.currentTimeMillis()));
     }
 
-    public Product(
-            @NotNull String serial, @NotNull Work work,
-            @NotNull User creator, @NotNull Timestamp time
-    ) {
-        Optional.of(serial).ifPresent(this::setSerial);
-        Optional.of(work).ifPresent(this::setWork);
-        Optional.of(creator).ifPresent(user -> {
-            this.createUser = user;
-            this.updateUser = user;
+    public CompleteProduct(@NotNull Product product, @NotNull User finisher, @NotNull Timestamp time) {
+        Optional.of(product).ifPresent(p -> {
+            Optional.of(p.getId()).ifPresent(this::setId);
+            Optional.of(p.getSerial()).ifPresent(this::setSerial);
+            this.endTime = product.getEndTime();
+            Optional.of(p.getWork()).ifPresent(this::setWork);
+            Optional.of(p.getCreateTime()).ifPresent(this::setCreateTime);
+            Optional.of(p.getCreateUser()).ifPresent(this::setCreateUser);
         });
-        Optional.of(time).ifPresent(t -> {
-            this.createTime = t;
-            this.updateTime = t;
-        });
+
+        Optional.of(finisher).ifPresent(this::setUpdateUser);
+        Optional.of(time).ifPresent(this::setUpdateTime);
     }
 
     public Long getId() {
         return id;
     }
 
+    private void setId(Long id) {
+        this.id = id;
+    }
+
     public String getSerial() {
         return serial;
     }
 
-    public void setSerial(String serial) {
+    private void setSerial(String serial) {
         this.serial = serial;
     }
 
     public Timestamp getEndTime() {
         return endTime;
-    }
-
-    public void setEndTime(Timestamp endTime) {
-        this.endTime = endTime;
     }
 
     public Set<ProductProcess> getProductProcesses() {
@@ -123,15 +117,23 @@ public class Product implements Serializable {
         return createTime;
     }
 
+    private void setCreateTime(Timestamp createTime) {
+        this.createTime = createTime;
+    }
+
     public User getCreateUser() {
         return createUser;
+    }
+
+    private void setCreateUser(User createUser) {
+        this.createUser = createUser;
     }
 
     public Timestamp getUpdateTime() {
         return updateTime;
     }
 
-    public void setUpdateTime(Timestamp updateTime) {
+    private void setUpdateTime(Timestamp updateTime) {
         this.updateTime = updateTime;
     }
 
@@ -139,7 +141,7 @@ public class Product implements Serializable {
         return updateUser;
     }
 
-    public void setUpdateUser(User updateUser) {
+    private void setUpdateUser(User updateUser) {
         this.updateUser = updateUser;
     }
 }

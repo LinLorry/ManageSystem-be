@@ -2,10 +2,6 @@ package com.dghysc.hy.product;
 
 import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.product.model.Product;
-import com.dghysc.hy.product.model.ProductStatus;
-import com.dghysc.hy.util.SecurityUtil;
-import com.dghysc.hy.work.WorkService;
-import com.dghysc.hy.work.model.Work;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,11 +24,8 @@ public class ProductController {
 
     private final ProductService productService;
 
-    private final WorkService workService;
-
-    public ProductController(ProductService productService, WorkService workService) {
+    public ProductController(ProductService productService) {
         this.productService = productService;
-        this.workService = workService;
     }
 
     /**
@@ -83,14 +76,9 @@ public class ProductController {
         Product product = new Product();
 
         product.setSerial(serial);
-        product.setCreateTime(new Timestamp(System.currentTimeMillis()));
-        product.setCreateUser(SecurityUtil.getUser());
         product.setEndTime(endTime);
-        product.setStatus(ProductStatus.PROGRESS);
 
         try {
-            Work work = workService.loadById(workId);
-            product.setWork(work);
 
             response.put("data", productService.addOrUpdate(product));
             response.put("status", 1);
@@ -141,7 +129,6 @@ public class ProductController {
         Long id = request.getLong("id");
         String serial = request.getString("serial");
         Timestamp endTime = request.getTimestamp("endTime");
-        Integer workId = request.getInteger("workId");
         Product product;
 
         if (id == null) {
@@ -158,11 +145,6 @@ public class ProductController {
             if (endTime != null) product.setEndTime(endTime);
 
             if (serial != null) product.setSerial(serial);
-
-            if (workId != null) {
-                Work work = workService.loadById(workId);
-                product.setWork(work);
-            }
 
             response.put("data", productService.addOrUpdate(product));
             response.put("status", 1);
@@ -184,7 +166,6 @@ public class ProductController {
      * Find Product Api
      * @param id the product id: Integer.
      * @param serial the serial product contains: String.
-     * @param status the product status: String.
      * @param pageNumber the page number: Integer.
      * @return {
      *     "status": 1,
@@ -212,7 +193,6 @@ public class ProductController {
     public JSONObject find(
             @RequestParam(required = false) Integer id,
             @RequestParam(required = false) String serial,
-            @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "0") Integer pageNumber) {
         JSONObject response = new JSONObject();
 
@@ -225,15 +205,6 @@ public class ProductController {
 
         if (serial != null) {
             likeMap.put("serial", serial);
-        }
-
-        if (status != null) {
-            switch (status) {
-                case "progress":
-                    equalMap.put("status", ProductStatus.PROGRESS);
-                case "finish":
-                    equalMap.put("status", ProductStatus.FINISH);
-            }
         }
 
         JSONObject data = new JSONObject();
@@ -268,10 +239,10 @@ public class ProductController {
         try {
             Product product = productService.loadById(id);
 
-            if (product.getStatus() != ProductStatus.FINISH) {
-                product.setStatus(ProductStatus.FINISH);
-                product.setFinishTime(new Timestamp(System.currentTimeMillis()));
-            }
+//            if (product.getStatus() != ProductStatus.FINISH) {
+//                product.setStatus(ProductStatus.FINISH);
+//                product.setFinishTime(new Timestamp(System.currentTimeMillis()));
+//            }
 
             productService.addOrUpdate(product);
             response.put("status", 1);
