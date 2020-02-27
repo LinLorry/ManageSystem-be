@@ -2,13 +2,20 @@ package com.dghysc.hy.product;
 
 import com.dghysc.hy.product.model.Product;
 import com.dghysc.hy.product.rep.ProductRepository;
+import com.dghysc.hy.util.SecurityUtil;
 import com.dghysc.hy.util.SpecificationUtil;
+import com.dghysc.hy.work.model.Work;
+import com.dghysc.hy.work.repo.WorkRepository;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityNotFoundException;
+import javax.validation.constraints.NotNull;
 import java.sql.Timestamp;
 import java.util.*;
 
@@ -20,9 +27,13 @@ import java.util.*;
 @Service
 public class ProductService {
 
+    private final WorkRepository workRepository;
+
     private final ProductRepository productRepository;
 
-    public ProductService(ProductRepository productRepository) {
+    public ProductService(WorkRepository workRepository,
+                          ProductRepository productRepository) {
+        this.workRepository = workRepository;
         this.productRepository = productRepository;
     }
 
@@ -32,6 +43,42 @@ public class ProductService {
      * @return the product have be add or update.
      */
     Product addOrUpdate(Product product) {
+        return productRepository.save(product);
+    }
+
+    /**
+     * Add Product Service
+     * @param serial the serial.
+     * @param endTime the endTime.
+     * @param workId the work id.
+     * @return the product.
+     * @throws NullPointerException if {@code serial}  or {@code workId} is null
+     * @throws EntityNotFoundException if work id is {@code workId} not exist
+     */
+    Product add(@NotNull String serial, @Nullable Timestamp endTime, @NotNull Integer workId) {
+        Work work = workRepository.findById(Optional.of(workId).get())
+                .orElseThrow(EntityNotFoundException::new);
+        Product product = new Product(serial, work, SecurityUtil.getUser());
+
+        product.setEndTime(endTime);
+
+        return productRepository.save(product);
+    }
+
+    /**
+     * Update Product Service.
+     * @param id the product id.
+     * @param serial the product serial.
+     * @param endTime the product endTime.
+     * @return the product.
+     */
+    @Transactional
+    public Product update(@NotNull Long id, @Nullable String serial, @Nullable Timestamp endTime) {
+        Product product = productRepository.findById(Optional.of(id).get())
+                .orElseThrow(EntityNotFoundException::new);
+        Optional.ofNullable(serial).ifPresent(product::setSerial);
+        Optional.ofNullable(endTime).ifPresent(product::setEndTime);
+
         return productRepository.save(product);
     }
 
