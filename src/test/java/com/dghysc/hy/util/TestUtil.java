@@ -2,7 +2,9 @@ package com.dghysc.hy.util;
 
 import com.dghysc.hy.exception.NoElementException;
 import com.dghysc.hy.exception.NoRepositoryException;
+import com.dghysc.hy.product.model.CompleteProduct;
 import com.dghysc.hy.product.model.Product;
+import com.dghysc.hy.product.rep.CompleteProductRepository;
 import com.dghysc.hy.product.rep.ProductRepository;
 import com.dghysc.hy.user.model.ChildMenu;
 import com.dghysc.hy.user.model.ParentMenu;
@@ -63,7 +65,8 @@ public class TestUtil extends Random {
             ChildMenuRepository childMenuRepository,
             ProcessRepository processRepository,
             WorkRepository workRepository,
-            ProductRepository productRepository
+            ProductRepository productRepository,
+            CompleteProductRepository completeProductRepository
     ) {
 
         this.map = new HashMap<>();
@@ -81,6 +84,7 @@ public class TestUtil extends Random {
         map.put(Work.class, workRepository);
 
         map.put(Product.class, productRepository);
+        map.put(CompleteProduct.class, completeProductRepository);
     }
 
     public HttpHeaders getTokenHeader() {
