@@ -136,7 +136,7 @@ public class TestUtil extends Random {
         if (userIterator == null || !userIterator.hasNext()) {
             Iterable<User> users = userRepository.findAll();
 
-            users.forEach(User::getAuthorities);
+            users.forEach(u -> u.getAuthorities().size());
             userIterator = users.iterator();
         }
 
@@ -155,7 +155,7 @@ public class TestUtil extends Random {
             if (role.getUsers().size() == 0) {
                 throw new EntityNotFoundException();
             }
-            role.getUsers().forEach(User::getAuthorities);
+            role.getUsers().forEach(u -> u.getAuthorities().size());
 
             userIterator = role.getUsers().iterator();
         } else if (!userIterator.hasNext()) {
