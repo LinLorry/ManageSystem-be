@@ -135,7 +135,6 @@ public class WorkService {
         processes.forEach(process ->
                 workProcesses.add(new WorkProcess(finalWork, process, map.get(process.getId())))
         );
-        processRepository.flush();
 
         work.setUpdateUser(user);
         work.setUpdateTime(now);

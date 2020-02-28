@@ -1,8 +1,10 @@
 package com.dghysc.hy.work.model;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.Optional;
 
 @Embeddable
 public class WorkProcessKey implements Serializable {
@@ -10,57 +12,47 @@ public class WorkProcessKey implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @ManyToOne
-    @JoinColumn
-    private Work work;
+    @Column(name = "work_id", nullable = false, updatable = false)
+    private Integer workId;
 
     @Id
-    @ManyToOne
-    @JoinColumn
-    private Process process;
+    @Column(name = "process_id", nullable = false, updatable = false)
+    private Integer processId;
 
-    public WorkProcessKey() {
+    public WorkProcessKey() { }
+
+    public WorkProcessKey(@NotNull Integer workId, @NotNull Integer processId) {
+        Optional.of(workId).ifPresent(this::setWorkId);
+        Optional.of(processId).ifPresent(this::setProcessId);
     }
 
-    public WorkProcessKey(Integer workId, Integer processId) {
-        this.work = new Work();
-        this.process = new Process();
-
-        this.work.setId(workId);
-        this.process.setId(processId);
+    public Integer getWorkId() {
+        return workId;
     }
 
-    public WorkProcessKey(Work work, Process process) {
-        this.work = work;
-        this.process = process;
+    private void setWorkId(Integer workId) {
+        this.workId = workId;
     }
 
-    public Work getWork() {
-        return work;
+    public Integer getProcessId() {
+        return processId;
     }
 
-    public void setWork(Work work) {
-        this.work = work;
-    }
-
-    public Process getProcess() {
-        return process;
-    }
-
-    public void setProcess(Process process) {
-        this.process = process;
+    private void setProcessId(Integer processId) {
+        this.processId = processId;
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj == this) return true;
-        else if (!(obj instanceof WorkProcessKey)) return false;
-        WorkProcessKey tmp = (WorkProcessKey) obj;
-        return tmp.work.equals(work) && tmp.process.equals(process);
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        WorkProcessKey that = (WorkProcessKey) o;
+        return workId.equals(that.workId) &&
+                processId.equals(that.processId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(work.getId(), process.getId());
+        return Objects.hash(workId, processId);
     }
 }
