@@ -47,7 +47,8 @@ public class WorkController {
         String comment = request.getString("comment");
 
         try {
-            response.put("data", workService.add(name, comment));
+            // TODO 工序参数
+            response.put("data", workService.add(name, comment, new ArrayList<>()));
             response.put("message", "创建生产流程成功");
             response.put("status", 1);
         } catch (NullPointerException e) {

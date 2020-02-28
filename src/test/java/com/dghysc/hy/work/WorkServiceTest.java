@@ -12,9 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -48,7 +46,16 @@ public class WorkServiceTest {
         String name = testUtil.nextString();
         String comment = testUtil.nextString();
 
-        Work work = workService.add(name, comment);
+
+        Set<Integer> tmp = new HashSet<>();
+
+        while (tmp.size() != processRepository.count() && tmp.size() < 3) {
+            tmp.add(testUtil.nextId(Process.class));
+        }
+
+        List<Integer> processIds = new ArrayList<>(tmp);
+
+        Work work = workService.add(name, comment, processIds);
 
         assertEquals(name, work.getName());
         assertEquals(comment, work.getComment());
@@ -56,7 +63,7 @@ public class WorkServiceTest {
         boolean flag = false;
 
         try {
-            workService.add(null, null);
+            workService.add(null, null, processIds);
         } catch (NullPointerException e) {
             flag = true;
         }
@@ -65,28 +72,11 @@ public class WorkServiceTest {
     }
 
     @Test
-    public void update() {
+    public void loadWithProcessesById() {
         Integer id = testUtil.nextId(Work.class);
-        String name = testUtil.nextString();
-        String comment = testUtil.nextString();
 
-        Work work = workService.update(id, name, comment);
-        assertEquals(id, work.getId());
-        assertEquals(name, work.getName());
-        assertEquals(comment, work.getComment());
-    }
+        Work work = workService.loadWithProcessesById(id);
 
-    @Test
-    public void updateProcesses() {
-        Integer id = testUtil.nextId(Work.class);
-        Set<Integer> processIds = new HashSet<>();
-
-        while (processIds.size() != processRepository.count() && processIds.size() < 3) {
-            processIds.add(testUtil.nextId(Process.class));
-        }
-
-        Work work = workService.updateProcesses(id, new ArrayList<>(processIds));
-
-        assertEquals(processIds.size(), work.getWorkProcesses().size());
+        System.out.println(work.getProcesses());
     }
 }

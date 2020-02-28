@@ -40,18 +40,10 @@ public class WorkProcess implements Serializable {
 
     public WorkProcess() { }
 
-    public WorkProcess(@NotNull Work work, @NotNull Process process,
+    public WorkProcess(@NotNull Integer workId, @NotNull Integer processId,
                        @NotNull Integer sequenceNumber) {
-        Optional.of(work).ifPresent(w -> {
-            Optional.of(w.getId()).ifPresent(this::setWorkId);
-            this.work = w;
-        });
-
-        Optional.of(process).ifPresent(p -> {
-            Optional.of(p.getId()).ifPresent(this::setProcessId);
-            this.process = p;
-        });
-
+        Optional.of(workId).ifPresent(this::setWorkId);
+        Optional.of(processId).ifPresent(this::setProcessId);
         Optional.of(sequenceNumber).ifPresent(this::setSequenceNumber);
     }
 
