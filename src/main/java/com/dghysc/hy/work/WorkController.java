@@ -1,13 +1,9 @@
 package com.dghysc.hy.work;
 
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.work.model.Work;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityNotFoundException;
@@ -29,13 +25,12 @@ public class WorkController {
     }
 
     /**
-     * Add Or Update Work Api
+     * Create Work Api
      * @param request {
-     *     "id": the work id: int,
      *     "name": the work name: str,
      *     "comment": the work comment: str
      * }
-     * @return if add or update success return {
+     * @return if create success return {
      *     "status": 1,
      *     "message": message: str,
      *     "data": work data: object
@@ -45,31 +40,24 @@ public class WorkController {
      * }
      */
     @PostMapping
-    public JSONObject createOrUpdate(@RequestBody JSONObject request) {
+    public JSONObject create(@RequestBody JSONObject request) {
         JSONObject response = new JSONObject();
 
-        Integer id = request.getInteger("id");
         String name = request.getString("name");
         String comment = request.getString("comment");
 
         try {
-            if (id == null) {
-                response.put("data", workService.add(name, comment));
-                response.put("message", "创建生产流程成功");
-            } else {
-                response.put("data", workService.update(id, name, comment));
-                response.put("message", "更新生产流程成功");
-            }
+            response.put("data", workService.add(name, comment));
+            response.put("message", "创建生产流程成功");
             response.put("status", 1);
         } catch (NullPointerException e) {
             response.put("status", 0);
-            response.put("message", "");
+            if (name == null) {
+                response.put("message", "名字不能为空");
+            }
         } catch (DataIntegrityViolationException e) {
             response.put("status", 0);
             response.put("message", "名称为" + name + "的生产流程已存在");
-        } catch (EntityNotFoundException e) {
-            response.put("status", 0);
-            response.put("message", "Id为" + id + "的生产流程不存在");
         }
 
         return response;
@@ -131,85 +119,6 @@ public class WorkController {
 
         response.put("status", 1);
         response.put("message", "获取生产流程成功");
-
-        return response;
-    }
-
-    /**
-     * Delete Work Api
-     * @param id the work id.
-     * @return if delete success return {
-     *     "status": 1,
-     *     "message": "删除生产流程成功"
-     * } else return {
-     *     "status": 1,
-     *     "message": error message: str
-     * }
-     */
-    @DeleteMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public JSONObject delete(@RequestParam Integer id) {
-        JSONObject response = new JSONObject();
-
-        try {
-            workService.removeById(id);
-
-            response.put("status", 1);
-            response.put("message", "删除生产流程成功");
-        } catch (EmptyResultDataAccessException e) {
-            response.put("status", 0);
-            response.put("message", "Id为" + id + "的生产流程不存在");
-        }
-
-        return response;
-    }
-
-    /**
-     * Update Work Processes Api
-     * @param request {
-     *     "id": the work id,
-     *     "processes": [
-     *         process id, this sequence is the work process sequence: int
-     *     ]
-     * }
-     * @return if success return {
-     *     "status": 1,
-     *     "message": "更新流程工序成功",
-     *     "data": {
-     *         "id": work id: int,
-     *         "name": work name: str,
-     *         "comment": work comment: str,
-     *         "processes": [
-     *             {
-     *                 "id": the process id: int,
-     *                 "name": the process name: str,
-     *                 "comment": the process comment: str,
-     *                 "sequence": the work process sequence: int
-     *             }, ...
-     *         ]
-     *     }
-     * }
-     * @throws MissingServletRequestParameterException if id is null.
-     */
-    @PostMapping("/processes")
-    public JSONObject updateProcesses(@RequestBody JSONObject request)
-            throws MissingServletRequestParameterException {
-        JSONObject response = new JSONObject();
-
-        Integer id = Optional.ofNullable(request.getInteger("id"))
-                .orElseThrow(() -> new MissingServletRequestParameterException("id", "int"));
-
-        JSONArray data = request.getJSONArray("processes");
-        List<Integer> processIds = data == null ? new ArrayList<>() : data.toJavaList(Integer.TYPE);
-
-        try {
-            response.put("data", workService.updateProcesses(id, processIds));
-            response.put("status", 1);
-            response.put("message", "更新流程工序成功");
-        } catch (EntityNotFoundException e) {
-            response.put("status", 0);
-            response.put("message", "Id为" + id + "的生产流程不存在");
-        }
 
         return response;
     }
