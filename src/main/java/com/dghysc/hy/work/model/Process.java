@@ -8,9 +8,12 @@ import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -19,7 +22,10 @@ import java.util.Set;
  * @author lin864464995@163.com
  */
 @Entity
-public class Process {
+public class Process implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Integer id;
@@ -51,23 +57,29 @@ public class Process {
     @OneToMany(mappedBy = "process")
     private Set<WorkProcess> workProcesses = new HashSet<>();
 
-    public Process() {
+    public Process() { }
+
+    public Process(@NotNull String name, @NotNull User creator) {
+        this(name, creator, new Timestamp(System.currentTimeMillis()));
     }
 
-    public Process(String name, User createUser, Timestamp createTime) {
-        this.name = name;
-        this.createUser = createUser;
-        this.createTime = createTime;
-        this.updateUser = createUser;
-        this.updateTime = createTime;
+    public Process(@NotNull String name, @NotNull User creator,
+                   @NotNull Timestamp createTime) {
+        Optional.of(name).ifPresent(this::setName);
+
+        Optional.of(creator).ifPresent(user -> {
+            this.createUser = user;
+            this.updateUser = user;
+        });
+
+        Optional.of(createTime).ifPresent(time -> {
+            this.createTime = time;
+            this.updateTime = time;
+        });
     }
 
     public Integer getId() {
         return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
     }
 
     public String getName() {
@@ -90,16 +102,8 @@ public class Process {
         return createTime;
     }
 
-    public void setCreateTime(Timestamp createTime) {
-        this.createTime = createTime;
-    }
-
     public User getCreateUser() {
         return createUser;
-    }
-
-    public void setCreateUser(User createUser) {
-        this.createUser = createUser;
     }
 
     public Timestamp getUpdateTime() {
