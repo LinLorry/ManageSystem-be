@@ -29,6 +29,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
+import javax.validation.constraints.NotNull;
 import java.lang.reflect.Method;
 import java.util.*;
 
@@ -175,5 +176,11 @@ public class TestUtil extends Random {
 
     public String nextString() {
         return randomString.nextString();
+    }
+
+    @Transactional
+    public Iterator<User> loadUsersByAuthority(@NotNull String authority) {
+        return roleRepository.findByRole(authority)
+                .orElseThrow(EntityNotFoundException::new).getUsers().iterator();
     }
 }

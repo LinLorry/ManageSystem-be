@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import static org.junit.Assert.*;
@@ -26,6 +27,8 @@ import static org.junit.Assert.*;
 public class UserProcessControllerTest {
 
     private static final String baseUrl = "/api/userProcess";
+
+    private static Iterator<User> users = null;
 
     @Autowired
     private TestRestTemplate restTemplate;
@@ -39,6 +42,9 @@ public class UserProcessControllerTest {
     @Before
     public void setUp() {
         testUtil.setAuthorities("ROLE_WORKER_MANAGER");
+        if (users == null || !users.hasNext()) {
+            users = testUtil.loadUsersByAuthority("ROLE_WORKER");
+        }
     }
 
     @Test
@@ -67,8 +73,7 @@ public class UserProcessControllerTest {
             processes.add(testUtil.nextId(Process.class));
         }
 
-        // TODO testUtil 添加根据权限获取用户
-        requestBody.put("id", testUtil.nextId(User.class));
+        requestBody.put("id", users.next().getId());
         requestBody.put("processes", processes);
 
         HttpEntity<JSONObject> request = new HttpEntity<>(requestBody, testUtil.getTokenHeader());
