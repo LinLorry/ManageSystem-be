@@ -55,4 +55,16 @@ public class ProcessServiceTest {
 
         assertTrue(flag);
     }
+
+    @Test
+    public void update() {
+        Integer id = testUtil.nextId(Process.class);
+        String name = testUtil.nextString();
+        String comment = testUtil.nextString();
+
+        Process process = processService.update(id, name, comment);
+        assertEquals(id, process.getId());
+        assertEquals(name, process.getName());
+        assertEquals(comment, process.getComment());
+    }
 }

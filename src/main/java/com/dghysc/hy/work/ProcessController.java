@@ -27,12 +27,13 @@ public class ProcessController {
     }
 
     /**
-     * Create Process Api
+     * Create Or Update Process Api
      * @param request {
+     *     "id": the process id: int,
      *     "name": the process name: str,
      *     "comment": the process comment: str
      * }
-     * @return if create success return {
+     * @return if create or update success return {
      *     "status": 1,
      *     "message": message: str,
      *     "data": process data: object
@@ -42,23 +43,31 @@ public class ProcessController {
      * }
      */
     @PostMapping
-    public JSONObject create(@RequestBody JSONObject request) {
+    public JSONObject createOrUpdate(@RequestBody JSONObject request) {
         JSONObject response = new JSONObject();
 
+        Integer id = request.getInteger("id");
         String name = request.getString("name");
         String comment = request.getString("comment");
 
         try {
-            response.put("data", processService.add(name, comment));
-            response.put("message", "创建工序成功");
-
+            if (id == null) {
+                response.put("data", processService.add(name, comment));
+                response.put("message", "创建工序成功");
+            } else {
+                response.put("data", processService.update(id, name, comment));
+                response.put("message", "更新工序成功");
+            }
             response.put("status", 1);
         } catch (NullPointerException e) {
             response.put("status", 0);
-            response.put("message", "名字不能为空");
+            response.put("message", "");
         } catch (DataIntegrityViolationException e) {
             response.put("status", 0);
             response.put("message", "名称为" + name + "的工序已存在");
+        } catch (EntityNotFoundException e) {
+            response.put("status", 0);
+            response.put("message", "Id为" + id + "的工序不存在");
         }
 
         return response;

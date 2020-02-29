@@ -12,7 +12,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import static org.junit.Assert.*;
 
@@ -69,6 +72,18 @@ public class WorkServiceTest {
         }
 
         assertTrue(flag);
+    }
+
+    @Test
+    public void update() {
+        Integer id = testUtil.nextId(Work.class);
+        String name = testUtil.nextString();
+        String comment = testUtil.nextString();
+
+        Work work = workService.update(id, name, comment);
+        assertEquals(id, work.getId());
+        assertEquals(name, work.getName());
+        assertEquals(comment, work.getComment());
     }
 
     @Test

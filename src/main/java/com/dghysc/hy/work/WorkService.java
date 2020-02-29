@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
 import javax.validation.constraints.NotNull;
+import java.sql.Timestamp;
 import java.util.*;
 
 /**
@@ -68,6 +69,33 @@ public class WorkService {
         for (int i = 0; i < processIds.size(); i++) {
             workProcesses.add(new WorkProcess(workId, processIds.get(i), i));
         }
+
+        return workRepository.save(work);
+    }
+
+    /**
+     * Update Work
+     *
+     * @param id      the work id.
+     * @param name    update work name.
+     * @param comment update work comment.
+     * @return the updated work.
+     * @throws DataIntegrityViolationException if the have work name is {@code name}.
+     * @throws EntityNotFoundException         if work id is {@code id} not exist.
+     * @throws IllegalArgumentException        if {@code id} is {@literal null}.
+     */
+    Work update(@NotNull Integer id, @Nullable String name, @Nullable String comment) {
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        User creator = SecurityUtil.getUser();
+
+        Work work = workRepository.findById(id)
+                .orElseThrow(EntityNotFoundException::new);
+
+        Optional.ofNullable(name).ifPresent(work::setName);
+        Optional.ofNullable(comment).ifPresent(work::setComment);
+
+        work.setUpdateTime(now);
+        work.setUpdateUser(creator);
 
         return workRepository.save(work);
     }

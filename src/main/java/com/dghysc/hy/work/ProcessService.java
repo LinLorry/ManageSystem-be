@@ -6,7 +6,6 @@ import com.dghysc.hy.util.SpecificationUtil;
 import com.dghysc.hy.work.model.Process;
 import com.dghysc.hy.work.repo.ProcessRepository;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
@@ -47,6 +46,34 @@ public class ProcessService {
         Process process = new Process(Optional.of(name).get(), creator);
 
         Optional.ofNullable(comment).ifPresent(process::setComment);
+
+        return processRepository.save(process);
+    }
+
+    /**
+     * Update Process
+     *
+     * @param id      the process id.
+     * @param name    update process name.
+     * @param comment update process comment.
+     * @return the updated process.
+     * @throws DataIntegrityViolationException if the have process name is {@code name}.
+     * @throws EntityNotFoundException         if process id is {@code id} not exist.
+     * @throws IllegalArgumentException        if {@code id} is {@literal null}.
+     */
+    Process update(@NotNull Integer id, @Nullable String name, @Nullable String comment) {
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        User creator = SecurityUtil.getUser();
+
+        Process process = processRepository.findById(id)
+                .orElseThrow(EntityNotFoundException::new);
+
+        Optional.ofNullable(name).ifPresent(process::setName);
+        Optional.ofNullable(comment).ifPresent(process::setComment);
+
+        process.setUpdateTime(now);
+
+        process.setUpdateUser(creator);
 
         return processRepository.save(process);
     }

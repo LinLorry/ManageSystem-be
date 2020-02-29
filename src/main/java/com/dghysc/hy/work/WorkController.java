@@ -25,12 +25,13 @@ public class WorkController {
     }
 
     /**
-     * Create Work Api
+     * Create Or Update Work Api
      * @param request {
+     *     "id": the work id: int,
      *     "name": the work name: str,
      *     "comment": the work comment: str
      * }
-     * @return if create success return {
+     * @return if create or update success return {
      *     "status": 1,
      *     "message": message: str,
      *     "data": work data: object
@@ -40,25 +41,32 @@ public class WorkController {
      * }
      */
     @PostMapping
-    public JSONObject create(@RequestBody JSONObject request) {
+    public JSONObject createOrUpdate(@RequestBody JSONObject request) {
         JSONObject response = new JSONObject();
 
+        Integer id = request.getInteger("id");
         String name = request.getString("name");
         String comment = request.getString("comment");
 
         try {
-            // TODO 工序参数
-            response.put("data", workService.add(name, comment, new ArrayList<>()));
-            response.put("message", "创建生产流程成功");
+            if (id == null) {
+                // TODO 工序参数
+                response.put("data", workService.add(name, comment, new ArrayList<>()));
+                response.put("message", "创建生产流程成功");
+            } else {
+                response.put("data", workService.update(id, name, comment));
+                response.put("message", "更新生产流程成功");
+            }
             response.put("status", 1);
         } catch (NullPointerException e) {
             response.put("status", 0);
-            if (name == null) {
-                response.put("message", "名字不能为空");
-            }
+            response.put("message", "");
         } catch (DataIntegrityViolationException e) {
             response.put("status", 0);
             response.put("message", "名称为" + name + "的生产流程已存在");
+        } catch (EntityNotFoundException e) {
+            response.put("status", 0);
+            response.put("message", "Id为" + id + "的生产流程不存在");
         }
 
         return response;
