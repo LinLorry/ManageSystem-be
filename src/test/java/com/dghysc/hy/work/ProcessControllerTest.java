@@ -96,21 +96,4 @@ public class ProcessControllerTest {
         assertNotNull(response);
         assertEquals(1, response.getIntValue("status"));
     }
-
-    @Test
-    public void delete() {
-        final String url = baseUrl + "?id=" + testUtil.nextId(Process.class);
-
-        HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
-
-        ResponseEntity<JSONObject> responseEntity = restTemplate
-                .exchange(url, HttpMethod.DELETE, request, JSONObject.class);
-
-        JSONObject response = responseEntity.getBody();
-
-        System.out.println(response);
-        assertEquals(200, responseEntity.getStatusCodeValue());
-        assertNotNull(response);
-        assertEquals(1, response.getIntValue("status"));
-    }
 }

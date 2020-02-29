@@ -3,9 +3,7 @@ package com.dghysc.hy.work;
 import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.work.model.Process;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityNotFoundException;
@@ -29,13 +27,13 @@ public class ProcessController {
     }
 
     /**
-     * Add Or Update Process Api
+     * Create Or Update Process Api
      * @param request {
      *     "id": the process id: int,
      *     "name": the process name: str,
      *     "comment": the process comment: str
      * }
-     * @return if add or update success return {
+     * @return if create or update success return {
      *     "status": 1,
      *     "message": message: str,
      *     "data": process data: object
@@ -130,35 +128,6 @@ public class ProcessController {
 
         response.put("status", 1);
         response.put("message", "获取工序成功");
-
-        return response;
-    }
-
-    /**
-     * Delete Process Api
-     * @param id the process id.
-     * @return if delete success return {
-     *     "status": 1,
-     *     "message": "删除工序成功"
-     * } else return {
-     *     "status": 1,
-     *     "message": error message: str
-     * }
-     */
-    @DeleteMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public JSONObject delete(@RequestParam Integer id) {
-        JSONObject response = new JSONObject();
-
-        try {
-            processService.removeById(id);
-
-            response.put("status", 1);
-            response.put("message", "删除工序成功");
-        } catch (EmptyResultDataAccessException e) {
-            response.put("status", 0);
-            response.put("message", "Id为" + id + "的工序不存在");
-        }
 
         return response;
     }
