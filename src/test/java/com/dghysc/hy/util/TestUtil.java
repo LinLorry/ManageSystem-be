@@ -31,6 +31,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
+import javax.validation.constraints.NotNull;
 import java.lang.reflect.Method;
 import java.util.*;
 
@@ -140,7 +141,7 @@ public class TestUtil extends Random {
         if (userIterator == null || !userIterator.hasNext()) {
             Iterable<User> users = userRepository.findAll();
 
-            users.forEach(User::getAuthorities);
+            users.forEach(u -> u.getAuthorities().size());
             userIterator = users.iterator();
         }
 
@@ -159,7 +160,7 @@ public class TestUtil extends Random {
             if (role.getUsers().size() == 0) {
                 throw new EntityNotFoundException();
             }
-            role.getUsers().forEach(User::getAuthorities);
+            role.getUsers().forEach(u -> u.getAuthorities().size());
 
             userIterator = role.getUsers().iterator();
         } else if (!userIterator.hasNext()) {
@@ -179,5 +180,11 @@ public class TestUtil extends Random {
 
     public String nextString() {
         return randomString.nextString();
+    }
+
+    @Transactional
+    public Iterator<User> loadUsersByAuthority(@NotNull String authority) {
+        return roleRepository.findByRole(authority)
+                .orElseThrow(EntityNotFoundException::new).getUsers().iterator();
     }
 }

@@ -13,4 +13,7 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface ProcessRepository extends JpaRepository<Process, Integer>, JpaSpecificationExecutor<Process> {
+
+    long countByIdIn(Iterable<Integer> ids);
+
 }

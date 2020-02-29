@@ -6,7 +6,6 @@ import com.dghysc.hy.util.SpecificationUtil;
 import com.dghysc.hy.work.model.Process;
 import com.dghysc.hy.work.repo.ProcessRepository;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
@@ -42,19 +41,11 @@ public class ProcessService {
      * @throws NullPointerException            if {@code name} is {@literal null}.
      */
     Process add(@NotNull String name, @Nullable String comment) {
-        Timestamp now = new Timestamp(System.currentTimeMillis());
         User creator = SecurityUtil.getUser();
 
-        Process process = new Process();
+        Process process = new Process(Optional.of(name).get(), creator);
 
-        Optional.of(name).ifPresent(process::setName);
         Optional.ofNullable(comment).ifPresent(process::setComment);
-
-        process.setCreateTime(now);
-            process.setUpdateTime(now);
-
-        process.setCreateUser(creator);
-        process.setUpdateUser(creator);
 
         return processRepository.save(process);
     }
@@ -116,15 +107,5 @@ public class ProcessService {
     public Process loadById(Integer id) {
         return processRepository.findById(id)
                 .orElseThrow(EntityNotFoundException::new);
-    }
-
-    /**
-     * Remove Process By Id
-     * @param id the process id.
-     * @throws org.springframework.dao.EmptyResultDataAccessException
-     *      if the process didn't exists throw this exception.
-     */
-    void removeById(Integer id) throws EmptyResultDataAccessException {
-        processRepository.deleteById(id);
     }
 }
