@@ -102,12 +102,12 @@ public class UserProcessService {
      * @param userId the user id.
      * @return the processes.
      */
-    List<Process> loadByUserId(@NotNull Long userId) {
+    public List<Process> loadByUserId(@NotNull Long userId) {
         return toProcessList(userProcessRepository
                 .findAllByUserId(Optional.of(userId).get()));
     }
 
-    private List<Process> toProcessList(@NotNull List<UserProcess> userProcesses) {
+    private static List<Process> toProcessList(@NotNull List<UserProcess> userProcesses) {
         List<Process> processes = new ArrayList<>(userProcesses.size());
 
         userProcesses.forEach(userProcess -> processes.add(userProcess.getProcess()));
