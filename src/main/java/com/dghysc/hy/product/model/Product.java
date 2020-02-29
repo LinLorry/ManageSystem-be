@@ -25,8 +25,8 @@ public class Product implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @Column(updatable = false)
-    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    @Column(nullable = false, updatable = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false, unique = true)
@@ -34,15 +34,15 @@ public class Product implements Serializable {
 
     private Timestamp endTime;
 
-    @OneToMany(mappedBy = "product",
-            cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH})
-    @JsonIgnore
-    private Set<ProductProcess> productProcesses = new HashSet<>();
-
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false, updatable = false)
     @NotFound(action = NotFoundAction.IGNORE)
     private Work work;
+
+    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH})
+    @JoinColumn(name = "product_id", referencedColumnName = "id")
+    @JsonIgnore
+    private Set<ProductProcess> productProcesses = new HashSet<>();
 
     @Column(nullable = false, updatable = false)
     private Timestamp createTime;

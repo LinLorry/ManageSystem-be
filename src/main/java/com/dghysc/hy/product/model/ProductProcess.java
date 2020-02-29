@@ -19,6 +19,7 @@ import java.util.Optional;
  * @author lin864464995@163.com
  */
 @Entity
+@IdClass(ProductProcessId.class)
 @Table(name = "product_process")
 public class ProductProcess implements Serializable {
 
@@ -28,6 +29,10 @@ public class ProductProcess implements Serializable {
     @Column(name = "product_id", updatable = false)
     @JsonIgnore
     private Long productId;
+
+    @Id
+    @Column(name = "process_id", updatable = false)
+    private Integer processId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false,
@@ -45,13 +50,15 @@ public class ProductProcess implements Serializable {
 
     @Id
     @ManyToOne(optional = false)
-    @JoinColumn(name = "process_id", updatable = false)
+    @JoinColumn(name = "process_id", nullable = false,
+            insertable = false, updatable = false)
     @NotFound(action = NotFoundAction.IGNORE)
     @JsonIgnore
     private Process process;
 
-    @OneToOne
-    @JoinColumn(nullable = false)
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "finisher_id", nullable = false)
+    @NotFound(action = NotFoundAction.IGNORE)
     @JsonIgnore
     private User finisher;
 
@@ -61,18 +68,18 @@ public class ProductProcess implements Serializable {
     public ProductProcess() { }
 
     public ProductProcess(
-            @NotNull Long processId, @NotNull Process process,
+            @NotNull Long productId, @NotNull Integer processId,
             @NotNull User finisher
     ) {
-        this(processId, process, finisher, new Timestamp(System.currentTimeMillis()));
+        this(productId, processId, finisher, new Timestamp(System.currentTimeMillis()));
     }
 
     public ProductProcess(
-            @NotNull Long processId, @NotNull Process process,
+            @NotNull Long productId, @NotNull Integer processId,
             @NotNull User finisher, @NotNull Timestamp time
     ) {
-        Optional.of(processId).ifPresent(this::setProductId);
-        Optional.of(process).ifPresent(this::setProcess);
+        Optional.of(productId).ifPresent(this::setProductId);
+        Optional.of(processId).ifPresent(this::setProcessId);
         Optional.of(finisher).ifPresent(this::setFinisher);
         Optional.of(time).ifPresent(this::setFinishTime);
     }
@@ -83,6 +90,14 @@ public class ProductProcess implements Serializable {
 
     private void setProductId(Long productId) {
         this.productId = productId;
+    }
+
+    public Integer getProcessId() {
+        return processId;
+    }
+
+    private void setProcessId(Integer processId) {
+        this.processId = processId;
     }
 
     public Product getProduct() {
@@ -122,14 +137,12 @@ public class ProductProcess implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ProductProcess that = (ProductProcess) o;
-        return Objects.equals(productId, that.productId) &&
-                Objects.equals(process, that.process) &&
-                Objects.equals(finisher, that.finisher) &&
-                Objects.equals(finishTime, that.finishTime);
+        return productId.equals(that.productId) &&
+                processId.equals(that.processId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(productId, process, finisher, finishTime);
+        return Objects.hash(productId, processId);
     }
 }

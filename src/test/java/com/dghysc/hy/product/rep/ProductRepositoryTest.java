@@ -1,22 +1,17 @@
 package com.dghysc.hy.product.rep;
 
 import com.dghysc.hy.product.model.Product;
-import com.dghysc.hy.product.model.ProductProcess;
 import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.util.SecurityUtil;
 import com.dghysc.hy.util.TestUtil;
-import com.dghysc.hy.work.model.Process;
 import com.dghysc.hy.work.model.Work;
-import com.dghysc.hy.work.repo.ProcessRepository;
 import com.dghysc.hy.work.repo.WorkRepository;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
 import java.sql.Timestamp;
@@ -32,9 +27,6 @@ public class ProductRepositoryTest {
 
     @Autowired
     private WorkRepository workRepository;
-
-    @Autowired
-    private ProcessRepository processRepository;
 
     @Autowired
     private ProductRepository productRepository;
@@ -70,25 +62,21 @@ public class ProductRepositoryTest {
     }
 
     @Test
-    @Rollback(false)
-    @Transactional
-    public void updateProductProcess() {
-        User creator = SecurityUtil.getUser();
-
+    public void update() {
         Long id = testUtil.nextId(Product.class);
+        String serial = testUtil.nextString();
+        Timestamp endTime = new Timestamp(System.currentTimeMillis());
 
         Product product = productRepository.findById(id)
                 .orElseThrow(EntityNotFoundException::new);
-        Work work = workRepository.findById(testUtil.nextId(Work.class))
-                .orElseThrow(EntityNotFoundException::new);
 
-        work.getWorkProcesses().forEach(workProcess -> {
-            Process process = workProcess.getProcess();
-            product.getProductProcesses().add(new ProductProcess(product.getId(), process, creator));
-        });
-        processRepository.flush();
+        product.setSerial(serial);
+        product.setEndTime(endTime);
+        product.setUpdateTime(endTime);
+        product.setUpdateUser(SecurityUtil.getUser());
 
-        Product result = productRepository.save(product);
-        assertEquals(work.getWorkProcesses().size(), result.getProductProcesses().size());
+        product = productRepository.save(product);
+
+        assertEquals(serial, product.getSerial());
     }
 }
