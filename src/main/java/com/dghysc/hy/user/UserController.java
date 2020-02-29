@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.util.SecurityUtil;
 import com.dghysc.hy.util.TokenUtil;
 import com.dghysc.hy.user.model.User;
+import com.dghysc.hy.work.UserProcessService;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,6 +12,7 @@ import java.util.NoSuchElementException;
 
 /**
  * User Controller
+ *
  * @author lorry
  * @author lin864464995@163.com
  */
@@ -22,29 +24,34 @@ public class UserController {
 
     private final UserService userService;
 
-    public UserController(UserService userService, TokenUtil tokenUtil) {
-        this.userService = userService;
+    private final UserProcessService userProcessService;
+
+    public UserController(TokenUtil tokenUtil, UserService userService,
+                          UserProcessService userProcessService) {
         this.tokenUtil = tokenUtil;
+        this.userService = userService;
+        this.userProcessService = userProcessService;
     }
 
     /**
      * Registry Api
+     *
      * @param request {
-     *      "username": username: String,
-     *      "password": password: String,
-     *      "name": name: String
-     * }
+     *                "username": username: String,
+     *                "password": password: String,
+     *                "name": name: String
+     *                }
      * @return if registry success return {
-     *     "status": 1,
-     *     "message": "Registry Success.",
-     *     "data": {
-     *         "id": user id: BigInteger,
-     *         "username": username: String,
-     *         "name": name: String
-     *     }
+     * "status": 1,
+     * "message": "Registry Success.",
+     * "data": {
+     * "id": user id: BigInteger,
+     * "username": username: String,
+     * "name": name: String
+     * }
      * } else return {
-     *     "status: 0,
-     *     "message": message: String
+     * "status: 0,
+     * "message": message: String
      * }
      */
     @ResponseBody
@@ -80,17 +87,18 @@ public class UserController {
 
     /**
      * User Login, Get Token Api
+     *
      * @param request {
-     *      "username": username: String,
-     *      "password": password: String,
-     * }
+     *                "username": username: String,
+     *                "password": password: String,
+     *                }
      * @return if login success return {
-     *     "status": 1,
-     *     "message": "Login success.",
-     *     "token": token: String
+     * "status": 1,
+     * "message": "Login success.",
+     * "token": token: String
      * } else return {
-     *     "status": 0,
-     *     "message": message: String
+     * "status": 0,
+     * "message": message: String
      * }
      */
     @ResponseBody
@@ -121,14 +129,15 @@ public class UserController {
 
     /**
      * Get User Self Profile Api
+     *
      * @return {
-     *     "status": 1,
-     *     "message": "Get profile success.",
-     *     "data": {
-     *         "id": user id: BigInteger,
-     *         "username": username: String,
-     *         "name": name: String
-     *     }
+     * "status": 1,
+     * "message": "Get profile success.",
+     * "data": {
+     * "id": user id: BigInteger,
+     * "username": username: String,
+     * "name": name: String
+     * }
      * }
      */
     @ResponseBody
@@ -145,20 +154,21 @@ public class UserController {
 
     /**
      * Update User Profile Api
+     *
      * @param request {
-     *      "name": name: String
-     * }
+     *                "name": name: String
+     *                }
      * @return if update user profile success return {
-     *     "status": 1,
-     *     "message": "Update profile success.",
-     *     "data": {
-     *         "id": user id: BigInteger
-     *         "username": username: String,
-     *         "name": name: String
-     *     }
+     * "status": 1,
+     * "message": "Update profile success.",
+     * "data": {
+     * "id": user id: BigInteger
+     * "username": username: String,
+     * "name": name: String
+     * }
      * } else return {
-     *     "status": 0,
-     *     "message": "Update profile failed."
+     * "status": 0,
+     * "message": "Update profile failed."
      * }
      */
     @ResponseBody
@@ -184,19 +194,20 @@ public class UserController {
 
     /**
      * Edit Password Api
+     *
      * @param request {
-     *      "oldPassword": oldPassword: String,
-     *      "newPassword": newPassword: String
-     * }
+     *                "oldPassword": oldPassword: String,
+     *                "newPassword": newPassword: String
+     *                }
      * @return if edit password success return {
-     *     "status": 1,
-     *     "message": "Edit Password Success"
+     * "status": 1,
+     * "message": "Edit Password Success"
      * } else if old password wrong return {
-     *     "status": 0,
-     *     "message": "Old Password Wrong"
+     * "status": 0,
+     * "message": "Old Password Wrong"
      * } else return {
-     *     "status": 0,
-     *     "message": "Edit Password Failed"
+     * "status": 0,
+     * "message": "Edit Password Failed"
      * }
      */
     @ResponseBody
@@ -223,14 +234,15 @@ public class UserController {
 
     /**
      * Judge Admin Api.
+     *
      * @return if user is admin return {
-     *     "status": 1,
-     *     "message": "Get success.",
-     *     "data": true
+     * "status": 1,
+     * "message": "Get success.",
+     * "data": true
      * } else return {
-     *     "status": 1,
-     *     "message": "Get success.",
-     *     "data": false
+     * "status": 1,
+     * "message": "Get success.",
+     * "data": false
      * }
      */
     @ResponseBody
@@ -246,6 +258,17 @@ public class UserController {
 
         response.put("status", 1);
         response.put("message", "Get success.");
+
+        return response;
+    }
+
+    @GetMapping("/processes")
+    public JSONObject getProcesses() {
+        JSONObject response = new JSONObject();
+
+        response.put("status", 1);
+        response.put("message", "获取工序成功");
+        response.put("data", userProcessService.loadByUserId(SecurityUtil.getUserId()));
 
         return response;
     }
