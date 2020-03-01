@@ -59,7 +59,7 @@ public class ProductServiceTest {
 
     @Before
     public void setUp() {
-        testUtil.setAuthorities("ROLE_WORKER");
+        testUtil.setAuthorities("ROLE_PRODUCT_MANAGER");
 
         User creator = testUtil.getUser();
 
@@ -101,6 +101,7 @@ public class ProductServiceTest {
     @Rollback(false)
     @Transactional
     public void completeProcess() {
+        testUtil.setAuthorities("ROLE_WORKER");
         Product product;
 
         while (true) {

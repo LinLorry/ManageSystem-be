@@ -78,6 +78,7 @@ public class ProductService {
      * @throws NullPointerException if {@code serial}  or {@code workId} is null
      * @throws EntityNotFoundException if work id is {@code workId} not exist
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
     Product add(@NotNull String serial, @Nullable Timestamp endTime, @NotNull Integer workId) {
         Work work = workRepository.findById(Optional.of(workId).get())
                 .orElseThrow(EntityNotFoundException::new);
@@ -95,6 +96,7 @@ public class ProductService {
      * @param endTime the product endTime.
      * @return the product.
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
     Product update(@NotNull Long id, @Nullable String serial, @Nullable Timestamp endTime) {
         Timestamp now = new Timestamp(System.currentTimeMillis());
         User updater = SecurityUtil.getUser();
@@ -161,6 +163,7 @@ public class ProductService {
      * @return the complete product.
      */
     @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
     public boolean complete(@NotNull Long id) {
         Product product = productRepository.findById(Optional.of(id).get())
                 .orElseThrow(EntityNotFoundException::new);
