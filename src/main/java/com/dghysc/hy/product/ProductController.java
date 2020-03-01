@@ -2,12 +2,11 @@ package com.dghysc.hy.product;
 
 import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.product.model.Product;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import javax.persistence.EntityNotFoundException;
 import javax.transaction.Transactional;
 import java.sql.Timestamp;
 import java.time.LocalDate;
@@ -18,7 +17,7 @@ import java.util.*;
  * @author lorry
  * @author lin864464995@163.com
  */
-@Controller
+@RestController
 @RequestMapping("/api/product")
 public class ProductController {
 
@@ -29,134 +28,53 @@ public class ProductController {
     }
 
     /**
-     * Create Product Api
+     * Create Or Update Product Api
      * @param request {
-     *     "serial": product serial: String[must],
-     *     "workId": product product id: Integer[must],
-     *     "endTime": product end time: Timestamp[must],
+     *     "id": product id: int,
+     *     "serial": product serial: str,
+     *     "endTime": product end time: Timestamp,
+     *     "workId": product product id: int
      * }
-     * @return create product success return {
+     * @return create or update product success return {
      *     "status": 1,
-     *     "message": "Create product success."
-     *     "data": {
-     *         "id": product id: Integer,
-     *         "serial": product serial: String,
-     *         "workId": product product id: Integer,
-     *         "workName": product product name: String,
-     *         "status": product status: String,
-     *         "createUser": create user name: String,
-     *         "createTime": product create time: Timestamp,
-     *         "endTime": product end time: Timestamp
-     *     }
+     *     "message": message: str,
+     *     "data": product info: object
      * }
      */
-    @ResponseBody
-    @PostMapping("/create")
-    public JSONObject create(@RequestBody JSONObject request) {
-        JSONObject response = new JSONObject();
-
-        String serial = request.getString("serial");
-        Integer workId = request.getInteger("workId");
-        Timestamp endTime = request.getTimestamp("endTime");
-
-        if (serial == null || serial.length() == 0 ) {
-            response.put("status", 0);
-            response.put("message", "Must have serial.");
-            return response;
-        } else if (workId == null) {
-            response.put("status", 0);
-            response.put("message", "Must have work id.");
-            return response;
-        } else if (endTime == null) {
-            response.put("status", 0);
-            response.put("message", "Must have end time.");
-            return response;
-        }
-
-        Product product = new Product();
-
-        product.setSerial(serial);
-        product.setEndTime(endTime);
-
-        try {
-
-            response.put("data", productService.addOrUpdate(product));
-            response.put("status", 1);
-            response.put("message", "Create product success.");
-        } catch (DataIntegrityViolationException e) {
-            if (!productService.checkBySerial(serial)) throw e;
-
-            response.put("status", 0);
-            response.put("message", "Process name exist.");
-        } catch (NoSuchElementException e) {
-            response.put("status", 0);
-            response.put("message", "The work isn't exist.");
-        }
-
-        return response;
-    }
-
-    /**
-     * Update Product Api
-     * @param request {
-     *     "id": product id: Integer[must]
-     *     "serial": product serial: String,
-     *     "workId": product work id: Integer,
-     *     "endTime": product end time: Timestamp
-     * }
-     * @return if update success return {
-     *     "status": 1,
-     *     "message": "Update product success."
-     *     "data": {
-     *         "id": product id: Integer,
-     *         "serial": product serial: String,
-     *         "workId": product product id: Integer,
-     *         "workName": product product name: String,
-     *         "status": product status: String,
-     *         "createUser": create user name: String,
-     *         "createTime": product create time: Timestamp,
-     *         "endTime": product end time: Timestamp
-     *     }
-     * }
-     */
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @ResponseBody
-    @PostMapping("/update")
-    @Transactional
-    public JSONObject update(@RequestBody JSONObject request) {
+    @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
+    public JSONObject createOrUpdate(@RequestBody JSONObject request) {
         JSONObject response = new JSONObject();
 
         Long id = request.getLong("id");
         String serial = request.getString("serial");
         Timestamp endTime = request.getTimestamp("endTime");
-        Product product;
-
-        if (id == null) {
-            response.put("status", 0);
-            response.put("message", "Must provide product id.");
-            return response;
-        }
+        Integer workId = null;
 
         try {
-            product = productService.loadById(id);
-
-            if (serial != null) product.setSerial(serial);
-
-            if (endTime != null) product.setEndTime(endTime);
-
-            if (serial != null) product.setSerial(serial);
-
-            response.put("data", productService.addOrUpdate(product));
+            if (id == null) {
+                workId = request.getInteger("workId");
+                response.put("data", productService.add(serial, endTime, workId));
+                response.put("message", "创建订单成功");
+            } else {
+                response.put("data", productService.update(id, serial, endTime));
+                response.put("message", "修改订单成功");
+            }
             response.put("status", 1);
-            response.put("message", "Update product success.");
-        } catch (DataIntegrityViolationException e) {
-            if (!productService.checkBySerial(serial)) throw e;
-
+        } catch (EntityNotFoundException e) {
             response.put("status", 0);
-            response.put("message", "Product serial exist.");
-        } catch (NoSuchElementException e) {
+            if (id == null) {
+                response.put("message", "Id为" + workId + "的生产流程不存在");
+            } else {
+                response.put("message", "Id为" + id + "的订单不存在");
+            }
+        } catch (NullPointerException e) {
             response.put("status", 0);
-            response.put("message", "This product isn't exist.");
+            if (serial == null) {
+                response.put("message", "订单号不能为空");
+            } else if (workId == null) {
+                response.put("message", "生产流程Id不能为空");
+            }
         }
 
         return response;

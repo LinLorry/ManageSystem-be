@@ -1,9 +1,10 @@
 package com.dghysc.hy.product;
 
 import com.alibaba.fastjson.JSONObject;
-import com.dghysc.hy.product.rep.ProductRepository;
+import com.dghysc.hy.product.model.Product;
 import com.dghysc.hy.util.TestUtil;
-import org.junit.Assert;
+import com.dghysc.hy.work.model.Work;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +19,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Timestamp;
 import java.util.Objects;
-import java.util.Random;
+
+import static org.junit.Assert.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -26,52 +28,49 @@ public class ProductControllerTest {
 
     private static final String baseUrl = "/api/product";
 
-    private static final Random random = new Random();
-
     @Autowired
     private TestRestTemplate restTemplate;
 
     @Autowired
     private TestUtil testUtil;
 
-    @Autowired
-    private ProductRepository productRepository;
-
-    @Test
-    public void create() throws URISyntaxException {
-        final String url = baseUrl + "/create";
-        URI uri = new URI(url);
-
-        JSONObject requestBody = new JSONObject();
-        requestBody.put("serial", testUtil.nextString());
-        requestBody.put("endTime", new Timestamp(System.currentTimeMillis() + 1000 * 60 * 60 * 28));
-        requestBody.put("workId", 1);
-
-        HttpEntity<JSONObject> request = new HttpEntity<>(requestBody, testUtil.getTokenHeader());
-
-        ResponseEntity<JSONObject> response = restTemplate.postForEntity(uri, request, JSONObject.class);
-
-        System.out.println(response.getBody());
-        Assert.assertEquals(200, response.getStatusCodeValue());
+    @Before
+    public void setUp() {
+        testUtil.setAuthorities("ROLE_PRODUCT_MANAGER");
     }
 
     @Test
-    public void update() throws URISyntaxException {
-        final String url = baseUrl + "/update";
-        URI uri = new URI(url);
-
+    public void create() {
         JSONObject requestBody = new JSONObject();
 
-        requestBody.put("id", 1);
+        requestBody.put("serial", testUtil.nextString());
+        requestBody.put("endTime", new Timestamp(System.currentTimeMillis() + 1000 * 60 * 60 * 28));
+        requestBody.put("workId", testUtil.nextId(Work.class));
+
+        HttpEntity<JSONObject> request = new HttpEntity<>(requestBody, testUtil.getTokenHeader());
+
+        ResponseEntity<JSONObject> responseEntity = restTemplate.exchange(
+                baseUrl, HttpMethod.POST, request, JSONObject.class
+        );
+
+        checkResponse(responseEntity);
+    }
+
+    @Test
+    public void update() {
+        JSONObject requestBody = new JSONObject();
+
+        requestBody.put("id", testUtil.nextId(Product.class));
         requestBody.put("serial", testUtil.nextString());
         requestBody.put("endTime", new Timestamp(System.currentTimeMillis()));
 
         HttpEntity<JSONObject> request = new HttpEntity<>(requestBody, testUtil.getTokenHeader());
 
-        ResponseEntity<JSONObject> response = restTemplate.postForEntity(uri, request, JSONObject.class);
+        ResponseEntity<JSONObject> responseEntity = restTemplate.exchange(
+                baseUrl, HttpMethod.POST, request, JSONObject.class
+        );
 
-        System.out.println(response.getBody());
-        Assert.assertEquals(200, response.getStatusCodeValue());
+        checkResponse(responseEntity);
     }
 
     @Test
@@ -86,13 +85,12 @@ public class ProductControllerTest {
                 .exchange(uri, HttpMethod.GET, request, JSONObject.class);
 
         System.out.println(response.getBody());
-        Assert.assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCodeValue());
     }
 
     @Test
     public void finish() throws URISyntaxException {
-        int number = (int)productRepository.count();
-        final String url = baseUrl + "/finish?id=" + random.nextInt(number);
+        final String url = baseUrl + "/finish?id=" + testUtil.nextId(Work.class);
 
         URI uri = new URI(url);
 
@@ -102,7 +100,7 @@ public class ProductControllerTest {
         ResponseEntity<JSONObject> response = restTemplate.postForEntity(uri, request, JSONObject.class);
 
         System.out.println(response.getBody());
-        Assert.assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCodeValue());
     }
 
     @Test
@@ -117,7 +115,7 @@ public class ProductControllerTest {
                 .exchange(uri, HttpMethod.GET, request, JSONObject.class);
 
         System.out.println(response.getBody());
-        Assert.assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCodeValue());
     }
 
     @Test
@@ -139,9 +137,9 @@ public class ProductControllerTest {
         ResponseEntity<JSONObject> dayAfterTomorrowResponse = restTemplate
                 .exchange(dayAfterTomorrow, HttpMethod.GET, dayAfterTomorrowRequest, JSONObject.class);
 
-        Assert.assertEquals(200, todayResponse.getStatusCodeValue());
-        Assert.assertEquals(200, tomorrowResponse.getStatusCodeValue());
-        Assert.assertEquals(200, dayAfterTomorrowResponse.getStatusCodeValue());
+        assertEquals(200, todayResponse.getStatusCodeValue());
+        assertEquals(200, tomorrowResponse.getStatusCodeValue());
+        assertEquals(200, dayAfterTomorrowResponse.getStatusCodeValue());
         System.out.println(todayResponse.getBody());
 
         System.out.println("today:");
@@ -169,12 +167,11 @@ public class ProductControllerTest {
     @Test
     public void delete() throws URISyntaxException {
         final String url = baseUrl + "/delete";
-        int number = (int)productRepository.count();
 
         URI uri = new URI(url);
 
         JSONObject requestBody = new JSONObject();
-        requestBody.put("id", random.nextInt(number));
+        requestBody.put("id", testUtil.nextId(Product.class));
 
         HttpEntity<JSONObject> request = new HttpEntity<>(requestBody, testUtil.getTokenHeader());
 
@@ -182,6 +179,15 @@ public class ProductControllerTest {
                 .exchange(uri, HttpMethod.DELETE, request, JSONObject.class);
 
         System.out.println(response.getBody());
-        Assert.assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCodeValue());
+    }
+
+    private void checkResponse(ResponseEntity<JSONObject> responseEntity) {
+        JSONObject response = responseEntity.getBody();
+        assertNotNull(response);
+        System.out.println(response);
+
+        assertEquals(200, responseEntity.getStatusCodeValue());
+        assertEquals(1, response.getIntValue("status"));
     }
 }
