@@ -1,20 +1,33 @@
 package com.dghysc.hy.product;
 
+import com.dghysc.hy.product.model.CompleteProduct;
 import com.dghysc.hy.product.model.Product;
+import com.dghysc.hy.product.model.ProductProcessId;
 import com.dghysc.hy.product.rep.CompleteProductRepository;
+import com.dghysc.hy.product.rep.ProductProcessRepository;
 import com.dghysc.hy.product.rep.ProductRepository;
 import com.dghysc.hy.user.model.User;
+import com.dghysc.hy.util.SecurityUtil;
 import com.dghysc.hy.util.TestUtil;
+import com.dghysc.hy.work.model.Process;
+import com.dghysc.hy.work.model.UserProcessId;
 import com.dghysc.hy.work.model.Work;
+import com.dghysc.hy.work.model.WorkProcess;
+import com.dghysc.hy.work.repo.UserProcessRepository;
 import com.dghysc.hy.work.repo.WorkRepository;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityNotFoundException;
 import java.sql.Timestamp;
+import java.util.Arrays;
+import java.util.Comparator;
 
 import static org.junit.Assert.*;
 
@@ -27,10 +40,16 @@ public class ProductServiceTest {
     public TestUtil testUtil;
 
     @Autowired
+    public UserProcessRepository userProcessRepository;
+
+    @Autowired
     public WorkRepository workRepository;
 
     @Autowired
     public ProductRepository productRepository;
+
+    @Autowired
+    public ProductProcessRepository productProcessRepository;
 
     @Autowired
     public CompleteProductRepository completeProductRepository;
@@ -40,7 +59,7 @@ public class ProductServiceTest {
 
     @Before
     public void setUp() {
-        testUtil.setAuthorities();
+        testUtil.setAuthorities("ROLE_WORKER");
 
         User creator = testUtil.getUser();
 
@@ -76,6 +95,38 @@ public class ProductServiceTest {
 
         assertEquals(id, product.getId());
         assertEquals(serial, product.getSerial());
+    }
+
+    @Test
+    @Rollback(false)
+    @Transactional
+    public void completeProcess() {
+        Product product;
+
+        while (true) {
+            product = productRepository.findById(testUtil.nextId(Product.class))
+                    .orElseThrow(EntityNotFoundException::new);
+            if (product.getWork().getWorkProcesses().size() == product.getProductProcesses().size()) {
+                assertFalse(productService.completeProcess(product.getId()));
+            } else {
+                break;
+            }
+        }
+
+        WorkProcess[] workProcesses = product.getWork().getWorkProcesses().toArray(new WorkProcess[0]);
+        Arrays.sort(workProcesses, Comparator.comparing(WorkProcess::getSequenceNumber));
+        Process process = workProcesses[product.getProductProcesses().size()].getProcess();
+
+        boolean userCanDo = userProcessRepository.existsById(
+                new UserProcessId(SecurityUtil.getUserId(), process.getId()));
+        boolean result = productService.completeProcess(product.getId());
+
+        if (userCanDo) {
+            assertTrue(result);
+            assertTrue(productProcessRepository.existsById(new ProductProcessId(product.getId(), process.getId())));
+        } else {
+            assertFalse(result);
+        }
     }
 
     @Test

@@ -2,17 +2,24 @@ package com.dghysc.hy.product;
 
 import com.dghysc.hy.product.model.CompleteProduct;
 import com.dghysc.hy.product.model.Product;
+import com.dghysc.hy.product.model.ProductProcess;
 import com.dghysc.hy.product.rep.CompleteProductRepository;
+import com.dghysc.hy.product.rep.ProductProcessRepository;
 import com.dghysc.hy.product.rep.ProductRepository;
+import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.util.SecurityUtil;
 import com.dghysc.hy.util.SpecificationUtil;
+import com.dghysc.hy.work.model.UserProcess;
 import com.dghysc.hy.work.model.Work;
+import com.dghysc.hy.work.model.WorkProcess;
+import com.dghysc.hy.work.repo.UserProcessRepository;
 import com.dghysc.hy.work.repo.WorkRepository;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.lang.Nullable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,18 +36,27 @@ import java.util.*;
 @Service
 public class ProductService {
 
+    private final UserProcessRepository userProcessRepository;
+
     private final WorkRepository workRepository;
 
     private final ProductRepository productRepository;
 
+    private final ProductProcessRepository productProcessRepository;
+
     private final CompleteProductRepository completeProductRepository;
 
     public ProductService(
+            UserProcessRepository userProcessRepository,
             WorkRepository workRepository,
             ProductRepository productRepository,
-            CompleteProductRepository completeProductRepository) {
+            ProductProcessRepository productProcessRepository,
+            CompleteProductRepository completeProductRepository
+    ) {
+        this.userProcessRepository = userProcessRepository;
         this.workRepository = workRepository;
         this.productRepository = productRepository;
+        this.productProcessRepository = productProcessRepository;
         this.completeProductRepository = completeProductRepository;
     }
 
@@ -92,6 +108,51 @@ public class ProductService {
         product.setUpdateTime(now);
 
         return productRepository.save(product);
+    }
+
+    /**
+     * User Complete Product Process Service
+     * @param id the product id
+     * @return complete result:
+     *      if product's all process have been complete, return false.
+     *      if execute complete user can't complete this process return false.
+     *      if complete success return true.
+     * @throws EntityNotFoundException the product not exist.
+     * @throws NullPointerException the {@code id} is {@literal null}
+     */
+    @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER', 'WORKER')")
+    public boolean completeProcess(@NotNull Long id) {
+        Product product = productRepository.findById(Optional.of(id).get())
+                .orElseThrow(EntityNotFoundException::new);
+
+        int processSequence = product.getProductProcesses().size();
+        WorkProcess[] workProcesses = product.getWork().getWorkProcesses().toArray(new WorkProcess[0]);
+
+        if (processSequence == workProcesses.length) return false;
+
+        Arrays.sort(workProcesses, Comparator.comparing(WorkProcess::getSequenceNumber));
+
+        Integer nowProcessId = workProcesses[processSequence].getProcessId();
+
+        List<UserProcess> userProcesses = userProcessRepository.findAllByUserId(SecurityUtil.getUserId());
+
+        boolean canNotDO = true;
+
+        for (UserProcess userProcess : userProcesses) {
+            if (nowProcessId.equals(userProcess.getProcessId())) {
+                canNotDO = false;
+                break;
+            }
+        }
+
+        if (canNotDO) return false;
+
+        ProductProcess productProcess = new ProductProcess(id, nowProcessId, SecurityUtil.getUser());
+
+        productProcessRepository.save(productProcess);
+
+        return true;
     }
 
     /**

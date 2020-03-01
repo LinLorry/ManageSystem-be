@@ -2,8 +2,10 @@ package com.dghysc.hy.product.model;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * The Product Process Id
@@ -22,6 +24,11 @@ public class ProductProcessId implements Serializable {
     private Integer processId;
 
     public ProductProcessId() { }
+
+    public ProductProcessId(@NotNull Long productId, @NotNull Integer processId) {
+        Optional.of(productId).ifPresent(this::setProductId);
+        Optional.of(processId).ifPresent(this::setProcessId);
+    }
 
     public Long getProductId() {
         return productId;
