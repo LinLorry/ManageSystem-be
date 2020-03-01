@@ -39,8 +39,7 @@ public class Product implements Serializable {
     @NotFound(action = NotFoundAction.IGNORE)
     private Work work;
 
-    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH})
-    @JoinColumn(name = "product_id", referencedColumnName = "id")
+    @OneToMany(mappedBy = "product", cascade = CascadeType.DETACH)
     @JsonIgnore
     private Set<ProductProcess> productProcesses = new HashSet<>();
 

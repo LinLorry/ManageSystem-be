@@ -34,7 +34,7 @@ public class CompleteProduct implements Serializable {
     @Column(updatable = false)
     private Timestamp endTime;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.DETACH)
+    @OneToMany(mappedBy = "product")
     @JsonIgnore
     private Set<ProductProcess> productProcesses = new HashSet<>();
 
