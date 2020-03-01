@@ -79,12 +79,17 @@ public class ProductService {
      * @param endTime the product endTime.
      * @return the product.
      */
-    @Transactional
-    public Product update(@NotNull Long id, @Nullable String serial, @Nullable Timestamp endTime) {
+    Product update(@NotNull Long id, @Nullable String serial, @Nullable Timestamp endTime) {
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        User updater = SecurityUtil.getUser();
+
         Product product = productRepository.findById(Optional.of(id).get())
                 .orElseThrow(EntityNotFoundException::new);
+
         Optional.ofNullable(serial).ifPresent(product::setSerial);
         Optional.ofNullable(endTime).ifPresent(product::setEndTime);
+        product.setUpdateUser(updater);
+        product.setUpdateTime(now);
 
         return productRepository.save(product);
     }
