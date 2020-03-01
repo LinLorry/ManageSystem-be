@@ -161,15 +161,19 @@ public class ProductService {
      * @return the complete product.
      */
     @Transactional
-    public CompleteProduct complete(@NotNull Long id) {
-        // TODO 判断生产流程是否完成
+    public boolean complete(@NotNull Long id) {
         Product product = productRepository.findById(Optional.of(id).get())
                 .orElseThrow(EntityNotFoundException::new);
 
-        CompleteProduct completeProduct = completeProductRepository.save(new CompleteProduct(product, SecurityUtil.getUser()));
+        if (product.getProductProcesses().size() !=
+                product.getWork().getWorkProcesses().size()) {
+            return false;
+        }
+
+        completeProductRepository.save(new CompleteProduct(product, SecurityUtil.getUser()));
         productRepository.deleteById(id);
 
-        return completeProduct;
+        return true;
     }
 
     /**

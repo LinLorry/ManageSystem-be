@@ -130,12 +130,26 @@ public class ProductServiceTest {
     }
 
     @Test
+    @Rollback(false)
+    @Transactional
     public void complete() {
         Long id = testUtil.nextId(Product.class);
+        Product product = productRepository.findById(id)
+                .orElseThrow(EntityNotFoundException::new);
 
-        productService.complete(id);
+        boolean complete = product.getProductProcesses().size() == product.getWork().getWorkProcesses().size();
+        boolean result = productService.complete(id);
 
-        assertFalse(productRepository.existsById(id));
-        assertTrue(completeProductRepository.existsById(id));
+        if (complete) {
+            assertTrue(result);
+            CompleteProduct completeProduct = completeProductRepository.findById(id)
+                    .orElseThrow(EntityNotFoundException::new);
+
+            assertEquals(product.getSerial(), completeProduct.getSerial());
+        } else {
+            assertFalse(result);
+            assertTrue(productRepository.existsById(id));
+            assertFalse(completeProductRepository.existsById(id));
+        }
     }
 }
