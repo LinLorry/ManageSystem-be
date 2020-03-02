@@ -7,7 +7,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityNotFoundException;
-import javax.transaction.Transactional;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.*;
@@ -138,7 +137,7 @@ public class ProductController {
     }
 
     /**
-     * Finish Product Api
+     * Complete Product Api
      * @param id the product id.
      * @return if product exist and finish success return {
      *     "status": 1,
@@ -148,26 +147,22 @@ public class ProductController {
      *     "message": "message"
      * }
      */
-    @ResponseBody
-    @PostMapping("/finish")
-    @Transactional
-    public JSONObject finish(@RequestParam Long id) {
+    @PostMapping("/complete")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
+    public JSONObject complete(@RequestParam Long id) {
         JSONObject response = new JSONObject();
 
         try {
-            Product product = productService.loadById(id);
-
-//            if (product.getStatus() != ProductStatus.FINISH) {
-//                product.setStatus(ProductStatus.FINISH);
-//                product.setFinishTime(new Timestamp(System.currentTimeMillis()));
-//            }
-
-            productService.addOrUpdate(product);
-            response.put("status", 1);
-            response.put("message", "Finish product success,");
-        } catch (NoSuchElementException e) {
+            if (productService.complete(id)) {
+                response.put("status", 1);
+                response.put("message", "完成订单成功");
+            } else {
+                response.put("status", 0);
+                response.put("message", "完成订单失败，该订单还有工序未完成");
+            }
+        } catch (EntityNotFoundException e) {
             response.put("status", 0);
-            response.put("message", "This product isn't exist.");
+            response.put("message", "Id为" + id + "的订单不存在");
         }
 
         return response;

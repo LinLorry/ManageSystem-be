@@ -2,6 +2,7 @@ package com.dghysc.hy.product;
 
 import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.product.model.Product;
+import com.dghysc.hy.product.rep.ProductRepository;
 import com.dghysc.hy.util.TestUtil;
 import com.dghysc.hy.work.model.Work;
 import org.junit.Before;
@@ -14,7 +15,9 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityNotFoundException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Timestamp;
@@ -33,6 +36,9 @@ public class ProductControllerTest {
 
     @Autowired
     private TestUtil testUtil;
+
+    @Autowired
+    private ProductRepository productRepository;
 
     @Before
     public void setUp() {
@@ -89,18 +95,32 @@ public class ProductControllerTest {
     }
 
     @Test
-    public void finish() throws URISyntaxException {
-        final String url = baseUrl + "/finish?id=" + testUtil.nextId(Work.class);
+    @Transactional(readOnly = true)
+    public void complete() {
+        Long id = testUtil.nextId(Product.class);
+        final String url = baseUrl + "/complete?id=" + id;
 
-        URI uri = new URI(url);
+        Product product = productRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+
+        boolean complete = product.getWork().getWorkProcesses().size() == product.getProductProcesses().size();
 
         HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
 
+        ResponseEntity<JSONObject> responseEntity = restTemplate.exchange(
+                url, HttpMethod.POST, request, JSONObject.class
+        );
 
-        ResponseEntity<JSONObject> response = restTemplate.postForEntity(uri, request, JSONObject.class);
+        System.out.println(responseEntity.getBody());
+        assertNotNull(responseEntity.getBody());
+        JSONObject response = responseEntity.getBody();
 
-        System.out.println(response.getBody());
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, responseEntity.getStatusCodeValue());
+
+        if (complete) {
+            assertEquals(1, response.getIntValue("status"));
+        } else {
+            assertEquals(0, response.getIntValue("status"));
+        }
     }
 
     @Test
