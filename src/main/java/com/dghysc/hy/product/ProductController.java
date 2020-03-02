@@ -2,6 +2,8 @@ package com.dghysc.hy.product;
 
 import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.product.model.Product;
+import com.dghysc.hy.product.model.ProductProcess;
+import com.dghysc.hy.work.model.WorkProcess;
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -80,58 +82,70 @@ public class ProductController {
     }
 
     /**
-     * Find Product Api
-     * @param id the product id: Integer.
-     * @param serial the serial product contains: String.
-     * @param pageNumber the page number: Integer.
-     * @return {
+     * Get Product Api
+     * @param id product id, only get one product if provide this.
+     * @param serial serial the serial product contains.
+     * @param accord accord the according day number
+     * @param create accord the created day number.
+     * @param withProcesses get product with processes, only when get one product.
+     * @param pageNumber the page number.
+     * @param pageSize the page size.
+     * @return if id provide return {
      *     "status": 1,
-     *     "message": "Get product success.",
-     *     "data":{
-     *         "total": page total number: Integer,
+     *     "message": message: str,
+     *     "data": only when product exist, product info: object
+     * } else return {
+     *     "status": 1,
+     *     "message": message: str,
+     *     "data": {
+     *         "total": total page number,
      *         "products": [
-     *             {
-     *                 "id": product id: Integer,
-     *                 "serial": product serial: String,
-     *                 "workId": product product id: Integer,
-     *                 "workName": product product name: String,
-     *                 "status": product status: String,
-     *                 "createUser": create user name: String,
-     *                 "createTime": product create time: Timestamp,
-     *                 "endTime": product end time: Timestamp
-     *             },
-     *             ...
+     *              product...
      *         ]
      *     }
      * }
      */
-    @ResponseBody
-    @GetMapping("/find")
-    public JSONObject find(
-            @RequestParam(required = false) Integer id,
+    @GetMapping
+    public JSONObject get(
+            @RequestParam(required = false) Long id,
             @RequestParam(required = false) String serial,
-            @RequestParam(defaultValue = "0") Integer pageNumber) {
+            @RequestParam(defaultValue = "0") int accord,
+            @RequestParam(defaultValue = "0") boolean create,
+            @RequestParam(defaultValue = "0") boolean end,
+            @RequestParam(defaultValue = "0") boolean withProcesses,
+            @RequestParam(defaultValue = "0") int pageNumber,
+            @RequestParam(defaultValue = "20") int pageSize
+    ) {
         JSONObject response = new JSONObject();
 
-        Map<String, Object> equalMap = new HashMap<>();
-        Map<String, Object> likeMap = new HashMap<>();
-
         if (id != null) {
-            equalMap.put("id", id);
+            try {
+                if (withProcesses) {
+                    response.put("data", formatProduct(productService.loadWithProcessesById(id)));
+                } else {
+                    response.put("data", productService.loadById(id));
+                }
+
+                response.put("message", "获取订单成功");
+            } catch (EntityNotFoundException e) {
+                response.put("message", "Id为" + id + "的订单不存在");
+            }
+        } else {
+            Map<String, Object> likeMap = new HashMap<>();
+            Optional.ofNullable(serial).ifPresent(s -> likeMap.put("serial", s));
+
+            if (create) {
+                response.put("data", getAccordProducts(likeMap, true, accord, pageNumber, pageSize));
+            } else if (end) {
+                response.put("data", getAccordProducts(likeMap, false, accord, pageNumber, pageSize));
+            } else {
+                response.put("data", formatPage(productService.load(likeMap, pageNumber, pageSize)));
+            }
+
+            response.put("message", "获取订单成功");
         }
 
-        if (serial != null) {
-            likeMap.put("serial", serial);
-        }
-
-        JSONObject data = new JSONObject();
-        Page<Product> page = productService.load(equalMap, likeMap, pageNumber);
-        data.put("total", page.getTotalPages());
-        data.put("products", page.getContent());
-
-        response.put("data", data);
         response.put("status", 1);
-        response.put("message", "Get product success.");
 
         return response;
     }
@@ -169,105 +183,6 @@ public class ProductController {
     }
 
     /**
-     * Get Today Create Product Api
-     * @param pageNumber the page number.
-     * @return {
-     *     "status": 1,
-     *     "message": "Get today create product success.",
-     *     "data":{
-     *         "total": page total number: Integer,
-     *         "products": [
-     *             {
-     *                 "id": product id: Integer,
-     *                 "serial": product serial: String,
-     *                 "workId": product product id: Integer,
-     *                 "workName": product product name: String,
-     *                 "status": product status: String,
-     *                 "createUser": create user name: String,
-     *                 "createTime": product create time: Timestamp,
-     *                 "endTime": product end time: Timestamp
-     *             },
-     *             ...
-     *         ]
-     *     }
-     * }
-     */
-    @ResponseBody
-    @GetMapping("/todayCreate")
-    public JSONObject todayCreate(@RequestParam(defaultValue = "0") Integer pageNumber) {
-        JSONObject response = new JSONObject();
-
-        LocalDate today = LocalDate.now();
-        LocalDate tomorrow = today.plusDays(1);
-
-        Timestamp todayTimestamp = Timestamp.valueOf(today.atStartOfDay());
-        Timestamp tomorrowTimestamp = Timestamp.valueOf(tomorrow.atStartOfDay());
-
-        JSONObject data = new JSONObject();
-        Page<Product> page = productService.loadByCreateTimeInterval(
-                todayTimestamp, tomorrowTimestamp, pageNumber);
-        data.put("total", page.getTotalPages());
-        data.put("products", page.getContent());
-
-        response.put("data", data);
-        response.put("status", 1);
-        response.put("message", "Get today create product success.");
-
-        return response;
-    }
-
-    /**
-     * Get According End Time Product Api
-     * @param accord the according day number.
-     * @param pageNumber the page number.
-     * @return {
-     *     "status": 1,
-     *     "message": "Get products success.",
-     *     "data":{
-     *         "total": page total number: Integer,
-     *         "products": [
-     *             {
-     *                 "id": product id: Integer,
-     *                 "serial": product serial: String,
-     *                 "workId": product product id: Integer,
-     *                 "workName": product product name: String,
-     *                 "status": product status: String,
-     *                 "createUser": create user name: String,
-     *                 "createTime": product create time: Timestamp,
-     *                 "endTime": product end time: Timestamp
-     *             },
-     *             ...
-     *         ]
-     *     }
-     * }
-     */
-    @ResponseBody
-    @GetMapping("/accordEnd")
-    public JSONObject accordEnd(
-            @RequestParam(defaultValue = "0") Integer accord,
-            @RequestParam(defaultValue = "0") Integer pageNumber) {
-        JSONObject response = new JSONObject();
-
-        LocalDate today = LocalDate.now().plusDays(accord);
-        LocalDate tomorrow = today.plusDays(1);
-
-        Timestamp todayTimestamp = Timestamp.valueOf(today.atStartOfDay());
-        Timestamp tomorrowTimestamp = Timestamp.valueOf(tomorrow.atStartOfDay());
-
-        JSONObject data = new JSONObject();
-        Page<Product> page = productService.loadByEndTimeInterval(
-                todayTimestamp, tomorrowTimestamp, pageNumber);
-        data.put("total", page.getTotalPages());
-        data.put("products", page.getContent());
-
-        response.put("data", data);
-        response.put("status", 1);
-        response.put("message", "Get products success.");
-
-        return response;
-    }
-
-    /**
      * Delete Product Api.
      * @param id the product id.
      * @return {
@@ -287,5 +202,68 @@ public class ProductController {
         response.put("message", "Delete product success.");
 
         return response;
+    }
+
+    private JSONObject getAccordProducts(
+            Map<String, Object> likeMap,
+            boolean flag, int accord,
+            int pageNumber, int pageSize
+    ) {
+        LocalDate today = LocalDate.now().plusDays(accord);
+
+        Timestamp todayTimestamp = Timestamp.valueOf(today.atStartOfDay());
+        Timestamp tomorrowTimestamp = Timestamp.valueOf(today.plusDays(1).atStartOfDay());
+
+        if (flag) {
+            return formatPage(productService.loadByCreateTimeInterval(
+                    todayTimestamp, tomorrowTimestamp, likeMap, pageNumber, pageSize
+            ));
+        } else {
+            return formatPage(productService.loadByEndTimeInterval(
+                    todayTimestamp, tomorrowTimestamp, likeMap, pageNumber, pageSize
+            ));
+        }
+    }
+
+    private JSONObject formatPage(Page<Product> page) {
+        JSONObject data = new JSONObject();
+
+        data.put("total", page.getTotalPages());
+        data.put("products", page.getContent());
+
+        return data;
+    }
+
+    private JSONObject formatProduct(Product product) {
+        Set<WorkProcess> workProcesses = product.getWork().getWorkProcesses();
+
+        JSONObject data = new JSONObject();
+        List<JSONObject> processes = new ArrayList<>(workProcesses.size());
+
+        data.put("id", product.getId());
+        data.put("serial", product.getSerial());
+        data.put("endTime", product.getEndTime());
+        data.put("workName", product.getWorkName());
+
+        for (WorkProcess workProcess : workProcesses) {
+            JSONObject one = new JSONObject();
+
+            one.put("name", workProcess.getProcess().getName());
+            one.put("sequence", workProcess.getSequenceNumber());
+            one.put("complete", false);
+
+            for (ProductProcess productProcess : product.getProductProcesses()) {
+                if (workProcess.getProcessId().equals(productProcess.getProcessId())) {
+                    one.put("complete", true);
+                    break;
+                }
+            }
+
+            processes.add(one);
+        }
+
+        data.put("processes", processes);
+
+        return data;
     }
 }

@@ -21,7 +21,6 @@ import javax.persistence.EntityNotFoundException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Timestamp;
-import java.util.Objects;
 
 import static org.junit.Assert.*;
 
@@ -80,19 +79,88 @@ public class ProductControllerTest {
     }
 
     @Test
-    public void find() throws URISyntaxException {
-        final String url = baseUrl + "/find";
-
-        URI uri = new URI(url);
+    public void get() {
+        String url = baseUrl;
 
         HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
 
-        ResponseEntity<JSONObject> response = restTemplate
-                .exchange(uri, HttpMethod.GET, request, JSONObject.class);
+        ResponseEntity<JSONObject> responseEntity = restTemplate
+                .exchange(url, HttpMethod.GET, request, JSONObject.class);
 
-        System.out.println(response.getBody());
-        assertEquals(200, response.getStatusCodeValue());
+        JSONObject response = checkResponse(responseEntity);
+        assertNotNull(response.getJSONObject("data"));
+        assertNotNull(response.getJSONObject("data").getInteger("total"));
+
+        url += "?id=" + testUtil.nextId(Product.class);
+
+        responseEntity = restTemplate.exchange(
+                url, HttpMethod.GET, request, JSONObject.class
+        );
+
+        checkResponse(responseEntity);
+
+        url += "&withProcesses=1";
+        responseEntity = restTemplate.exchange(
+                url, HttpMethod.GET, request, JSONObject.class
+        );
+
+        response = checkResponse(responseEntity);
+        JSONObject product = response.getJSONObject("data");
+        assertNotNull(product);
+        assertNotNull(product.get("processes"));
     }
+
+    @Test
+    public void todayCreate() {
+        final String url = baseUrl + "?create=1";
+
+        HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
+
+        ResponseEntity<JSONObject> responseEntity = restTemplate
+                .exchange(url, HttpMethod.GET, request, JSONObject.class);
+
+        checkResponse(responseEntity);
+    }
+
+    @Test
+    public void accordEnd() {
+        final String url = baseUrl + "?end=1";
+
+        String tomorrow = url + "&accord=1";
+        String dayAfterTomorrow = url + "&accord=2";
+
+        HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
+
+        ResponseEntity<JSONObject> todayResponseEntity = restTemplate
+                .exchange(url, HttpMethod.GET, request, JSONObject.class);
+        ResponseEntity<JSONObject> tomorrowResponseEntity = restTemplate
+                .exchange(tomorrow, HttpMethod.GET, request, JSONObject.class);
+        ResponseEntity<JSONObject> dayAfterTomorrowResponseEntity = restTemplate
+                .exchange(dayAfterTomorrow, HttpMethod.GET, request, JSONObject.class);
+
+        JSONObject todayResponse = checkResponse(todayResponseEntity);
+        JSONObject tomorrowResponse = checkResponse(tomorrowResponseEntity);
+        JSONObject dayAfterTomorrowResponse = checkResponse(dayAfterTomorrowResponseEntity);
+
+        System.out.println("today:");
+        for (Object obj : todayResponse.getJSONObject("data").getJSONArray("products")) {
+            JSONObject json = (JSONObject) obj;
+            System.out.println(json.getInteger("id") + ": " + json.getTimestamp("endTime"));
+        }
+
+        System.out.println("tomorrow:");
+        for (Object obj : tomorrowResponse.getJSONObject("data").getJSONArray("products")) {
+            JSONObject json = (JSONObject) obj;
+            System.out.println(json.getInteger("id") + ": " + json.getTimestamp("endTime"));
+        }
+
+        System.out.println("dayAfterTomorrow:");
+        for (Object obj : dayAfterTomorrowResponse.getJSONObject("data").getJSONArray("products")) {
+            JSONObject json = (JSONObject) obj;
+            System.out.println(json.getInteger("id") + ": " + json.getTimestamp("endTime"));
+        }
+    }
+
 
     @Test
     @Transactional(readOnly = true)
@@ -124,67 +192,6 @@ public class ProductControllerTest {
     }
 
     @Test
-    public void todayCreate() throws URISyntaxException {
-        final String url = baseUrl + "/todayCreate";
-
-        URI uri = new URI(url);
-
-        HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
-
-        ResponseEntity<JSONObject> response = restTemplate
-                .exchange(uri, HttpMethod.GET, request, JSONObject.class);
-
-        System.out.println(response.getBody());
-        assertEquals(200, response.getStatusCodeValue());
-    }
-
-    @Test
-    public void accordEnd() throws URISyntaxException {
-        final String url = baseUrl + "/accordEnd";
-
-        URI today = new URI(url);
-        URI tomorrow = new URI(url + "?accord=1");
-        URI dayAfterTomorrow = new URI(url + "?accord=2");
-
-        HttpEntity<JSONObject> todayRequest = new HttpEntity<>(testUtil.getTokenHeader());
-        HttpEntity<JSONObject> tomorrowRequest = new HttpEntity<>(testUtil.getTokenHeader());
-        HttpEntity<JSONObject> dayAfterTomorrowRequest = new HttpEntity<>(testUtil.getTokenHeader());
-
-        ResponseEntity<JSONObject> todayResponse = restTemplate
-                .exchange(today, HttpMethod.GET, todayRequest, JSONObject.class);
-        ResponseEntity<JSONObject> tomorrowResponse = restTemplate
-                .exchange(tomorrow, HttpMethod.GET, tomorrowRequest, JSONObject.class);
-        ResponseEntity<JSONObject> dayAfterTomorrowResponse = restTemplate
-                .exchange(dayAfterTomorrow, HttpMethod.GET, dayAfterTomorrowRequest, JSONObject.class);
-
-        assertEquals(200, todayResponse.getStatusCodeValue());
-        assertEquals(200, tomorrowResponse.getStatusCodeValue());
-        assertEquals(200, dayAfterTomorrowResponse.getStatusCodeValue());
-        System.out.println(todayResponse.getBody());
-
-        System.out.println("today:");
-        for (Object obj : Objects.requireNonNull(todayResponse.getBody())
-                .getJSONObject("data").getJSONArray("products")) {
-            JSONObject json = (JSONObject) obj;
-            System.out.println(json.getInteger("id") + ": " + json.getTimestamp("endTime"));
-        }
-
-        System.out.println("tomorrow:");
-        for (Object obj : Objects.requireNonNull(tomorrowResponse.getBody())
-                .getJSONObject("data").getJSONArray("products")) {
-            JSONObject json = (JSONObject) obj;
-            System.out.println(json.getInteger("id") + ": " + json.getTimestamp("endTime"));
-        }
-
-        System.out.println("dayAfterTomorrow:");
-        for (Object obj : Objects.requireNonNull(dayAfterTomorrowResponse.getBody())
-                .getJSONObject("data").getJSONArray("products")) {
-            JSONObject json = (JSONObject) obj;
-            System.out.println(json.getInteger("id") + ": " + json.getTimestamp("endTime"));
-        }
-    }
-
-    @Test
     public void delete() throws URISyntaxException {
         final String url = baseUrl + "/delete";
 
@@ -202,12 +209,14 @@ public class ProductControllerTest {
         assertEquals(200, response.getStatusCodeValue());
     }
 
-    private void checkResponse(ResponseEntity<JSONObject> responseEntity) {
+    private JSONObject checkResponse(ResponseEntity<JSONObject> responseEntity) {
         JSONObject response = responseEntity.getBody();
         assertNotNull(response);
         System.out.println(response);
 
         assertEquals(200, responseEntity.getStatusCodeValue());
         assertEquals(1, response.getIntValue("status"));
+
+        return response;
     }
 }
