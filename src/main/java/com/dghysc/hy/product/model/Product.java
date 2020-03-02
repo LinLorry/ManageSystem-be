@@ -1,7 +1,9 @@
 package com.dghysc.hy.product.model;
 
 import com.dghysc.hy.user.model.User;
+import com.dghysc.hy.util.EntityUtil;
 import com.dghysc.hy.work.model.Work;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
@@ -10,9 +12,7 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.sql.Timestamp;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 /**
  * The Product Model
@@ -37,6 +37,7 @@ public class Product implements Serializable {
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false, updatable = false)
     @NotFound(action = NotFoundAction.IGNORE)
+    @JsonIgnore
     private Work work;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.DETACH)
@@ -46,19 +47,19 @@ public class Product implements Serializable {
     @Column(nullable = false, updatable = false)
     private Timestamp createTime;
 
-    @JsonIgnore
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false, updatable = false)
     @NotFound(action = NotFoundAction.IGNORE)
+    @JsonIgnore
     private User createUser;
 
     @Column(nullable = false)
     private Timestamp updateTime;
 
-    @JsonIgnore
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false)
     @NotFound(action = NotFoundAction.IGNORE)
+    @JsonIgnore
     private User updateUser;
 
     public Product() { }
@@ -140,5 +141,18 @@ public class Product implements Serializable {
 
     public void setUpdateUser(User updateUser) {
         this.updateUser = updateUser;
+    }
+
+    public Integer getWorkId() {
+        return work.getId();
+    }
+
+    public String getWorkName() {
+        return work.getName();
+    }
+
+    @JsonAnyGetter
+    public Map<String, Object> historyInfo() {
+        return EntityUtil.getCreateAndUpdateInfo(createUser, updateUser);
     }
 }
