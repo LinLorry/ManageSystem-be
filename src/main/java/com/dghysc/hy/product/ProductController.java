@@ -182,28 +182,6 @@ public class ProductController {
         return response;
     }
 
-    /**
-     * Delete Product Api.
-     * @param id the product id.
-     * @return {
-     *     "status": 1,
-     *     "message": "Delete product success."
-     * }
-     */
-    @PreAuthorize("hasRole('ADMIN')")
-    @ResponseBody
-    @DeleteMapping("/delete")
-    public JSONObject delete(@RequestParam Long id) {
-        JSONObject response = new JSONObject();
-
-        productService.removeById(id);
-
-        response.put("status", 1);
-        response.put("message", "Delete product success.");
-
-        return response;
-    }
-
     private JSONObject getAccordProducts(
             Map<String, Object> likeMap,
             boolean flag, int accord,

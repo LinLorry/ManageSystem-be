@@ -18,8 +18,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.sql.Timestamp;
 
 import static org.junit.Assert.*;
@@ -189,24 +187,6 @@ public class ProductControllerTest {
         } else {
             assertEquals(0, response.getIntValue("status"));
         }
-    }
-
-    @Test
-    public void delete() throws URISyntaxException {
-        final String url = baseUrl + "/delete";
-
-        URI uri = new URI(url);
-
-        JSONObject requestBody = new JSONObject();
-        requestBody.put("id", testUtil.nextId(Product.class));
-
-        HttpEntity<JSONObject> request = new HttpEntity<>(requestBody, testUtil.getTokenHeader());
-
-        ResponseEntity<JSONObject> response = restTemplate
-                .exchange(uri, HttpMethod.DELETE, request, JSONObject.class);
-
-        System.out.println(response.getBody());
-        assertEquals(200, response.getStatusCodeValue());
     }
 
     private JSONObject checkResponse(ResponseEntity<JSONObject> responseEntity) {

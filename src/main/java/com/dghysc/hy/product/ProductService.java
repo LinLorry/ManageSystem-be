@@ -14,7 +14,6 @@ import com.dghysc.hy.work.model.Work;
 import com.dghysc.hy.work.model.WorkProcess;
 import com.dghysc.hy.work.repo.UserProcessRepository;
 import com.dghysc.hy.work.repo.WorkRepository;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
@@ -58,15 +57,6 @@ public class ProductService {
         this.productRepository = productRepository;
         this.productProcessRepository = productProcessRepository;
         this.completeProductRepository = completeProductRepository;
-    }
-
-    /**
-     * Add Or Update Product
-     * @param product the product will be add.
-     * @return the product have be add or update.
-     */
-    Product addOrUpdate(Product product) {
-        return productRepository.save(product);
     }
 
     /**
@@ -281,24 +271,5 @@ public class ProductService {
         return productRepository.findAll(
                 specificationUtil.getSpecification(),
                 PageRequest.of(pageNumber, pageSize));
-    }
-
-    /**
-     * Check Product By Name
-     * @param serial the product serial.
-     * @return if name is exist return true else return false.
-     */
-    boolean checkBySerial(String serial) {
-        return productRepository.existsBySerial(serial);
-    }
-
-    /**
-     * Remove Product By Id
-     * @param id the product id.
-     * @throws org.springframework.dao.EmptyResultDataAccessException
-     *      if the product didn't exists throw this exception.
-     */
-    void removeById(Long id) throws EmptyResultDataAccessException {
-        productRepository.deleteById(id);
     }
 }
