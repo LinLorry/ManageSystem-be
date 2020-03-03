@@ -1,6 +1,7 @@
 package com.dghysc.hy.product;
 
 import com.alibaba.fastjson.JSONObject;
+import com.dghysc.hy.product.model.CompleteProduct;
 import com.dghysc.hy.product.model.Product;
 import com.dghysc.hy.product.rep.ProductRepository;
 import com.dghysc.hy.util.TestUtil;
@@ -90,6 +91,38 @@ public class ProductControllerTest {
         assertNotNull(response.getJSONObject("data").getInteger("total"));
 
         url += "?id=" + testUtil.nextId(Product.class);
+
+        responseEntity = restTemplate.exchange(
+                url, HttpMethod.GET, request, JSONObject.class
+        );
+
+        checkResponse(responseEntity);
+
+        url += "&withProcesses=1";
+        responseEntity = restTemplate.exchange(
+                url, HttpMethod.GET, request, JSONObject.class
+        );
+
+        response = checkResponse(responseEntity);
+        JSONObject product = response.getJSONObject("data");
+        assertNotNull(product);
+        assertNotNull(product.get("processes"));
+    }
+
+    @Test
+    public void getComplete() {
+        String url = baseUrl + "?complete=1";
+
+        HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
+
+        ResponseEntity<JSONObject> responseEntity = restTemplate
+                .exchange(url, HttpMethod.GET, request, JSONObject.class);
+
+        JSONObject response = checkResponse(responseEntity);
+        assertNotNull(response.getJSONObject("data"));
+        assertNotNull(response.getJSONObject("data").getInteger("total"));
+
+        url += "&id=" + testUtil.nextId(CompleteProduct.class);
 
         responseEntity = restTemplate.exchange(
                 url, HttpMethod.GET, request, JSONObject.class

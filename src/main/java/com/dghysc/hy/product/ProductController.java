@@ -1,6 +1,7 @@
 package com.dghysc.hy.product;
 
 import com.alibaba.fastjson.JSONObject;
+import com.dghysc.hy.product.model.CompleteProduct;
 import com.dghysc.hy.product.model.Product;
 import com.dghysc.hy.product.model.ProductProcess;
 import com.dghysc.hy.work.model.WorkProcess;
@@ -113,36 +114,59 @@ public class ProductController {
             @RequestParam(defaultValue = "0") boolean create,
             @RequestParam(defaultValue = "0") boolean end,
             @RequestParam(defaultValue = "0") boolean withProcesses,
+            @RequestParam(defaultValue = "0") boolean complete,
             @RequestParam(defaultValue = "0") int pageNumber,
             @RequestParam(defaultValue = "20") int pageSize
     ) {
         JSONObject response = new JSONObject();
 
-        if (id != null) {
-            try {
-                if (withProcesses) {
-                    response.put("data", formatProduct(productService.loadWithProcessesById(id)));
+        if (!complete) {
+            if (id != null) {
+                try {
+                    if (withProcesses) {
+                        response.put("data", formatProduct(productService.loadWithProcessesById(id)));
+                    } else {
+                        response.put("data", productService.loadById(id));
+                    }
+
+                    response.put("message", "获取订单成功");
+                } catch (EntityNotFoundException e) {
+                    response.put("message", "Id为" + id + "的订单不存在");
+                }
+            } else {
+                Map<String, Object> likeMap = new HashMap<>();
+                Optional.ofNullable(serial).ifPresent(s -> likeMap.put("serial", s));
+
+                if (create) {
+                    response.put("data", getAccordProducts(likeMap, true, accord, pageNumber, pageSize));
+                } else if (end) {
+                    response.put("data", getAccordProducts(likeMap, false, accord, pageNumber, pageSize));
                 } else {
-                    response.put("data", productService.loadById(id));
+                    response.put("data", formatPage(productService.load(likeMap, pageNumber, pageSize)));
                 }
 
                 response.put("message", "获取订单成功");
-            } catch (EntityNotFoundException e) {
-                response.put("message", "Id为" + id + "的订单不存在");
             }
         } else {
-            Map<String, Object> likeMap = new HashMap<>();
-            Optional.ofNullable(serial).ifPresent(s -> likeMap.put("serial", s));
+            if (id == null) {
+                Map<String, Object> likeMap = new HashMap<>();
+                Optional.ofNullable(serial).ifPresent(s -> likeMap.put("serial", s));
 
-            if (create) {
-                response.put("data", getAccordProducts(likeMap, true, accord, pageNumber, pageSize));
-            } else if (end) {
-                response.put("data", getAccordProducts(likeMap, false, accord, pageNumber, pageSize));
+                response.put("data", formatPage(productService.loadComplete(likeMap, pageNumber, pageSize)));
+                response.put("message", "获取订单成功");
             } else {
-                response.put("data", formatPage(productService.load(likeMap, pageNumber, pageSize)));
-            }
+                try {
+                    if (withProcesses) {
+                        response.put("data", formatProduct(productService.loadCompleteWithProcessesById(id)));
+                    } else {
+                        response.put("data", productService.loadCompleteById(id));
+                    }
 
-            response.put("message", "获取订单成功");
+                    response.put("message", "获取订单成功");
+                } catch (EntityNotFoundException e) {
+                    response.put("message", "Id为" + id + "的订单不存在");
+                }
+            }
         }
 
         response.put("status", 1);
@@ -203,7 +227,7 @@ public class ProductController {
         }
     }
 
-    private JSONObject formatPage(Page<Product> page) {
+    private <T> JSONObject formatPage(Page<T> page) {
         JSONObject data = new JSONObject();
 
         data.put("total", page.getTotalPages());
@@ -213,15 +237,37 @@ public class ProductController {
     }
 
     private JSONObject formatProduct(Product product) {
-        Set<WorkProcess> workProcesses = product.getWork().getWorkProcesses();
-
         JSONObject data = new JSONObject();
-        List<JSONObject> processes = new ArrayList<>(workProcesses.size());
 
         data.put("id", product.getId());
         data.put("serial", product.getSerial());
         data.put("endTime", product.getEndTime());
         data.put("workName", product.getWorkName());
+
+        data.put("processes", formatProcesses(
+                product.getWork().getWorkProcesses(), product.getProductProcesses()
+        ));
+
+        return data;
+    }
+
+    private JSONObject formatProduct(CompleteProduct product) {
+        JSONObject data = new JSONObject();
+
+        data.put("id", product.getId());
+        data.put("serial", product.getSerial());
+        data.put("endTime", product.getEndTime());
+        data.put("workName", product.getWorkName());
+
+        data.put("processes", formatProcesses(
+                product.getWork().getWorkProcesses(), product.getProductProcesses()
+        ));
+
+        return data;
+    }
+
+    private List<JSONObject> formatProcesses(Set<WorkProcess> workProcesses, Set<ProductProcess> productProcesses) {
+        List<JSONObject> processes = new ArrayList<>(workProcesses.size());
 
         for (WorkProcess workProcess : workProcesses) {
             JSONObject one = new JSONObject();
@@ -230,7 +276,7 @@ public class ProductController {
             one.put("sequence", workProcess.getSequenceNumber());
             one.put("complete", false);
 
-            for (ProductProcess productProcess : product.getProductProcesses()) {
+            for (ProductProcess productProcess : productProcesses) {
                 if (workProcess.getProcessId().equals(productProcess.getProcessId())) {
                     one.put("complete", true);
                     break;
@@ -240,8 +286,6 @@ public class ProductController {
             processes.add(one);
         }
 
-        data.put("processes", processes);
-
-        return data;
+        return processes;
     }
 }
