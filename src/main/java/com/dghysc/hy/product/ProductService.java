@@ -191,6 +191,27 @@ public class ProductService {
     }
 
     /**
+     * Load Complete Product By Its Field
+     * @param likeMap {
+     *     "the complete product field": value will be equal by "%value%"
+     * }
+     * @param pageNumber page number.
+     * @param pageSize page size.
+     * @return the page of query result.
+     */
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
+    Page<CompleteProduct> loadComplete(Map<String, Object> likeMap, int pageNumber, int pageSize) {
+
+        SpecificationUtil specificationUtil = new SpecificationUtil();
+
+        specificationUtil.addLikeMap(likeMap);
+
+        Specification<CompleteProduct> specification = specificationUtil.getSpecification();
+
+        return completeProductRepository.findAll(specification, PageRequest.of(pageNumber, pageSize));
+    }
+
+    /**
      * Load Product By Id Service
      * @param id the product id.
      * @return the product.
@@ -199,6 +220,17 @@ public class ProductService {
     @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
     Product loadById(@NotNull Long id) {
         return productRepository.findById(Optional.of(id).get()).orElseThrow(EntityNotFoundException::new);
+    }
+
+    /**
+     * Load Complete Product By Id Service
+     * @param id the complete product id.
+     * @return the complete product.
+     * @throws EntityNotFoundException if the complete product isn't exist throw this exception.
+     */
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
+    CompleteProduct loadCompleteById(@NotNull Long id) {
+        return completeProductRepository.findById(Optional.of(id).get()).orElseThrow(EntityNotFoundException::new);
     }
 
     /**
@@ -211,6 +243,24 @@ public class ProductService {
     @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER', 'WORKER')")
     public Product loadWithProcessesById(@NotNull Long id) {
         Product product = productRepository.findById(Optional.of(id).get())
+                .orElseThrow(EntityNotFoundException::new);
+
+        product.getProductProcesses().size();
+        product.getWork().getWorkProcesses().size();
+
+        return product;
+    }
+
+    /**
+     * Load Complete Product With Work And Processes By Id
+     * @param id the complete product id.
+     * @return the complete product with its work and processes.
+     * @throws EntityNotFoundException if the complete product isn't exist throw this exception.
+     */
+    @Transactional(readOnly = true)
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
+    public CompleteProduct loadCompleteWithProcessesById(@NotNull Long id) {
+        CompleteProduct product = completeProductRepository.findById(Optional.of(id).get())
                 .orElseThrow(EntityNotFoundException::new);
 
         product.getProductProcesses().size();
