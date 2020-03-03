@@ -322,4 +322,15 @@ public class ProductService {
                 specificationUtil.getSpecification(),
                 PageRequest.of(pageNumber, pageSize));
     }
+
+    /**
+     * Load Product Processes By Id
+     * @param id the product or complete product id.
+     * @return the product processes.
+     * @throws NullPointerException if {@code id} is {@literal null}.
+     */
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
+    List<ProductProcess> loadProductProcesses(@NotNull Long id) {
+        return productProcessRepository.findAllByProductId(Optional.of(id).get());
+    }
 }
