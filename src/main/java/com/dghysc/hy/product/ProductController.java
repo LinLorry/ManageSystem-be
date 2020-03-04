@@ -1,18 +1,15 @@
 package com.dghysc.hy.product;
 
 import com.alibaba.fastjson.JSONObject;
+import com.dghysc.hy.product.model.CompleteProduct;
 import com.dghysc.hy.product.model.Product;
-import com.dghysc.hy.product.model.ProductStatus;
-import com.dghysc.hy.util.SecurityUtil;
-import com.dghysc.hy.work.WorkService;
-import com.dghysc.hy.work.model.Work;
-import org.springframework.dao.DataIntegrityViolationException;
+import com.dghysc.hy.product.model.ProductProcess;
+import com.dghysc.hy.work.model.WorkProcess;
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import javax.transaction.Transactional;
+import javax.persistence.EntityNotFoundException;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.*;
@@ -22,234 +19,163 @@ import java.util.*;
  * @author lorry
  * @author lin864464995@163.com
  */
-@Controller
+@RestController
 @RequestMapping("/api/product")
 public class ProductController {
 
     private final ProductService productService;
 
-    private final WorkService workService;
-
-    public ProductController(ProductService productService, WorkService workService) {
+    public ProductController(ProductService productService) {
         this.productService = productService;
-        this.workService = workService;
     }
 
     /**
-     * Create Product Api
+     * Create Or Update Product Api
      * @param request {
-     *     "serial": product serial: String[must],
-     *     "workId": product product id: Integer[must],
-     *     "endTime": product end time: Timestamp[must],
+     *     "id": product id: int,
+     *     "serial": product serial: str,
+     *     "endTime": product end time: Timestamp,
+     *     "workId": product product id: int
      * }
-     * @return create product success return {
+     * @return create or update product success return {
      *     "status": 1,
-     *     "message": "Create product success."
-     *     "data": {
-     *         "id": product id: Integer,
-     *         "serial": product serial: String,
-     *         "workId": product product id: Integer,
-     *         "workName": product product name: String,
-     *         "status": product status: String,
-     *         "createUser": create user name: String,
-     *         "createTime": product create time: Timestamp,
-     *         "endTime": product end time: Timestamp
-     *     }
+     *     "message": message: str,
+     *     "data": product info: object
      * }
      */
-    @ResponseBody
-    @PostMapping("/create")
-    public JSONObject create(@RequestBody JSONObject request) {
-        JSONObject response = new JSONObject();
-
-        String serial = request.getString("serial");
-        Integer workId = request.getInteger("workId");
-        Timestamp endTime = request.getTimestamp("endTime");
-
-        if (serial == null || serial.length() == 0 ) {
-            response.put("status", 0);
-            response.put("message", "Must have serial.");
-            return response;
-        } else if (workId == null) {
-            response.put("status", 0);
-            response.put("message", "Must have work id.");
-            return response;
-        } else if (endTime == null) {
-            response.put("status", 0);
-            response.put("message", "Must have end time.");
-            return response;
-        }
-
-        Product product = new Product();
-
-        product.setSerial(serial);
-        product.setCreateTime(new Timestamp(System.currentTimeMillis()));
-        product.setCreateUser(SecurityUtil.getUser());
-        product.setEndTime(endTime);
-        product.setStatus(ProductStatus.PROGRESS);
-
-        try {
-            Work work = workService.loadById(workId);
-            product.setWork(work);
-
-            response.put("data", productService.addOrUpdate(product));
-            response.put("status", 1);
-            response.put("message", "Create product success.");
-        } catch (DataIntegrityViolationException e) {
-            if (!productService.checkBySerial(serial)) throw e;
-
-            response.put("status", 0);
-            response.put("message", "Process name exist.");
-        } catch (NoSuchElementException e) {
-            response.put("status", 0);
-            response.put("message", "The work isn't exist.");
-        }
-
-        return response;
-    }
-
-    /**
-     * Update Product Api
-     * @param request {
-     *     "id": product id: Integer[must]
-     *     "serial": product serial: String,
-     *     "workId": product work id: Integer,
-     *     "endTime": product end time: Timestamp
-     * }
-     * @return if update success return {
-     *     "status": 1,
-     *     "message": "Update product success."
-     *     "data": {
-     *         "id": product id: Integer,
-     *         "serial": product serial: String,
-     *         "workId": product product id: Integer,
-     *         "workName": product product name: String,
-     *         "status": product status: String,
-     *         "createUser": create user name: String,
-     *         "createTime": product create time: Timestamp,
-     *         "endTime": product end time: Timestamp
-     *     }
-     * }
-     */
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @ResponseBody
-    @PostMapping("/update")
-    @Transactional
-    public JSONObject update(@RequestBody JSONObject request) {
+    @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
+    public JSONObject createOrUpdate(@RequestBody JSONObject request) {
         JSONObject response = new JSONObject();
 
         Long id = request.getLong("id");
         String serial = request.getString("serial");
         Timestamp endTime = request.getTimestamp("endTime");
-        Integer workId = request.getInteger("workId");
-        Product product;
-
-        if (id == null) {
-            response.put("status", 0);
-            response.put("message", "Must provide product id.");
-            return response;
-        }
+        Integer workId = null;
 
         try {
-            product = productService.loadById(id);
-
-            if (serial != null) product.setSerial(serial);
-
-            if (endTime != null) product.setEndTime(endTime);
-
-            if (serial != null) product.setSerial(serial);
-
-            if (workId != null) {
-                Work work = workService.loadById(workId);
-                product.setWork(work);
+            if (id == null) {
+                workId = request.getInteger("workId");
+                response.put("data", productService.add(serial, endTime, workId));
+                response.put("message", "创建订单成功");
+            } else {
+                response.put("data", productService.update(id, serial, endTime));
+                response.put("message", "修改订单成功");
             }
-
-            response.put("data", productService.addOrUpdate(product));
             response.put("status", 1);
-            response.put("message", "Update product success.");
-        } catch (DataIntegrityViolationException e) {
-            if (!productService.checkBySerial(serial)) throw e;
-
+        } catch (EntityNotFoundException e) {
             response.put("status", 0);
-            response.put("message", "Product serial exist.");
-        } catch (NoSuchElementException e) {
+            if (id == null) {
+                response.put("message", "Id为" + workId + "的生产流程不存在");
+            } else {
+                response.put("message", "Id为" + id + "的订单不存在");
+            }
+        } catch (NullPointerException e) {
             response.put("status", 0);
-            response.put("message", "This product isn't exist.");
+            if (serial == null) {
+                response.put("message", "订单号不能为空");
+            } else if (workId == null) {
+                response.put("message", "生产流程Id不能为空");
+            }
         }
 
         return response;
     }
 
     /**
-     * Find Product Api
-     * @param id the product id: Integer.
-     * @param serial the serial product contains: String.
-     * @param status the product status: String.
-     * @param pageNumber the page number: Integer.
-     * @return {
+     * Get Product Api
+     * @param id product id, only get one product if provide this.
+     * @param serial serial the serial product contains.
+     * @param accord accord the according day number
+     * @param create accord the created day number.
+     * @param withProcesses get product with processes, only when get one product.
+     * @param pageNumber the page number.
+     * @param pageSize the page size.
+     * @return if id provide return {
      *     "status": 1,
-     *     "message": "Get product success.",
-     *     "data":{
-     *         "total": page total number: Integer,
+     *     "message": message: str,
+     *     "data": only when product exist, product info: object
+     * } else return {
+     *     "status": 1,
+     *     "message": message: str,
+     *     "data": {
+     *         "total": total page number,
      *         "products": [
-     *             {
-     *                 "id": product id: Integer,
-     *                 "serial": product serial: String,
-     *                 "workId": product product id: Integer,
-     *                 "workName": product product name: String,
-     *                 "status": product status: String,
-     *                 "createUser": create user name: String,
-     *                 "createTime": product create time: Timestamp,
-     *                 "endTime": product end time: Timestamp
-     *             },
-     *             ...
+     *              product...
      *         ]
      *     }
      * }
      */
-    @ResponseBody
-    @GetMapping("/find")
-    public JSONObject find(
-            @RequestParam(required = false) Integer id,
+    @GetMapping
+    public JSONObject get(
+            @RequestParam(required = false) Long id,
             @RequestParam(required = false) String serial,
-            @RequestParam(required = false) String status,
-            @RequestParam(defaultValue = "0") Integer pageNumber) {
+            @RequestParam(defaultValue = "0") int accord,
+            @RequestParam(defaultValue = "0") boolean create,
+            @RequestParam(defaultValue = "0") boolean end,
+            @RequestParam(defaultValue = "0") boolean withProcesses,
+            @RequestParam(defaultValue = "0") boolean complete,
+            @RequestParam(defaultValue = "0") int pageNumber,
+            @RequestParam(defaultValue = "20") int pageSize
+    ) {
         JSONObject response = new JSONObject();
 
-        Map<String, Object> equalMap = new HashMap<>();
-        Map<String, Object> likeMap = new HashMap<>();
+        if (!complete) {
+            if (id != null) {
+                try {
+                    if (withProcesses) {
+                        response.put("data", formatProduct(productService.loadWithProcessesById(id)));
+                    } else {
+                        response.put("data", productService.loadById(id));
+                    }
 
-        if (id != null) {
-            equalMap.put("id", id);
-        }
+                    response.put("message", "获取订单成功");
+                } catch (EntityNotFoundException e) {
+                    response.put("message", "Id为" + id + "的订单不存在");
+                }
+            } else {
+                Map<String, Object> likeMap = new HashMap<>();
+                Optional.ofNullable(serial).ifPresent(s -> likeMap.put("serial", s));
 
-        if (serial != null) {
-            likeMap.put("serial", serial);
-        }
+                if (create) {
+                    response.put("data", getAccordProducts(likeMap, true, accord, pageNumber, pageSize));
+                } else if (end) {
+                    response.put("data", getAccordProducts(likeMap, false, accord, pageNumber, pageSize));
+                } else {
+                    response.put("data", formatPage(productService.load(likeMap, pageNumber, pageSize)));
+                }
 
-        if (status != null) {
-            switch (status) {
-                case "progress":
-                    equalMap.put("status", ProductStatus.PROGRESS);
-                case "finish":
-                    equalMap.put("status", ProductStatus.FINISH);
+                response.put("message", "获取订单成功");
+            }
+        } else {
+            if (id == null) {
+                Map<String, Object> likeMap = new HashMap<>();
+                Optional.ofNullable(serial).ifPresent(s -> likeMap.put("serial", s));
+
+                response.put("data", formatPage(productService.loadComplete(likeMap, pageNumber, pageSize)));
+                response.put("message", "获取订单成功");
+            } else {
+                try {
+                    if (withProcesses) {
+                        response.put("data", formatProduct(productService.loadCompleteWithProcessesById(id)));
+                    } else {
+                        response.put("data", productService.loadCompleteById(id));
+                    }
+
+                    response.put("message", "获取订单成功");
+                } catch (EntityNotFoundException e) {
+                    response.put("message", "Id为" + id + "的订单不存在");
+                }
             }
         }
 
-        JSONObject data = new JSONObject();
-        Page<Product> page = productService.load(equalMap, likeMap, pageNumber);
-        data.put("total", page.getTotalPages());
-        data.put("products", page.getContent());
-
-        response.put("data", data);
         response.put("status", 1);
-        response.put("message", "Get product success.");
 
         return response;
     }
 
     /**
-     * Finish Product Api
+     * Complete Product Api
      * @param id the product id.
      * @return if product exist and finish success return {
      *     "status": 1,
@@ -259,149 +185,162 @@ public class ProductController {
      *     "message": "message"
      * }
      */
-    @ResponseBody
-    @PostMapping("/finish")
-    @Transactional
-    public JSONObject finish(@RequestParam Long id) {
+    @PostMapping("/complete")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
+    public JSONObject complete(@RequestParam Long id) {
         JSONObject response = new JSONObject();
 
         try {
-            Product product = productService.loadById(id);
-
-            if (product.getStatus() != ProductStatus.FINISH) {
-                product.setStatus(ProductStatus.FINISH);
-                product.setFinishTime(new Timestamp(System.currentTimeMillis()));
+            if (productService.complete(id)) {
+                response.put("status", 1);
+                response.put("message", "完成订单成功");
+            } else {
+                response.put("status", 0);
+                response.put("message", "完成订单失败，该订单还有工序未完成");
             }
-
-            productService.addOrUpdate(product);
-            response.put("status", 1);
-            response.put("message", "Finish product success,");
-        } catch (NoSuchElementException e) {
+        } catch (EntityNotFoundException e) {
             response.put("status", 0);
-            response.put("message", "This product isn't exist.");
+            response.put("message", "Id为" + id + "的订单不存在");
         }
 
         return response;
     }
 
-    /**
-     * Get Today Create Product Api
-     * @param pageNumber the page number.
-     * @return {
-     *     "status": 1,
-     *     "message": "Get today create product success.",
-     *     "data":{
-     *         "total": page total number: Integer,
-     *         "products": [
-     *             {
-     *                 "id": product id: Integer,
-     *                 "serial": product serial: String,
-     *                 "workId": product product id: Integer,
-     *                 "workName": product product name: String,
-     *                 "status": product status: String,
-     *                 "createUser": create user name: String,
-     *                 "createTime": product create time: Timestamp,
-     *                 "endTime": product end time: Timestamp
-     *             },
-     *             ...
-     *         ]
-     *     }
-     * }
-     */
-    @ResponseBody
-    @GetMapping("/todayCreate")
-    public JSONObject todayCreate(@RequestParam(defaultValue = "0") Integer pageNumber) {
+    @GetMapping("/processes")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
+    public JSONObject getProcesses(@RequestParam Long id,
+                                   @RequestParam(defaultValue = "0") boolean complete) {
         JSONObject response = new JSONObject();
 
-        LocalDate today = LocalDate.now();
-        LocalDate tomorrow = today.plusDays(1);
+        if (complete) {
+            CompleteProduct completeProduct = productService.loadCompleteWithProcessesById(id);
 
-        Timestamp todayTimestamp = Timestamp.valueOf(today.atStartOfDay());
-        Timestamp tomorrowTimestamp = Timestamp.valueOf(tomorrow.atStartOfDay());
+            response.put("data", formatProcessesWithDetail(
+                    completeProduct.getWork().getWorkProcesses(),
+                    completeProduct.getProductProcesses()
+            ));
+        } else {
+            Product product = productService.loadWithProcessesById(id);
 
-        JSONObject data = new JSONObject();
-        Page<Product> page = productService.loadByCreateTimeInterval(
-                todayTimestamp, tomorrowTimestamp, pageNumber);
-        data.put("total", page.getTotalPages());
-        data.put("products", page.getContent());
+            response.put("data", formatProcessesWithDetail(
+                    product.getWork().getWorkProcesses(),
+                    product.getProductProcesses()
+            ));
+        }
 
-        response.put("data", data);
         response.put("status", 1);
-        response.put("message", "Get today create product success.");
+        response.put("message", "获取工序完成情况成");
 
         return response;
     }
 
-    /**
-     * Get According End Time Product Api
-     * @param accord the according day number.
-     * @param pageNumber the page number.
-     * @return {
-     *     "status": 1,
-     *     "message": "Get products success.",
-     *     "data":{
-     *         "total": page total number: Integer,
-     *         "products": [
-     *             {
-     *                 "id": product id: Integer,
-     *                 "serial": product serial: String,
-     *                 "workId": product product id: Integer,
-     *                 "workName": product product name: String,
-     *                 "status": product status: String,
-     *                 "createUser": create user name: String,
-     *                 "createTime": product create time: Timestamp,
-     *                 "endTime": product end time: Timestamp
-     *             },
-     *             ...
-     *         ]
-     *     }
-     * }
-     */
-    @ResponseBody
-    @GetMapping("/accordEnd")
-    public JSONObject accordEnd(
-            @RequestParam(defaultValue = "0") Integer accord,
-            @RequestParam(defaultValue = "0") Integer pageNumber) {
-        JSONObject response = new JSONObject();
-
+    private JSONObject getAccordProducts(
+            Map<String, Object> likeMap,
+            boolean flag, int accord,
+            int pageNumber, int pageSize
+    ) {
         LocalDate today = LocalDate.now().plusDays(accord);
-        LocalDate tomorrow = today.plusDays(1);
 
         Timestamp todayTimestamp = Timestamp.valueOf(today.atStartOfDay());
-        Timestamp tomorrowTimestamp = Timestamp.valueOf(tomorrow.atStartOfDay());
+        Timestamp tomorrowTimestamp = Timestamp.valueOf(today.plusDays(1).atStartOfDay());
 
+        if (flag) {
+            return formatPage(productService.loadByCreateTimeInterval(
+                    todayTimestamp, tomorrowTimestamp, likeMap, pageNumber, pageSize
+            ));
+        } else {
+            return formatPage(productService.loadByEndTimeInterval(
+                    todayTimestamp, tomorrowTimestamp, likeMap, pageNumber, pageSize
+            ));
+        }
+    }
+
+    private <T> JSONObject formatPage(Page<T> page) {
         JSONObject data = new JSONObject();
-        Page<Product> page = productService.loadByEndTimeInterval(
-                todayTimestamp, tomorrowTimestamp, pageNumber);
+
         data.put("total", page.getTotalPages());
         data.put("products", page.getContent());
 
-        response.put("data", data);
-        response.put("status", 1);
-        response.put("message", "Get products success.");
-
-        return response;
+        return data;
     }
 
-    /**
-     * Delete Product Api.
-     * @param id the product id.
-     * @return {
-     *     "status": 1,
-     *     "message": "Delete product success."
-     * }
-     */
-    @PreAuthorize("hasRole('ADMIN')")
-    @ResponseBody
-    @DeleteMapping("/delete")
-    public JSONObject delete(@RequestParam Long id) {
-        JSONObject response = new JSONObject();
+    private JSONObject formatProduct(Product product) {
+        JSONObject data = new JSONObject();
 
-        productService.removeById(id);
+        data.put("id", product.getId());
+        data.put("serial", product.getSerial());
+        data.put("endTime", product.getEndTime());
+        data.put("workName", product.getWorkName());
 
-        response.put("status", 1);
-        response.put("message", "Delete product success.");
+        data.put("processes", formatProcesses(
+                product.getWork().getWorkProcesses(), product.getProductProcesses()
+        ));
 
-        return response;
+        return data;
+    }
+
+    private JSONObject formatProduct(CompleteProduct product) {
+        JSONObject data = new JSONObject();
+
+        data.put("id", product.getId());
+        data.put("serial", product.getSerial());
+        data.put("endTime", product.getEndTime());
+        data.put("workName", product.getWorkName());
+
+        data.put("processes", formatProcesses(
+                product.getWork().getWorkProcesses(), product.getProductProcesses()
+        ));
+
+        return data;
+    }
+
+    private List<JSONObject> formatProcesses(Set<WorkProcess> workProcesses, Set<ProductProcess> productProcesses) {
+        List<JSONObject> processes = new ArrayList<>(workProcesses.size());
+
+        for (WorkProcess workProcess : workProcesses) {
+            JSONObject one = new JSONObject();
+
+            one.put("name", workProcess.getProcess().getName());
+            one.put("sequence", workProcess.getSequenceNumber());
+            one.put("complete", false);
+
+            for (ProductProcess productProcess : productProcesses) {
+                if (workProcess.getProcessId().equals(productProcess.getProcessId())) {
+                    one.put("complete", true);
+                    break;
+                }
+            }
+
+            processes.add(one);
+        }
+
+        return processes;
+    }
+
+    private List<JSONObject> formatProcessesWithDetail(Set<WorkProcess> workProcesses, Set<ProductProcess> productProcesses) {
+        List<JSONObject> processes = new ArrayList<>(workProcesses.size());
+
+        for (WorkProcess workProcess : workProcesses) {
+            JSONObject one = new JSONObject();
+
+            one.put("name", workProcess.getProcess().getName());
+            one.put("sequence", workProcess.getSequenceNumber());
+
+            one.put("complete", false);
+
+            for (ProductProcess productProcess : productProcesses) {
+                if (workProcess.getProcessId().equals(productProcess.getProcessId())) {
+                    one.put("completeTime", productProcess.getFinishTime());
+                    one.put("completeUserId", productProcess.getFinisher().getId());
+                    one.put("completeUserName", productProcess.getFinisher().getName());
+                    one.put("complete", true);
+                    break;
+                }
+            }
+
+            processes.add(one);
+        }
+
+        return processes;
     }
 }
