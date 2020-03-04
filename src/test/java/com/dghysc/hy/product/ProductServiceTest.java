@@ -2,7 +2,6 @@ package com.dghysc.hy.product;
 
 import com.dghysc.hy.product.model.CompleteProduct;
 import com.dghysc.hy.product.model.Product;
-import com.dghysc.hy.product.model.ProductProcess;
 import com.dghysc.hy.product.model.ProductProcessId;
 import com.dghysc.hy.product.rep.CompleteProductRepository;
 import com.dghysc.hy.product.rep.ProductProcessRepository;
@@ -29,7 +28,6 @@ import javax.persistence.EntityNotFoundException;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -153,23 +151,6 @@ public class ProductServiceTest {
             assertFalse(result);
             assertTrue(productRepository.existsById(id));
             assertFalse(completeProductRepository.existsById(id));
-        }
-    }
-
-    @Test
-    public void loadProductProcesses() {
-        Long id = testUtil.nextId(Product.class);
-        List<ProductProcess> productProcesses = productService.loadProductProcesses(id);
-
-        for (ProductProcess productProcess : productProcesses) {
-            assertEquals(id, productProcess.getProductId());
-        }
-
-        id = testUtil.nextId(CompleteProduct.class);
-        productProcesses = productService.loadProductProcesses(id);
-
-        for (ProductProcess productProcess : productProcesses) {
-            assertEquals(id, productProcess.getProductId());
         }
     }
 }

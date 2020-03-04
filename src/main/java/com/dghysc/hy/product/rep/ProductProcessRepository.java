@@ -5,8 +5,6 @@ import com.dghysc.hy.product.model.ProductProcessId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-
 /**
  * Product Process Repository
  * @author lorry
@@ -14,8 +12,4 @@ import java.util.List;
  * @see org.springframework.data.jpa.repository.JpaRepository
  */
 @Repository
-public interface ProductProcessRepository extends JpaRepository<ProductProcess, ProductProcessId> {
-
-    List<ProductProcess> findAllByProductId(Long productId);
-
-}
+public interface ProductProcessRepository extends JpaRepository<ProductProcess, ProductProcessId> { }
