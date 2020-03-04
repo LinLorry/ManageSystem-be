@@ -206,6 +206,34 @@ public class ProductController {
         return response;
     }
 
+    @GetMapping("/processes")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
+    public JSONObject getProcesses(@RequestParam Long id,
+                                   @RequestParam(defaultValue = "0") boolean complete) {
+        JSONObject response = new JSONObject();
+
+        if (complete) {
+            CompleteProduct completeProduct = productService.loadCompleteWithProcessesById(id);
+
+            response.put("data", formatProcessesWithDetail(
+                    completeProduct.getWork().getWorkProcesses(),
+                    completeProduct.getProductProcesses()
+            ));
+        } else {
+            Product product = productService.loadWithProcessesById(id);
+
+            response.put("data", formatProcessesWithDetail(
+                    product.getWork().getWorkProcesses(),
+                    product.getProductProcesses()
+            ));
+        }
+
+        response.put("status", 1);
+        response.put("message", "获取工序完成情况成");
+
+        return response;
+    }
+
     private JSONObject getAccordProducts(
             Map<String, Object> likeMap,
             boolean flag, int accord,
@@ -278,6 +306,33 @@ public class ProductController {
 
             for (ProductProcess productProcess : productProcesses) {
                 if (workProcess.getProcessId().equals(productProcess.getProcessId())) {
+                    one.put("complete", true);
+                    break;
+                }
+            }
+
+            processes.add(one);
+        }
+
+        return processes;
+    }
+
+    private List<JSONObject> formatProcessesWithDetail(Set<WorkProcess> workProcesses, Set<ProductProcess> productProcesses) {
+        List<JSONObject> processes = new ArrayList<>(workProcesses.size());
+
+        for (WorkProcess workProcess : workProcesses) {
+            JSONObject one = new JSONObject();
+
+            one.put("name", workProcess.getProcess().getName());
+            one.put("sequence", workProcess.getSequenceNumber());
+
+            one.put("complete", false);
+
+            for (ProductProcess productProcess : productProcesses) {
+                if (workProcess.getProcessId().equals(productProcess.getProcessId())) {
+                    one.put("completeTime", productProcess.getFinishTime());
+                    one.put("completeUserId", productProcess.getFinisher().getId());
+                    one.put("completeUserName", productProcess.getFinisher().getName());
                     one.put("complete", true);
                     break;
                 }

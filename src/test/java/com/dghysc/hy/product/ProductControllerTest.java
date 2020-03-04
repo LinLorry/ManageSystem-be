@@ -222,6 +222,30 @@ public class ProductControllerTest {
         }
     }
 
+    @Test
+    public void getProcesses() {
+        Long id = testUtil.nextId(Product.class);
+        final String baseUrl = ProductControllerTest.baseUrl + "/processes";
+        String url = baseUrl + "?id=" + id;
+
+        HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
+
+        ResponseEntity<JSONObject> responseEntity = restTemplate
+                .exchange(url, HttpMethod.GET, request, JSONObject.class);
+
+        checkResponse(responseEntity);
+
+        id = testUtil.nextId(CompleteProduct.class);
+        url = baseUrl + "?complete=1&id=" + id;
+
+        request = new HttpEntity<>(testUtil.getTokenHeader());
+
+        responseEntity = restTemplate
+                .exchange(url, HttpMethod.GET, request, JSONObject.class);
+
+        checkResponse(responseEntity);
+    }
+
     private JSONObject checkResponse(ResponseEntity<JSONObject> responseEntity) {
         JSONObject response = responseEntity.getBody();
         assertNotNull(response);
