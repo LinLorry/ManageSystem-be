@@ -2,7 +2,11 @@ package com.dghysc.hy.user;
 
 import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.user.repo.UserRepository;
+import com.dghysc.hy.util.SecurityUtil;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.lang.Nullable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -11,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
 import javax.validation.constraints.NotNull;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 /**
@@ -35,12 +38,21 @@ public class UserService {
 
     /**
      * Add User Service
-     * @param user the new user have raw password.
-     * @return new user.
+     * @param username the username.
+     * @param password the password.
+     * @param name the name.
+     * @return the user.
+     * @throws NullPointerException {@code username} or {@code password} is {@literal null}.
+     * @throws DataIntegrityViolationException sql error.
      */
-    User add(User user) {
-        String hash = encoder.encode(salt + user.getPassword().trim() + salt);
-        user.setPassword(hash);
+    User add(@NotNull String username, @NotNull String password, @Nullable String name) {
+        User user = new User();
+
+        Optional.of(username).ifPresent(user::setUsername);
+        Optional.of(password).ifPresent(p ->
+                user.setPassword(encoder.encode(salt + p + salt)));
+
+        Optional.ofNullable(name).ifPresent(user::setName);
 
         return userRepository.save(user);
     }
@@ -55,10 +67,22 @@ public class UserService {
     }
 
     /**
-     * Update User
-     * @param user the user will be update.
+     * Update User Service
+     * @param id the user id.
+     * @param username the user username.
+     * @param name the user name.
+     * @return the user.
+     * @throws NullPointerException {@code id} is {@literal null}.
+     * @throws EntityNotFoundException if user not exist.
+     * @throws DataIntegrityViolationException sql error.
      */
-    User update(User user) {
+    User update(@NotNull Long id, @Nullable String username, @Nullable String name) {
+        User user = userRepository.findById(Optional.of(id).get())
+                .orElseThrow(EntityNotFoundException::new);
+
+        Optional.ofNullable(username).ifPresent(user::setUsername);
+        Optional.ofNullable(name).ifPresent(user::setName);
+
         return userRepository.save(user);
     }
 
@@ -72,12 +96,29 @@ public class UserService {
         return encoder.matches(salt + password + salt, user.getPassword());
     }
 
+    void updatePassword(@NotNull String password) {
+        User user = userRepository.findById(Optional.of(SecurityUtil.getUserId()).get())
+                .orElseThrow(EntityNotFoundException::new);
+
+        String hash = encoder.encode(salt + Optional.of(password).get() + salt);
+        user.setPassword(hash);
+
+        userRepository.save(user);
+    }
+
     /**
-     * Update User Password
-     * @param user the user with new raw password.
+     * Update User Password Service
+     * @param id the user id.
+     * @param password the new password.
+     * @throws NullPointerException {@code id} or {@code password} is {@literal null}.
+     * @throws EntityNotFoundException if user not exist.
      */
-    void updatePassword(User user) {
-        String hash = encoder.encode(salt + user.getPassword().trim() + salt);
+    @PreAuthorize("hasRole('ADMIN')")
+    void updatePassword(@NotNull Long id, @NotNull String password) {
+        User user = userRepository.findById(Optional.of(id).get())
+                .orElseThrow(EntityNotFoundException::new);
+
+        String hash = encoder.encode(salt + Optional.of(password).get() + salt);
         user.setPassword(hash);
 
         userRepository.save(user);
@@ -87,21 +128,24 @@ public class UserService {
      * Load User By Id
      * @param id the user id.
      * @return the user.
-     * @throws NoSuchElementException if the user is not exits throw this exception.
+     * @throws NullPointerException {@code id} is {@literal null}.
+     * @throws EntityNotFoundException if the user is not exits throw this exception.
      */
-    public User loadById(Long id) throws NoSuchElementException {
-        return userRepository.findById(id).orElseThrow(NoSuchElementException::new);
+    public User loadById(@NotNull Long id) {
+        return userRepository.findById(Optional.of(id).get())
+                .orElseThrow(EntityNotFoundException::new);
     }
 
     /**
      * Load User By Username.
      * @param username the username.
      * @return the user.
-     * @throws NoSuchElementException if the user is not exits throw this exception.
+     * @throws NullPointerException {@code id} is {@literal null}.
+     * @throws EntityNotFoundException if the user is not exits throw this exception.
      */
-    User loadByUsername(String username) throws NoSuchElementException {
-        return userRepository.findByUsername(username)
-                .orElseThrow(NoSuchElementException::new);
+    User loadByUsername(String username) {
+        return userRepository.findByUsername(Optional.of(username).get())
+                .orElseThrow(EntityNotFoundException::new);
     }
 
     /**
@@ -109,6 +153,7 @@ public class UserService {
      * @param id the user id.
      * @return the user authentication.
      * @throws NullPointerException {@code id} is {@literal null}.
+     * @throws EntityNotFoundException if the user is not exits throw this exception.
      * @throws DisabledException user is disable.
      */
     @Transactional(readOnly = true)

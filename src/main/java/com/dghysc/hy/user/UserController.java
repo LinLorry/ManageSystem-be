@@ -10,7 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.NoSuchElementException;
+import javax.persistence.EntityNotFoundException;
 import java.util.Optional;
 
 /**
@@ -37,49 +37,54 @@ public class UserController {
     }
 
     /**
-     * Registry Api
-     *
+     * Create Or Update User Api
      * @param request {
-     *                "username": username: String,
-     *                "password": password: String,
-     *                "name": name: String
-     *                }
-     * @return if registry success return {
-     * "status": 1,
-     * "message": "Registry Success.",
-     * "data": {
-     * "id": user id: BigInteger,
-     * "username": username: String,
-     * "name": name: String
+     *     "id": update user id: int,
+     *     "username": the user username: str,
+     *     "password": create user password: str,
+     *     "name": the user name: str,
      * }
-     * } else return {
-     * "status: 0,
-     * "message": message: String
+     * @return if create or update success return {
+     *     "status": 1,
+     *     "message": message: str,
+     *     "data": user info: object
      * }
+     * @throws MissingServletRequestParameterException when create user
+     *      {@code username} or {@code password} is {@literal null}
      */
-    @ResponseBody
-    @PostMapping("/registry")
-    public JSONObject registry(@RequestBody JSONObject request) {
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public JSONObject createOrUpdate(@RequestBody JSONObject request)
+            throws MissingServletRequestParameterException {
         JSONObject response = new JSONObject();
 
+        Long id = request.getLong("id");
         String username = request.getString("username");
-        String name = request.getString("name");
         String password = request.getString("password");
-
-        User user = new User();
-
-        user.setUsername(username);
-        user.setName(name);
-        user.setPassword(password);
+        String name = request.getString("name");
 
         try {
-            response.put("data", userService.add(user));
+            if (id == null) {
+                response.put("data", userService.add(username, password, name));
+                response.put("message", "创建用户成功");
+            } else {
+                response.put("data", userService.update(id, username, name));
+                response.put("message", "更新用户成功");
+            }
             response.put("status", 1);
-            response.put("message", "Registry Success.");
+        } catch (NullPointerException e) {
+            if (username == null) {
+                throw new MissingServletRequestParameterException("username", "str");
+            } else if (password == null) {
+                throw new MissingServletRequestParameterException("password", "str");
+            }
+        } catch (EntityNotFoundException e) {
+            response.put("status", 0);
+            response.put("message", "Id为：" + id + "的用户不存在");
         } catch (DataIntegrityViolationException e) {
             if (userService.checkByUsername(username)) {
                 response.put("status", 0);
-                response.put("message", "Registry failed: username exits");
+                response.put("message", "用户名为" + username + "的用户已存在");
             } else {
                 throw e;
             }
@@ -90,23 +95,22 @@ public class UserController {
 
     /**
      * User Login, Get Token Api
-     *
      * @param request {
-     *                "username": username: String,
-     *                "password": password: String,
-     *                }
+     *     "username": username: str,
+     *     "password": password: str,
+     * }
      * @return if login success return {
-     * "status": 1,
-     * "message": "Login success.",
-     * "token": token: String
+     *      "status": 1,
+     *      "message": "登陆成功",
+     *      "token": token: str
      * } else return {
-     * "status": 0,
-     * "message": message: String
+     *      "status": 0,
+     *      "message": message: str
      * }
      */
-    @ResponseBody
     @PostMapping("/token")
-    public JSONObject token(@RequestBody JSONObject request) {
+    public JSONObject token(@RequestBody JSONObject request)
+            throws MissingServletRequestParameterException {
         JSONObject result = new JSONObject();
 
         String username = request.getString("username");
@@ -118,7 +122,7 @@ public class UserController {
 
                 if (user.isEnabled()) {
                     result.put("status", 1);
-                    result.put("message", "Login success.");
+                    result.put("message", "登陆成功");
                     result.put("token", tokenUtil.generateToken(user));
                 } else {
                     result.put("status", 0);
@@ -126,11 +130,13 @@ public class UserController {
                 }
             } else {
                 result.put("status", 0);
-                result.put("message", "Wrong password.");
+                result.put("message", "密码错误");
             }
         } catch (EntityNotFoundException e) {
             result.put("status", 0);
             result.put("message", "The user does not exist.");
+        } catch (NullPointerException e) {
+            throw new MissingServletRequestParameterException("username", "str");
         }
 
         return result;
@@ -138,139 +144,95 @@ public class UserController {
 
     /**
      * Get User Self Profile Api
-     *
      * @return {
-     * "status": 1,
-     * "message": "Get profile success.",
-     * "data": {
-     * "id": user id: BigInteger,
-     * "username": username: String,
-     * "name": name: String
-     * }
+     *      "status": 1,
+     *      "message": "Get profile success.",
+     *      "data": {
+     *          "id": user id: int,
+     *          "username": username: str,
+     *          "name": name: str
+     *      }
      * }
      */
-    @ResponseBody
     @GetMapping("/profile")
     public JSONObject getProfile() {
         JSONObject response = new JSONObject();
+        JSONObject data = new JSONObject();
+        User user = SecurityUtil.getUser();
+
+        data.put("id", user.getId());
+        data.put("username", user.getUsername());
+        data.put("name", user.getName());
 
         response.put("status", 1);
         response.put("message", "Get profile success.");
-        response.put("data", SecurityUtil.getUser());
-
-        return response;
-    }
-
-    /**
-     * Update User Profile Api
-     *
-     * @param request {
-     *                "name": name: String
-     *                }
-     * @return if update user profile success return {
-     * "status": 1,
-     * "message": "Update profile success.",
-     * "data": {
-     * "id": user id: BigInteger
-     * "username": username: String,
-     * "name": name: String
-     * }
-     * } else return {
-     * "status": 0,
-     * "message": "Update profile failed."
-     * }
-     */
-    @ResponseBody
-    @PostMapping("/profile")
-    public JSONObject editProfile(@RequestBody JSONObject request) {
-        JSONObject response = new JSONObject();
-
-        String name = request.getString("name");
-        User user = userService.loadById(SecurityUtil.getUserId());
-        user.setName(name);
-
-        try {
-            response.put("data", userService.update(user));
-            response.put("status", 1);
-            response.put("message", "Update profile success.");
-        } catch (Exception e) {
-            response.put("status", 0);
-            response.put("message", "Update profile failed.");
-        }
+        response.put("data", data);
 
         return response;
     }
 
     /**
      * Edit Password Api
-     *
-     * @param request {
-     *                "oldPassword": oldPassword: String,
-     *                "newPassword": newPassword: String
-     *                }
+     * @param request if admin change other user password {
+     *      "id": the user id: int,
+     *      "password": new password: str
+     * } else if user change his password {
+     *      "oldPassword": user old password: str,
+     *      "newPassword": user new password: str
+     * }
      * @return if edit password success return {
-     * "status": 1,
-     * "message": "Edit Password Success"
-     * } else if old password wrong return {
-     * "status": 0,
-     * "message": "Old Password Wrong"
-     * } else return {
-     * "status": 0,
-     * "message": "Edit Password Failed"
+     *      "status": 1,
+     *      "message": "更新用户秘密成功"
      * }
      */
-    @ResponseBody
     @PostMapping("/password")
-    public JSONObject editPassword(@RequestBody JSONObject request) {
+    public JSONObject editPassword(@RequestBody JSONObject request)
+            throws MissingServletRequestParameterException {
         JSONObject response = new JSONObject();
-        String oldPassword = request.getString("oldPassword");
-        String newPassword = request.getString("newPassword");
 
-        User user = userService.loadById(SecurityUtil.getUserId());
+        Long id = request.getLong("id");
 
-        if (userService.checkPassword(user, oldPassword)) {
-            user.setPassword(newPassword);
-            userService.updatePassword(user);
-            response.put("status", 1);
-            response.put("message", "Edit Password Success");
+        if (id == null) {
+            String oldPassword = request.getString("oldPassword");
+            if (userService.checkPassword(SecurityUtil.getUser(), oldPassword)) {
+                String newPassword = Optional.of(request.getString("newPassword"))
+                        .orElseThrow(() -> new MissingServletRequestParameterException("newPassword", "str"));
+
+                userService.updatePassword(newPassword);
+                response.put("status", 1);
+                response.put("message", "更新密码成功");
+            } else {
+                response.put("status", 0);
+                response.put("message", "原始秘密错误");
+            }
         } else {
-            response.put("status", 0);
-            response.put("message", "Old Password Wrong");
+            String password = Optional.of(request.getString("password"))
+                    .orElseThrow(() -> new MissingServletRequestParameterException("password", "str"));
+            try {
+                userService.updatePassword(id, password);
+                response.put("status", 1);
+                response.put("message", "更新用户秘密成功");
+            } catch (NullPointerException e) {
+                throw new MissingServletRequestParameterException("id", "int");
+            } catch (EntityNotFoundException e) {
+                response.put("status", 0);
+                response.put("message", "Id为：" + id + "的用户不存在");
+            }
         }
 
         return response;
     }
 
     /**
-     * Judge Admin Api.
-     *
-     * @return if user is admin return {
-     * "status": 1,
-     * "message": "Get success.",
-     * "data": true
-     * } else return {
-     * "status": 1,
-     * "message": "Get success.",
-     * "data": false
+     * Get User Processes Api
+     * @return {
+     *     "status": 1,
+     *     "message": message: str,
+     *     "data": [
+     *          process info...: object
+     *     ]
      * }
      */
-    @ResponseBody
-    @GetMapping("/isAdmin")
-    public JSONObject isAdmin() {
-        JSONObject response = new JSONObject();
-
-        if (SecurityUtil.getUser().getAuthorities().size() == 0) {
-            response.put("data", false);
-        } else {
-            response.put("data", true);
-        }
-
-        response.put("status", 1);
-        response.put("message", "Get success.");
-
-        return response;
-    }
-
     @GetMapping("/processes")
     public JSONObject getProcesses() {
         JSONObject response = new JSONObject();

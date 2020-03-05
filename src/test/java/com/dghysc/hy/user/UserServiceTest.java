@@ -27,6 +27,33 @@ public class UserServiceTest {
     private UserService userService;
 
     @Test
+    public void add() {
+        String username = testUtil.nextString();
+        String password = "test";
+        String name = testUtil.nextString();
+
+        User user = userService.add(username, password, name);
+        assertEquals(username, user.getUsername());
+        assertEquals(name, user.getName());
+    }
+
+    @Test
+    public void update() {
+        Long id;
+        do {
+            id = testUtil.nextId(User.class);
+        } while (id == 1);
+        String username = testUtil.nextString();
+        String name = testUtil.nextString();
+
+        User user = userService.update(id, username, name);
+
+        assertEquals(id, user.getId());
+        assertEquals(username, user.getUsername());
+        assertEquals(name, user.getName());
+    }
+
+    @Test
     public void disableAndEnable() {
         Long id = testUtil.nextId(User.class);
 

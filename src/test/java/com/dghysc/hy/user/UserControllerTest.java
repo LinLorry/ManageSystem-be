@@ -42,6 +42,69 @@ public class UserControllerTest {
     }
 
     @Test
+    public void create() {
+        String username = testUtil.nextString();
+        String password = testUtil.nextString();
+        String name = testUtil.nextString();
+
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("username", username);
+        requestBody.put("password", password);
+        requestBody.put("name", name);
+
+        HttpEntity<JSONObject> request = new HttpEntity<>(requestBody, testUtil.getTokenHeader());
+        ResponseEntity<JSONObject> responseEntity = restTemplate.exchange(
+                baseUrl, HttpMethod.POST, request, JSONObject.class
+        );
+
+        checkResponse(responseEntity);
+
+        JSONObject response = checkResponse(responseEntity);
+        Long id = response.getJSONObject("data").getLong("id");
+        User user = userRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+        assertEquals(username, user.getUsername());
+        assertEquals(name, user.getName());
+    }
+
+    @Test
+    public void update() {
+        Long id = testUtil.nextId(User.class);
+        String username = testUtil.nextString();
+        String name = testUtil.nextString();
+
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("id", id);
+        requestBody.put("username", username);
+        requestBody.put("name", name);
+
+        HttpEntity<JSONObject> request = new HttpEntity<>(requestBody, testUtil.getTokenHeader());
+        ResponseEntity<JSONObject> responseEntity = restTemplate.exchange(
+                baseUrl, HttpMethod.POST, request, JSONObject.class
+        );
+
+        checkResponse(responseEntity);
+
+        JSONObject response = checkResponse(responseEntity);
+        assertEquals(id, response.getJSONObject("data").getLong("id"));
+
+        User user = userRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+        assertEquals(username, user.getUsername());
+        assertEquals(name, user.getName());
+    }
+
+    @Test
+    public void getProcesses() {
+        String url = baseUrl + "/processes";
+
+        HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
+
+        ResponseEntity<JSONObject> responseEntity = restTemplate
+                .exchange(url, HttpMethod.GET, request, JSONObject.class);
+
+        checkResponse(responseEntity);
+    }
+
+    @Test
     public void disableUser() {
         String url = baseUrl + "/disable";
 
