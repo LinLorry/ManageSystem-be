@@ -22,6 +22,7 @@ import javax.persistence.EntityNotFoundException;
 import java.sql.Timestamp;
 
 import static org.junit.Assert.*;
+import static com.dghysc.hy.util.TestUtil.checkResponse;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -244,16 +245,5 @@ public class ProductControllerTest {
                 .exchange(url, HttpMethod.GET, request, JSONObject.class);
 
         checkResponse(responseEntity);
-    }
-
-    private JSONObject checkResponse(ResponseEntity<JSONObject> responseEntity) {
-        JSONObject response = responseEntity.getBody();
-        assertNotNull(response);
-        System.out.println(response);
-
-        assertEquals(200, responseEntity.getStatusCodeValue());
-        assertEquals(1, response.getIntValue("status"));
-
-        return response;
     }
 }

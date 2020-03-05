@@ -1,5 +1,6 @@
 package com.dghysc.hy.util;
 
+import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.exception.NoElementException;
 import com.dghysc.hy.exception.NoRepositoryException;
 import com.dghysc.hy.product.model.CompleteProduct;
@@ -25,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -34,6 +36,9 @@ import javax.persistence.EntityNotFoundException;
 import javax.validation.constraints.NotNull;
 import java.lang.reflect.Method;
 import java.util.*;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 @Component
 public class TestUtil extends Random {
@@ -186,5 +191,16 @@ public class TestUtil extends Random {
     public Iterator<User> loadUsersByAuthority(@NotNull String authority) {
         return roleRepository.findByRole(authority)
                 .orElseThrow(EntityNotFoundException::new).getUsers().iterator();
+    }
+
+    public static JSONObject checkResponse(ResponseEntity<JSONObject> responseEntity) {
+        JSONObject response = responseEntity.getBody();
+        assertNotNull(response);
+        System.out.println(response);
+
+        assertEquals(200, responseEntity.getStatusCodeValue());
+        assertEquals(1, response.getIntValue("status"));
+
+        return response;
     }
 }
