@@ -3,13 +3,16 @@ package com.dghysc.hy.user;
 import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.user.repo.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
+import javax.validation.constraints.NotNull;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 /**
  * User Service
@@ -101,9 +104,50 @@ public class UserService {
                 .orElseThrow(NoSuchElementException::new);
     }
 
+    /**
+     * Get User Authentication Service
+     * @param id the user id.
+     * @return the user authentication.
+     * @throws NullPointerException {@code id} is {@literal null}.
+     * @throws DisabledException user is disable.
+     */
     @Transactional(readOnly = true)
-    public UsernamePasswordAuthenticationToken getAuthentication(long id) {
-        User user = userRepository.findById(id).orElseThrow(EntityNotFoundException::new);
-        return new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+    public UsernamePasswordAuthenticationToken getAuthentication(@NotNull long id) {
+        User user = userRepository.findById(Optional.of(id).get())
+                .orElseThrow(EntityNotFoundException::new);
+
+        if (user.isEnabled()) {
+            return new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+        } else {
+            throw new DisabledException("User: " + user.getUsername() + " is disabled");
+        }
+    }
+
+    /**
+     * Enable User Service
+     * @param id the user id.
+     * @throws NullPointerException {@code id} is {@literal null}.
+     */
+    public void enable(@NotNull Long id) {
+        User user = userRepository.findById(Optional.of(id).get())
+                .orElseThrow(EntityNotFoundException::new);
+
+        user.setDisable(false);
+
+        userRepository.save(user);
+    }
+
+    /**
+     * Disable User Service
+     * @param id the user id.
+     * @throws NullPointerException {@code id} is {@literal null}.
+     */
+    public void disable(@NotNull Long id) {
+        User user = userRepository.findById(Optional.of(id).get())
+                .orElseThrow(EntityNotFoundException::new);
+
+        user.setDisable(true);
+
+        userRepository.save(user);
     }
 }

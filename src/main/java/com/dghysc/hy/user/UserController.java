@@ -6,9 +6,12 @@ import com.dghysc.hy.util.TokenUtil;
 import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.work.UserProcessService;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 /**
  * User Controller
@@ -112,14 +115,20 @@ public class UserController {
         try {
             User user = userService.loadByUsername(username);
             if (userService.checkPassword(user, password)) {
-                result.put("status", 1);
-                result.put("message", "Login success.");
-                result.put("token", tokenUtil.generateToken(user));
+
+                if (user.isEnabled()) {
+                    result.put("status", 1);
+                    result.put("message", "Login success.");
+                    result.put("token", tokenUtil.generateToken(user));
+                } else {
+                    result.put("status", 0);
+                    result.put("message", "该用户已被禁用");
+                }
             } else {
                 result.put("status", 0);
                 result.put("message", "Wrong password.");
             }
-        } catch (NoSuchElementException e) {
+        } catch (EntityNotFoundException e) {
             result.put("status", 0);
             result.put("message", "The user does not exist.");
         }
@@ -269,6 +278,42 @@ public class UserController {
         response.put("status", 1);
         response.put("message", "获取工序成功");
         response.put("data", userProcessService.loadByUserId(SecurityUtil.getUserId()));
+
+        return response;
+    }
+
+    /**
+     * Disable or Enable User Api
+     * @param request {
+     *     "id": the user id: long[must],
+     *     "operation": true is disable, false is enable: bool[must]
+     * }
+     * @return {
+     *     "status": 1,
+     *     "message": message: str
+     * }
+     * @throws MissingServletRequestParameterException id or operation not exist.
+     */
+    @PostMapping("/disable")
+    @PreAuthorize("hasRole('ADMIN')")
+    public JSONObject disableUser(@RequestBody JSONObject request)
+            throws MissingServletRequestParameterException {
+        JSONObject response = new JSONObject();
+
+        Long id = Optional.ofNullable(request.getLong("id")).orElseThrow(
+                () -> new MissingServletRequestParameterException("id", "int"));
+        Boolean disable = Optional.ofNullable(request.getBoolean("operation")).orElseThrow(
+                () -> new MissingServletRequestParameterException("operation", "bool"));
+
+        if (disable) {
+            userService.disable(id);
+            response.put("message", "禁用用户成功");
+        } else {
+            userService.enable(id);
+            response.put("message", "解禁用户成功");
+        }
+
+        response.put("status", 1);
 
         return response;
     }

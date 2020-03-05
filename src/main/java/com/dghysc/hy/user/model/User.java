@@ -34,6 +34,9 @@ public class User implements UserDetails, Serializable {
     @JsonIgnore
     private String password;
 
+    @Column(nullable = false, columnDefinition = "Boolean default false")
+    private Boolean disable = false;
+
     @JsonIgnore
     @ManyToMany
     @JoinTable(
@@ -75,6 +78,14 @@ public class User implements UserDetails, Serializable {
         this.password = password;
     }
 
+    public Boolean getDisable() {
+        return disable;
+    }
+
+    public void setDisable(Boolean disable) {
+        this.disable = disable;
+    }
+
     @Override
     @JsonIgnore
     public Collection<Role> getAuthorities() {
@@ -102,6 +113,6 @@ public class User implements UserDetails, Serializable {
     @Override
     @JsonIgnore
     public boolean isEnabled() {
-        return true;
+        return !disable;
     }
 }

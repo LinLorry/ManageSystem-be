@@ -9,12 +9,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import javax.persistence.EntityNotFoundException;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.NoSuchElementException;
 
 /**
  * The Authentication Filter
@@ -55,7 +55,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
                     logger.warn("JWT Token has expired");
                 } catch (SignatureException e) {
                     logger.error("Signature Exception");
-                } catch (NoSuchElementException e) {
+                } catch (EntityNotFoundException e) {
                     logger.warn("User " + tokenUtil.getUserIdFromToken(token) + " no exist.");
                 } catch (Exception e) {
                     logger.error(e);
