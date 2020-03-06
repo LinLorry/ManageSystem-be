@@ -1,6 +1,8 @@
 package com.dghysc.hy.user;
 
+import com.dghysc.hy.user.model.Role;
 import com.dghysc.hy.user.model.User;
+import com.dghysc.hy.user.repo.RoleRepository;
 import com.dghysc.hy.user.repo.UserRepository;
 import com.dghysc.hy.util.TestUtil;
 import org.junit.Test;
@@ -10,6 +12,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.persistence.EntityNotFoundException;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.Assert.*;
 
@@ -22,6 +28,9 @@ public class UserServiceTest {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private RoleRepository roleRepository;
 
     @Autowired
     private UserService userService;
@@ -45,8 +54,12 @@ public class UserServiceTest {
         } while (id == 1);
         String username = testUtil.nextString();
         String name = testUtil.nextString();
+        Set<Integer> tmp = new HashSet<>();
+        while (tmp.size() != roleRepository.count() && tmp.size() < 3) {
+            tmp.add(testUtil.nextId(Role.class));
+        }
 
-        User user = userService.update(id, username, name);
+        User user = userService.update(id, username, name, new ArrayList<>(tmp));
 
         assertEquals(id, user.getId());
         assertEquals(username, user.getUsername());

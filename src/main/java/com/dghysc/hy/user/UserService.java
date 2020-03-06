@@ -1,6 +1,7 @@
 package com.dghysc.hy.user;
 
 import com.dghysc.hy.user.model.User;
+import com.dghysc.hy.user.repo.RoleRepository;
 import com.dghysc.hy.user.repo.UserRepository;
 import com.dghysc.hy.util.SecurityUtil;
 import com.dghysc.hy.util.SpecificationUtil;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
 import javax.validation.constraints.NotNull;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -34,10 +36,13 @@ public class UserService {
 
     private final UserRepository userRepository;
 
+    private final RoleRepository roleRepository;
+
     private static final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, RoleRepository roleRepository) {
         this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
     }
 
     /**
@@ -75,17 +80,31 @@ public class UserService {
      * @param id the user id.
      * @param username the user username.
      * @param name the user name.
+     * @param roleIds the list of role id.
      * @return the user.
      * @throws NullPointerException {@code id} is {@literal null}.
      * @throws EntityNotFoundException if user not exist.
      * @throws DataIntegrityViolationException sql error.
      */
-    User update(@NotNull Long id, @Nullable String username, @Nullable String name) {
+    @Transactional
+    @PreAuthorize("hasRole('ADMIN')")
+    public User update(@NotNull Long id, @Nullable String username,
+                @Nullable String name, @NotNull List<Integer> roleIds) {
         User user = userRepository.findById(Optional.of(id).get())
                 .orElseThrow(EntityNotFoundException::new);
 
         Optional.ofNullable(username).ifPresent(user::setUsername);
         Optional.ofNullable(name).ifPresent(user::setName);
+
+        if (roleIds.size() != roleRepository.countAllByIdIn(roleIds)) {
+            throw new EntityNotFoundException();
+        }
+
+        user.getAuthorities()
+                .removeIf(role -> !roleIds.contains(role.getId()));
+        user.getAuthorities().addAll(
+                roleRepository.findAllById(roleIds)
+        );
 
         return userRepository.save(user);
     }

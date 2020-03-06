@@ -1,7 +1,9 @@
 package com.dghysc.hy.user;
 
 import com.alibaba.fastjson.JSONObject;
+import com.dghysc.hy.user.model.Role;
 import com.dghysc.hy.user.model.User;
+import com.dghysc.hy.user.repo.RoleRepository;
 import com.dghysc.hy.user.repo.UserRepository;
 import com.dghysc.hy.util.TestUtil;
 import org.junit.Before;
@@ -17,6 +19,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.persistence.EntityNotFoundException;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.Assert.*;
 import static com.dghysc.hy.util.TestUtil.checkResponse;
@@ -35,6 +40,9 @@ public class UserControllerTest {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private RoleRepository roleRepository;
 
     @Before
     public void setUp() {
@@ -68,21 +76,28 @@ public class UserControllerTest {
 
     @Test
     public void update() {
-        Long id = testUtil.nextId(User.class);
+        Long id;
+        do {
+            id = testUtil.nextId(User.class);
+        } while (id == 1);
         String username = testUtil.nextString();
         String name = testUtil.nextString();
+
+        Set<Integer> roles = new HashSet<>();
+        while (roles.size() != roleRepository.count() && roles.size() < 3) {
+            roles.add(testUtil.nextId(Role.class));
+        }
 
         JSONObject requestBody = new JSONObject();
         requestBody.put("id", id);
         requestBody.put("username", username);
         requestBody.put("name", name);
+        requestBody.put("roles", roles);
 
         HttpEntity<JSONObject> request = new HttpEntity<>(requestBody, testUtil.getTokenHeader());
         ResponseEntity<JSONObject> responseEntity = restTemplate.exchange(
                 baseUrl, HttpMethod.POST, request, JSONObject.class
         );
-
-        checkResponse(responseEntity);
 
         JSONObject response = checkResponse(responseEntity);
         assertEquals(id, response.getJSONObject("data").getLong("id"));

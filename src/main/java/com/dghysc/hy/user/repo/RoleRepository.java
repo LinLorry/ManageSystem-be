@@ -21,4 +21,6 @@ public interface RoleRepository extends JpaRepository<Role, Integer> {
     List<Role> findAllByIsDeleteFalse();
 
     Optional<Role> findByRole(String role);
+
+    int countAllByIdIn(Iterable<Integer> ids);
 }

@@ -1,5 +1,6 @@
 package com.dghysc.hy.user;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.util.SecurityUtil;
 import com.dghysc.hy.util.TokenUtil;
@@ -12,9 +13,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityNotFoundException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * User Controller
@@ -70,7 +69,9 @@ public class UserController {
                 response.put("data", userService.add(username, password, name));
                 response.put("message", "创建用户成功");
             } else {
-                response.put("data", userService.update(id, username, name));
+                JSONArray tmp = request.getJSONArray("roles");
+                List<Integer> roleIds = tmp == null ? new ArrayList<>() : tmp.toJavaList(Integer.TYPE);
+                response.put("data", userService.update(id, username, name, roleIds));
                 response.put("message", "更新用户成功");
             }
             response.put("status", 1);
@@ -82,7 +83,7 @@ public class UserController {
             }
         } catch (EntityNotFoundException e) {
             response.put("status", 0);
-            response.put("message", "Id为：" + id + "的用户不存在");
+            response.put("message", "用户或权限不存在");
         } catch (DataIntegrityViolationException e) {
             if (userService.checkByUsername(username)) {
                 response.put("status", 0);
