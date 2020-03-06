@@ -6,16 +6,18 @@ import com.dghysc.hy.util.TokenUtil;
 import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.work.UserProcessService;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityNotFoundException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 /**
  * User Controller
- *
  * @author lorry
  * @author lin864464995@163.com
  */
@@ -89,6 +91,60 @@ public class UserController {
                 throw e;
             }
         }
+
+        return response;
+    }
+
+    /**
+     * Get Users Api
+     * @param id the user id.
+     * @param name the user name.
+     * @param pageNumber the page number.
+     * @param pageSize the page size.
+     * @return if id provide {
+     *     "status": 1,
+     *     "message": message: str,
+     *     "data": user info: object
+     * } else return {
+     *     "status": 1,
+     *     "message": message: str,
+     *     "data": {
+     *         "total": page total number: int,
+     *         "users": [ user info...: object ]
+     *     }
+     * }
+     */
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public JSONObject get(
+            @RequestParam(required = false) Long id,
+            @RequestParam(required = false) String name,
+            @RequestParam(defaultValue = "0") int pageNumber,
+            @RequestParam(defaultValue = "20") int pageSize
+    ) {
+        JSONObject response = new JSONObject();
+
+        if (id == null) {
+            JSONObject data = new JSONObject();
+            Map<String, Object> likeMap = new HashMap<>();
+            Optional.ofNullable(name).ifPresent(n -> likeMap.put("name", n));
+
+            Page<User> users = userService.load(likeMap, pageNumber, pageSize);
+
+            data.put("total", users.getTotalPages());
+            data.put("users", users.getContent());
+            response.put("data", data);
+            response.put("message", "获取用户列表成功");
+        } else {
+            try {
+                response.put("data", userService.loadById(id));
+                response.put("message", "获取用户详情成功");
+            } catch (EntityNotFoundException e) {
+                response.put("message", "Id为" + id + "的用户不存在");
+            }
+        }
+
+        response.put("status", 1);
 
         return response;
     }

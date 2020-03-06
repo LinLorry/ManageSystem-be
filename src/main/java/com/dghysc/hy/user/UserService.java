@@ -3,8 +3,11 @@ package com.dghysc.hy.user;
 import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.user.repo.UserRepository;
 import com.dghysc.hy.util.SecurityUtil;
+import com.dghysc.hy.util.SpecificationUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.lang.Nullable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.DisabledException;
@@ -15,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
 import javax.validation.constraints.NotNull;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -122,6 +126,26 @@ public class UserService {
         user.setPassword(hash);
 
         userRepository.save(user);
+    }
+
+    /**
+     * Load Users Service
+     * @param likeMap {
+     *      "the user field": value will be equal by "%value%"
+     * }
+     * @param pageNumber the page number.
+     * @param pageSize the page size.
+     * @return the users page.
+     * @throws NullPointerException {@code likeMap} is {@literal null}
+     */
+    Page<User> load(@NotNull Map<String, Object> likeMap, int pageNumber, int pageSize) {
+
+        SpecificationUtil specificationUtil = new SpecificationUtil();
+
+        specificationUtil.addLikeMap(likeMap);
+
+        return userRepository.findAll(specificationUtil.getSpecification(),
+                PageRequest.of(pageNumber, pageSize));
     }
 
     /**

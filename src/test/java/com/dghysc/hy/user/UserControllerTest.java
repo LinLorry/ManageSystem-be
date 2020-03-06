@@ -93,6 +93,21 @@ public class UserControllerTest {
     }
 
     @Test
+    public void get() {
+        HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
+
+        ResponseEntity<JSONObject> responseEntity = restTemplate
+                .exchange(baseUrl, HttpMethod.GET, request, JSONObject.class);
+
+        checkResponse(responseEntity);
+
+        String url = baseUrl + "?id=" + testUtil.nextId(User.class);
+        responseEntity = restTemplate
+                .exchange(url, HttpMethod.GET, request, JSONObject.class);
+        checkResponse(responseEntity);
+    }
+
+    @Test
     public void getProcesses() {
         String url = baseUrl + "/processes";
 
