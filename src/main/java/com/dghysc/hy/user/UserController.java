@@ -280,6 +280,32 @@ public class UserController {
     }
 
     /**
+     * Get User Authority Api
+     * @param id the user id.
+     * @return {
+     *     "status": 1,
+     *     "message": message: str,
+     *     "data": [ role info: object ]
+     * }
+     */
+    @GetMapping("/authority")
+    @PreAuthorize("hasRole('ADMIN')")
+    public JSONObject getAuthority(@RequestParam Long id) {
+        JSONObject response = new JSONObject();
+
+        try {
+            response.put("status", 1);
+            response.put("message", "获取用户权限信息成功");
+            response.put("data", userService.loadWithRolesById(id).getAuthorities());
+        } catch (EntityNotFoundException e) {
+            response.put("status", 0);
+            response.put("message", "Id为：" + id + "的用户不存在");
+        }
+
+        return response;
+    }
+
+    /**
      * Get User Processes Api
      * @return {
      *     "status": 1,

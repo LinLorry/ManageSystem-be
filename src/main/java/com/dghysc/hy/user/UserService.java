@@ -172,6 +172,16 @@ public class UserService {
                 .orElseThrow(EntityNotFoundException::new);
     }
 
+    @Transactional(readOnly = true)
+    public User loadWithRolesById(@NotNull Long id) {
+        User user = userRepository.findById(Optional.of(id).get())
+                .orElseThrow(EntityNotFoundException::new);
+
+        user.getAuthorities().size();
+
+        return user;
+    }
+
     /**
      * Get User Authentication Service
      * @param id the user id.
