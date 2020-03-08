@@ -133,6 +133,7 @@ public class UserController {
             Page<User> users = userService.load(likeMap, pageNumber, pageSize);
 
             data.put("total", users.getTotalPages());
+            data.put("size", users.getSize());
             data.put("users", users.getContent());
             response.put("data", data);
             response.put("message", "获取用户列表成功");
