@@ -70,7 +70,7 @@ public class UserController {
                 response.put("message", "创建用户成功");
             } else {
                 JSONArray tmp = request.getJSONArray("roles");
-                List<Integer> roleIds = tmp == null ? new ArrayList<>() : tmp.toJavaList(Integer.TYPE);
+                List<Integer> roleIds = tmp == null ? null : tmp.toJavaList(Integer.TYPE);
                 response.put("data", userService.update(id, username, name, roleIds));
                 response.put("message", "更新用户成功");
             }

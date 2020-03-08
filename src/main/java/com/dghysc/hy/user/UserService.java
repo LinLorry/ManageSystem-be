@@ -89,22 +89,24 @@ public class UserService {
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
     public User update(@NotNull Long id, @Nullable String username,
-                @Nullable String name, @NotNull List<Integer> roleIds) {
+                @Nullable String name, @Nullable List<Integer> roleIds) {
         User user = userRepository.findById(Optional.of(id).get())
                 .orElseThrow(EntityNotFoundException::new);
 
         Optional.ofNullable(username).ifPresent(user::setUsername);
         Optional.ofNullable(name).ifPresent(user::setName);
 
-        if (roleIds.size() != roleRepository.countAllByIdIn(roleIds)) {
-            throw new EntityNotFoundException();
-        }
+        if (roleIds != null) {
+            if (roleIds.size() != roleRepository.countAllByIdIn(roleIds)) {
+                throw new EntityNotFoundException();
+            }
 
-        user.getAuthorities()
-                .removeIf(role -> !roleIds.contains(role.getId()));
-        user.getAuthorities().addAll(
-                roleRepository.findAllById(roleIds)
-        );
+            user.getAuthorities()
+                    .removeIf(role -> !roleIds.contains(role.getId()));
+            user.getAuthorities().addAll(
+                    roleRepository.findAllById(roleIds)
+            );
+        }
 
         return userRepository.save(user);
     }
