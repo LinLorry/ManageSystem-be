@@ -1,6 +1,5 @@
 package com.dghysc.hy.wechat;
 
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.exception.*;
 import com.dghysc.hy.util.TokenUtil;
@@ -13,8 +12,8 @@ import org.springframework.web.bind.annotation.*;
 import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -41,27 +40,48 @@ public class WechatController {
         this.wechatUserService = wechatUserService;
     }
 
+    /**
+     * Get Wechat User Api
+     * @param id the wechat user id.
+     * @param name the wechat user name.
+     * @param pageNumber the page number.
+     * @param pageSize the page size.
+     * @return if id is provide {
+     *     "status": 1,
+     *     "message": message: str,
+     *     "data": wechat user info: object
+     * } else return {
+     *     "status": 0,
+     *     "message": message: str,
+     *     "data": {
+     *         "size": the page size: int,
+     *         "total": the page total number: int,
+     *         "wechatUsers": [ wechat user info...: object ]
+     *     }
+     * }
+     */
     @GetMapping("/user")
     @PreAuthorize("hasRole('ADMIN')")
     public JSONObject getWechatUser(
             @RequestParam(required = false) String id,
-            @RequestParam(required = false, defaultValue = "0") Integer pageNumber,
-            @RequestParam(required = false, defaultValue = "20") Integer pageSize) {
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false, defaultValue = "0") int pageNumber,
+            @RequestParam(required = false, defaultValue = "20") int pageSize) {
         JSONObject response = new JSONObject();
 
         if (id != null) {
             try {
                 response.put("data", wechatUserService.loadById(id));
-                response.put("status", 1);
                 response.put("message", "获取微信用户详细信息成功");
             } catch (EntityNotFoundException e) {
-                response.put("status", 0);
                 response.put("message", "Id为" + id + "的微信用户不存在");
             }
         } else {
             JSONObject data = new JSONObject();
+            Map<String, Object> likeMap = new HashMap<>();
+            Optional.ofNullable(name).ifPresent(n -> likeMap.put("name", n));
 
-            Page<WechatUser> wechatUsers = wechatUserService.loadAll(pageNumber, pageSize);
+            Page<WechatUser> wechatUsers = wechatUserService.load(likeMap, pageNumber, pageSize);
 
             data.put("size", pageSize);
             data.put("total", wechatUsers.getTotalPages());
@@ -69,8 +89,9 @@ public class WechatController {
 
             response.put("data", data);
             response.put("message", "获取微信用户列表成功");
-            response.put("status", 1);
         }
+
+        response.put("status", 1);
 
         return response;
     }
@@ -78,12 +99,7 @@ public class WechatController {
     /**
      * Update Wechat User Api
      * @param request {
-     *     "id": the wechat user id: str[not null],
-     *     "disable": disable this user: bool,
-     *     "userId": the user id: long,
-     *     "roles": [
-     *         id, ...
-     *     ]: the role id list
+     *     "id": the wechat user id: str[not null]
      * }
      * @return if success return {
      *     "status": 1,
@@ -95,40 +111,21 @@ public class WechatController {
      * }
      * @throws MissingServletRequestParameterException if id is null.
      */
-    @PostMapping("/user")
+    @PostMapping("/user/enable")
     @PreAuthorize("hasRole('ADMIN')")
-    public JSONObject updateWechatUser(@RequestBody JSONObject request)
+    public JSONObject enableWechatUser(@RequestBody JSONObject request)
             throws MissingServletRequestParameterException {
         JSONObject response = new JSONObject();
         String id = Optional.ofNullable(request.getString("id"))
                 .orElseThrow(() -> new MissingServletRequestParameterException("id", "str"));
-        boolean disable = request.getBooleanValue("disable");
-        Long userId = request.getLong("userId");
 
         try {
-            if (disable) {
-                response.put("data", wechatUserService.disable(id));
-                response.put("status", 1);
-                response.put("message", "禁用该用户成功");
-            } else {
-                JSONArray roles = request.getJSONArray("roles");
-                List<Integer> roleIds = roles == null ? new ArrayList<>() : roles.toJavaList(Integer.TYPE);
-
-                WechatUser wechatUser = wechatUserService.addOrUpdateUser(id, userId);
-                wechatUserService.updateRole(wechatUser.getId(), roleIds);
-                response.put("data", wechatUser);
-                response.put("status", 1);
-                response.put("message", "更新微信用户成功");
-            }
+            response.put("data", wechatUserService.addUser(id));
+            response.put("status", 1);
+            response.put("message", "更新微信用户成功");
         } catch (EntityNotFoundException e) {
             response.put("status", 0);
             response.put("message", "Id为" + id + "的微信用户不存在");
-        } catch (DuplicateUserException e) {
-            response.put("status", 0);
-            response.put("message", "Id为" + userId + "的用户已经被绑定");
-        } catch (UserNoFoundException e) {
-            response.put("status", 0);
-            response.put("message", "Id为" + userId + "的用户不存在");
         }
 
         return response;
@@ -164,9 +161,11 @@ public class WechatController {
 
         if (wechatUser.getUser() == null) {
             response.put("message", "还未注册");
-        } else {
+        } else if (wechatUser.getUser().isEnabled()) {
             response.put("message", "登陆成功");
             response.put("token", tokenUtil.generateToken(wechatUser.getUser()));
+        } else {
+            response.put("message", "被禁用");
         }
 
         return response;
