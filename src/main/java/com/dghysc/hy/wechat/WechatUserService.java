@@ -3,6 +3,7 @@ package com.dghysc.hy.wechat;
 import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.exception.*;
 import com.dghysc.hy.user.model.User;
+import com.dghysc.hy.util.SpecificationUtil;
 import com.dghysc.hy.wechat.model.WechatUser;
 import com.dghysc.hy.wechat.repo.WechatUserRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,6 +21,7 @@ import javax.persistence.EntityNotFoundException;
 import javax.validation.constraints.NotNull;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -168,16 +170,35 @@ public class WechatUserService {
         return wechatUser;
     }
 
-    WechatUser loadById(String id) {
-        return wechatUserRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+    /**
+     * Load Wechat User By Id
+     * @param id the wechat user id.
+     * @return the wechat user.
+     * @throws NullPointerException {@code id} is {@literal null}
+     * @throws EntityNotFoundException the wechat user not exist.
+     */
+    WechatUser loadById(@NotNull String id) {
+        return wechatUserRepository.findById(Optional.of(id).get())
+                .orElseThrow(EntityNotFoundException::new);
     }
 
-    Page<WechatUser> loadAll(Integer pageNumber, Integer pageSize) {
-        return wechatUserRepository.findAll(PageRequest.of(pageNumber, pageSize));
-    }
+    /**
+     * Load Wechat Users Service
+     * @param likeMap {
+     *      "the wechat user field": value will be equal by "%value%"
+     * }
+     * @param pageNumber the page number.
+     * @param pageSize the page size.
+     * @return the wechat users page.
+     * @throws NullPointerException {@code likeMap} is {@literal null}
+     */
+    Page<WechatUser> load(@NotNull Map<String, Object> likeMap, int pageNumber, int pageSize) {
+        SpecificationUtil specificationUtil = new SpecificationUtil();
 
-    Page<WechatUser> loadAllByName(String name, Integer pageNumber, Integer pageSize) {
-        return wechatUserRepository.findAllByName(name, PageRequest.of(pageNumber, pageSize));
+        specificationUtil.addLikeMap(likeMap);
+
+        return wechatUserRepository.findAll(specificationUtil.getSpecification(),
+                PageRequest.of(pageNumber, pageSize));
     }
 
     WechatUser refreshAccessToken(WechatUser wechatUser)

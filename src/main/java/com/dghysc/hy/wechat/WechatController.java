@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.*;
 import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -38,27 +40,48 @@ public class WechatController {
         this.wechatUserService = wechatUserService;
     }
 
+    /**
+     * Get Wechat User Api
+     * @param id the wechat user id.
+     * @param name the wechat user name.
+     * @param pageNumber the page number.
+     * @param pageSize the page size.
+     * @return if id is provide {
+     *     "status": 1,
+     *     "message": message: str,
+     *     "data": wechat user info: object
+     * } else return {
+     *     "status": 0,
+     *     "message": message: str,
+     *     "data": {
+     *         "size": the page size: int,
+     *         "total": the page total number: int,
+     *         "wechatUsers": [ wechat user info...: object ]
+     *     }
+     * }
+     */
     @GetMapping("/user")
     @PreAuthorize("hasRole('ADMIN')")
     public JSONObject getWechatUser(
             @RequestParam(required = false) String id,
-            @RequestParam(required = false, defaultValue = "0") Integer pageNumber,
-            @RequestParam(required = false, defaultValue = "20") Integer pageSize) {
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false, defaultValue = "0") int pageNumber,
+            @RequestParam(required = false, defaultValue = "20") int pageSize) {
         JSONObject response = new JSONObject();
 
         if (id != null) {
             try {
                 response.put("data", wechatUserService.loadById(id));
-                response.put("status", 1);
                 response.put("message", "获取微信用户详细信息成功");
             } catch (EntityNotFoundException e) {
-                response.put("status", 0);
                 response.put("message", "Id为" + id + "的微信用户不存在");
             }
         } else {
             JSONObject data = new JSONObject();
+            Map<String, Object> likeMap = new HashMap<>();
+            Optional.ofNullable(name).ifPresent(n -> likeMap.put("name", n));
 
-            Page<WechatUser> wechatUsers = wechatUserService.loadAll(pageNumber, pageSize);
+            Page<WechatUser> wechatUsers = wechatUserService.load(likeMap, pageNumber, pageSize);
 
             data.put("size", pageSize);
             data.put("total", wechatUsers.getTotalPages());
@@ -66,8 +89,9 @@ public class WechatController {
 
             response.put("data", data);
             response.put("message", "获取微信用户列表成功");
-            response.put("status", 1);
         }
+
+        response.put("status", 1);
 
         return response;
     }

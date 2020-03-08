@@ -9,10 +9,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Page;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import javax.persistence.EntityNotFoundException;
 
 import static org.junit.Assert.*;
 
@@ -55,17 +53,5 @@ public class WechatUserServiceTest {
         wechatUser = wechatUserService.addUser(id);
 
         assertNotNull(wechatUser.getUser());
-    }
-
-    @Test
-    public void loadByName() {
-        String id = testUtil.nextId(WechatUser.class);
-        WechatUser wechatUser = wechatUserRepository.findById(id)
-                .orElseThrow(EntityNotFoundException::new);
-
-        Page<WechatUser> wechatUsers = wechatUserService.loadAllByName(
-                wechatUser.getName(), Math.abs(testUtil.nextInt()), 5);
-        System.out.println(wechatUsers.getContent());
-        assertEquals(wechatUserRepository.count(), wechatUsers.getTotalElements());
     }
 }
