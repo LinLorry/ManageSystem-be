@@ -87,7 +87,6 @@ public class UserService {
      * @throws DataIntegrityViolationException sql error.
      */
     @Transactional
-    @PreAuthorize("hasRole('ADMIN')")
     public User update(@NotNull Long id, @Nullable String username,
                 @Nullable String name, @Nullable List<Integer> roleIds) {
         User user = userRepository.findById(Optional.of(id).get())
