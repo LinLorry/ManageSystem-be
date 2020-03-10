@@ -341,7 +341,7 @@ public class UserController {
      * @throws MissingServletRequestParameterException id or operation not exist.
      */
     @PostMapping("/disable")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'WORKER_MANAGER')")
     public JSONObject disableUser(@RequestBody JSONObject request)
             throws MissingServletRequestParameterException {
         JSONObject response = new JSONObject();

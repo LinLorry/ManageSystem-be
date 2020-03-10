@@ -112,7 +112,7 @@ public class WechatController {
      * @throws MissingServletRequestParameterException if id is null.
      */
     @PostMapping("/user/enable")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'WORKER_MANAGER')")
     public JSONObject enableWechatUser(@RequestBody JSONObject request)
             throws MissingServletRequestParameterException {
         JSONObject response = new JSONObject();

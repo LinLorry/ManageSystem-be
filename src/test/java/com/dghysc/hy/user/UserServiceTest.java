@@ -5,6 +5,7 @@ import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.user.repo.RoleRepository;
 import com.dghysc.hy.user.repo.UserRepository;
 import com.dghysc.hy.util.TestUtil;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,11 @@ public class UserServiceTest {
     @Autowired
     private UserService userService;
 
+    @Before
+    public void setUp() {
+        testUtil.setAuthorities("ROLE_ADMIN");
+    }
+
     @Test
     public void add() {
         String username = testUtil.nextString();
@@ -64,6 +70,38 @@ public class UserServiceTest {
         assertEquals(id, user.getId());
         assertEquals(username, user.getUsername());
         assertEquals(name, user.getName());
+    }
+
+    @Test
+    public void enableWorker() {
+        Long id = testUtil.nextId(User.class);
+        User user = userService.enableWorker(id);
+
+        boolean isWorker = false;
+        for (Role role : user.getAuthorities()) {
+            if ("ROLE_WORKER".equals(role.getRole())) {
+                isWorker = true;
+                break;
+            }
+        }
+
+        assertTrue(isWorker);
+    }
+
+    @Test
+    public void disableWorker() {
+        Long id = testUtil.nextId(User.class);
+        User user = userService.disableWorker(id);
+
+        boolean isWorker = false;
+        for (Role role : user.getAuthorities()) {
+            if ("ROLE_WORKER".equals(role.getRole())) {
+                isWorker = true;
+                break;
+            }
+        }
+
+        assertFalse(isWorker);
     }
 
     @Test

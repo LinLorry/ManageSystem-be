@@ -1,5 +1,6 @@
 package com.dghysc.hy.user;
 
+import com.dghysc.hy.user.model.Role;
 import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.user.repo.RoleRepository;
 import com.dghysc.hy.user.repo.UserRepository;
@@ -87,7 +88,6 @@ public class UserService {
      * @throws DataIntegrityViolationException sql error.
      */
     @Transactional
-    @PreAuthorize("hasRole('ADMIN')")
     public User update(@NotNull Long id, @Nullable String username,
                 @Nullable String name, @Nullable List<Integer> roleIds) {
         User user = userRepository.findById(Optional.of(id).get())
@@ -150,6 +150,49 @@ public class UserService {
     }
 
     /**
+     * Enable User To Worker Service
+     * @param id the user id.
+     * @return the user.
+     * @throws NullPointerException {@code id} is {@literal null}.
+     * @throws EntityNotFoundException if user not exist.
+     */
+    @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN', 'WORKER_MANAGER')")
+    public User enableWorker(@NotNull Long id) {
+        User user = userRepository.findById(Optional.of(id).get())
+                .orElseThrow(EntityNotFoundException::new);
+
+        for (Role role : user.getAuthorities()) {
+            if ("ROLE_WORKER".equals(role.getRole())) {
+                return user;
+            }
+        }
+
+        user.getAuthorities().add(roleRepository.findByRole("ROLE_WORKER")
+                .orElseThrow(EntityNotFoundException::new));
+
+        return userRepository.save(user);
+    }
+
+    /**
+     * Disable User From Worker Service
+     * @param id the user id.
+     * @return the user.
+     * @throws NullPointerException {@code id} is {@literal null}.
+     * @throws EntityNotFoundException if user not exist.
+     */
+    @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN', 'WORKER_MANAGER')")
+    public User disableWorker(@NotNull Long id) {
+        User user = userRepository.findById(Optional.of(id).get())
+                .orElseThrow(EntityNotFoundException::new);
+
+        user.getAuthorities().removeIf(role -> "ROLE_WORKER".equals(role.getRole()));
+
+        return userRepository.save(user);
+    }
+
+    /**
      * Load Users Service
      * @param likeMap {
      *      "the user field": value will be equal by "%value%"
@@ -201,6 +244,16 @@ public class UserService {
         user.getAuthorities().size();
 
         return user;
+    }
+
+    /**
+     * Load All Worker Service
+     * @param pageNumber the page number.
+     * @param pageSize the page size.
+     * @return the worker page.
+     */
+    public Page<User> loadALLWorkers(int pageNumber, int pageSize) {
+        return userRepository.loadAllByRole("ROLE_WORKER", PageRequest.of(pageNumber, pageSize));
     }
 
     /**
