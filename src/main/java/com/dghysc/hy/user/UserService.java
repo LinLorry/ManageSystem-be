@@ -204,6 +204,16 @@ public class UserService {
     }
 
     /**
+     * Load All Worker Service
+     * @param pageNumber the page number.
+     * @param pageSize the page size.
+     * @return the worker page.
+     */
+    public Page<User> loadALLWorkers(int pageNumber, int pageSize) {
+        return userRepository.loadAllByRole("ROLE_WORKER", PageRequest.of(pageNumber, pageSize));
+    }
+
+    /**
      * Get User Authentication Service
      * @param id the user id.
      * @return the user authentication.
