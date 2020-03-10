@@ -1,5 +1,6 @@
 package com.dghysc.hy.user;
 
+import com.dghysc.hy.user.model.Role;
 import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.user.repo.RoleRepository;
 import com.dghysc.hy.user.repo.UserRepository;
@@ -146,6 +147,31 @@ public class UserService {
         user.setPassword(hash);
 
         userRepository.save(user);
+    }
+
+    /**
+     * Enable User To Worker Service
+     * @param id the user id.
+     * @return the user.
+     * @throws NullPointerException {@code id} is {@literal null}.
+     * @throws EntityNotFoundException if user not exist.
+     */
+    @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN', 'WORKER_MANAGER')")
+    public User enableWorker(@NotNull Long id) {
+        User user = userRepository.findById(Optional.of(id).get())
+                .orElseThrow(EntityNotFoundException::new);
+
+        for (Role role : user.getAuthorities()) {
+            if ("ROLE_WORKER".equals(role.getRole())) {
+                return user;
+            }
+        }
+
+        user.getAuthorities().add(roleRepository.findByRole("ROLE_WORKER")
+                .orElseThrow(EntityNotFoundException::new));
+
+        return userRepository.save(user);
     }
 
     /**
