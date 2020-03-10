@@ -107,4 +107,45 @@ public class WorkerController {
 
         return response;
     }
+
+    /**
+     * Set Or Unset User To Worker Api
+     * @param request {
+     *      "id": user id: int[must],
+     *      "operation": true is set, false is unset: bool[must]
+     * }
+     * @return {
+     *     "status": 1,
+     *     "message": message: str,
+     *     "data": user info: object
+     * }
+     * @throws MissingServletRequestParameterException {@code id} or {@code operation} is {@literal null}
+     */
+    @PostMapping("/set")
+    public JSONObject setWorker(@RequestBody JSONObject request)
+            throws MissingServletRequestParameterException {
+        JSONObject response = new JSONObject();
+
+        Long id = Optional.ofNullable(request.getLong("id"))
+                .orElseThrow(() -> new MissingServletRequestParameterException("id", "int"));
+        Boolean set = Optional.ofNullable(request.getBoolean("operation")).orElseThrow(
+                () -> new MissingServletRequestParameterException("operation", "bool"));
+
+        try {
+            if (set) {
+                response.put("data", userService.enableWorker(id));
+                response.put("message", "设置用户为员工成功");
+            } else {
+                response.put("data", userService.disableWorker(id));
+                response.put("message", "取消用户员工身份成功");
+            }
+            response.put("status", 1);
+
+        } catch (EntityNotFoundException e) {
+            response.put("status", 0);
+            response.put("message", "Id为：" + id + "的用户不存在");
+        }
+
+        return response;
+    }
 }
