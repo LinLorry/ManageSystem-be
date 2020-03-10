@@ -89,6 +89,22 @@ public class UserServiceTest {
     }
 
     @Test
+    public void disableWorker() {
+        Long id = testUtil.nextId(User.class);
+        User user = userService.disableWorker(id);
+
+        boolean isWorker = false;
+        for (Role role : user.getAuthorities()) {
+            if ("ROLE_WORKER".equals(role.getRole())) {
+                isWorker = true;
+                break;
+            }
+        }
+
+        assertFalse(isWorker);
+    }
+
+    @Test
     public void disableAndEnable() {
         Long id = testUtil.nextId(User.class);
 

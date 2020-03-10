@@ -175,6 +175,24 @@ public class UserService {
     }
 
     /**
+     * Disable User From Worker Service
+     * @param id the user id.
+     * @return the user.
+     * @throws NullPointerException {@code id} is {@literal null}.
+     * @throws EntityNotFoundException if user not exist.
+     */
+    @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN', 'WORKER_MANAGER')")
+    public User disableWorker(@NotNull Long id) {
+        User user = userRepository.findById(Optional.of(id).get())
+                .orElseThrow(EntityNotFoundException::new);
+
+        user.getAuthorities().removeIf(role -> "ROLE_WORKER".equals(role.getRole()));
+
+        return userRepository.save(user);
+    }
+
+    /**
      * Load Users Service
      * @param likeMap {
      *      "the user field": value will be equal by "%value%"
