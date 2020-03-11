@@ -61,7 +61,7 @@ public class WechatController {
      * }
      */
     @GetMapping("/user")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'WORKER_MANAGER')")
     public JSONObject getWechatUser(
             @RequestParam(required = false) String id,
             @RequestParam(required = false) String name,
