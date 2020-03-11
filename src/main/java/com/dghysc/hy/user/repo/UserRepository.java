@@ -20,6 +20,6 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
 
     boolean existsByUsername(String username);
 
-    @Query("SELECT users FROM Role role join role.users users")
+    @Query("SELECT users FROM Role role inner join role.users users where role.role = :role")
     Page<User> loadAllByRole(String role, Pageable pageable);
 }
