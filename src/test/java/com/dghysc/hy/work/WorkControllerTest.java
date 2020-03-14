@@ -2,7 +2,9 @@ package com.dghysc.hy.work;
 
 import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.util.TestUtil;
+import com.dghysc.hy.work.model.Process;
 import com.dghysc.hy.work.model.Work;
+import com.dghysc.hy.work.repo.ProcessRepository;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +14,9 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.Assert.*;
 
@@ -27,11 +32,21 @@ public class WorkControllerTest {
     @Autowired
     private TestUtil testUtil;
 
+    @Autowired
+    private ProcessRepository processRepository;
+
     @Test
     public void create() {
+        Set<Integer> processIds = new HashSet<>();
+
+        while (processIds.size() != processRepository.count() && processIds.size() < 3) {
+            processIds.add(testUtil.nextId(Process.class));
+        }
+
         JSONObject requestBody = new JSONObject();
         requestBody.put("name", testUtil.nextString());
         requestBody.put("comment", testUtil.nextString());
+        requestBody.put("processes", processIds);
 
         HttpEntity<JSONObject> request = new HttpEntity<>(requestBody, testUtil.getTokenHeader());
 
