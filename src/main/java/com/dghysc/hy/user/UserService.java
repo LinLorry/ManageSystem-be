@@ -256,6 +256,10 @@ public class UserService {
         return userRepository.loadAllByRoleAndEnable("ROLE_WORKER", PageRequest.of(pageNumber, pageSize));
     }
 
+    public boolean checkWorker(@NotNull Long userId) {
+        return userRepository.existsByRoleAndUserId("ROLE_WORKER", Optional.of(userId).get());
+    }
+
     /**
      * Get User Authentication Service
      * @param id the user id.

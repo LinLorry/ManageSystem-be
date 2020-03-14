@@ -22,4 +22,10 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
 
     @Query("SELECT user FROM Role role inner join role.users user where role.role = :role and user.disable = false")
     Page<User> loadAllByRoleAndEnable(String role, Pageable pageable);
+
+    @Query("SELECT CASE WHEN COUNT(user) > 0 THEN true ELSE false END " +
+            "FROM Role role " +
+            "INNER JOIN role.users user " +
+            "WHERE role.role = :role and user.id = :userId")
+    boolean existsByRoleAndUserId(String role, Long userId);
 }
