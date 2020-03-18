@@ -86,7 +86,7 @@ public class AdminCommandLineRunner implements CommandLineRunner {
             adminMenu = parentMenuRepository.save(adminMenu);
 
             roleManageMenu.setName("权限管理");
-            roleManageMenu.setUrl("/roleManage");
+            roleManageMenu.setUrl("/admin/roleManage");
             roleManageMenu.setLocation(0);
             roleManageMenu.setParent(adminMenu);
             roleManageMenu.setCreateUser(admin);
@@ -97,7 +97,7 @@ public class AdminCommandLineRunner implements CommandLineRunner {
             childMenuRepository.save(roleManageMenu);
 
             menuManageMenu.setName("菜单管理");
-            menuManageMenu.setUrl("/menuManage");
+            menuManageMenu.setUrl("/admin/menuManage");
             menuManageMenu.setLocation(1);
             menuManageMenu.setParent(adminMenu);
             menuManageMenu.setCreateUser(admin);
