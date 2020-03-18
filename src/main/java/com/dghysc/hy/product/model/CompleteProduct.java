@@ -34,6 +34,20 @@ public class CompleteProduct implements Serializable {
     @Column(unique = true, nullable = false, updatable = false)
     private String serial;
 
+    private String IGT;
+
+    private String ERP;
+
+    private String central;
+
+    private String area;
+
+    private String design;
+
+    private Timestamp beginTime;
+
+    private Timestamp demandTime;
+
     @Column(updatable = false)
     private Timestamp endTime;
 
@@ -75,11 +89,19 @@ public class CompleteProduct implements Serializable {
         Optional.of(product).ifPresent(p -> {
             Optional.of(p.getId()).ifPresent(this::setId);
             Optional.of(p.getSerial()).ifPresent(this::setSerial);
-            this.endTime = product.getEndTime();
-            Optional.of(p.getWork()).ifPresent(this::setWork);
-            Optional.of(p.getCreateTime()).ifPresent(this::setCreateTime);
-            Optional.of(p.getCreateUser()).ifPresent(this::setCreateUser);
+            this.IGT = p.getIGT();
+            this.ERP = p.getERP();
+            this.central = p.getCentral();
+            this.area = p.getArea();
+            this.design = p.getDesign();
+            this.beginTime = p.getBeginTime();
+            this.demandTime = p.getDemandTime();
+            this.endTime = p.getEndTime();
         });
+
+        Optional.of(product.getWork()).ifPresent(this::setWork);
+        Optional.of(product.getCreateTime()).ifPresent(this::setCreateTime);
+        Optional.of(product.getCreateUser()).ifPresent(this::setCreateUser);
 
         Optional.of(finisher).ifPresent(this::setUpdateUser);
         Optional.of(time).ifPresent(this::setUpdateTime);
@@ -99,6 +121,34 @@ public class CompleteProduct implements Serializable {
 
     private void setSerial(String serial) {
         this.serial = serial;
+    }
+
+    public String getIGT() {
+        return IGT;
+    }
+
+    public String getERP() {
+        return ERP;
+    }
+
+    public String getCentral() {
+        return central;
+    }
+
+    public String getArea() {
+        return area;
+    }
+
+    public String getDesign() {
+        return design;
+    }
+
+    public Timestamp getBeginTime() {
+        return beginTime;
+    }
+
+    public Timestamp getDemandTime() {
+        return demandTime;
     }
 
     public Timestamp getEndTime() {

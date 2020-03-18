@@ -32,6 +32,20 @@ public class Product implements Serializable {
     @Column(nullable = false, unique = true)
     private String serial;
 
+    private String IGT;
+
+    private String ERP;
+
+    private String central;
+
+    private String area;
+
+    private String design;
+
+    private Timestamp beginTime;
+
+    private Timestamp demandTime;
+
     private Timestamp endTime;
 
     @ManyToOne(optional = false)
@@ -97,6 +111,62 @@ public class Product implements Serializable {
 
     public void setSerial(String serial) {
         this.serial = serial;
+    }
+
+    public String getIGT() {
+        return IGT;
+    }
+
+    public void setIGT(String IGT) {
+        this.IGT = IGT;
+    }
+
+    public String getERP() {
+        return ERP;
+    }
+
+    public void setERP(String ERP) {
+        this.ERP = ERP;
+    }
+
+    public String getCentral() {
+        return central;
+    }
+
+    public void setCentral(String central) {
+        this.central = central;
+    }
+
+    public String getArea() {
+        return area;
+    }
+
+    public void setArea(String area) {
+        this.area = area;
+    }
+
+    public String getDesign() {
+        return design;
+    }
+
+    public void setDesign(String design) {
+        this.design = design;
+    }
+
+    public Timestamp getBeginTime() {
+        return beginTime;
+    }
+
+    public void setBeginTime(Timestamp beginTime) {
+        this.beginTime = beginTime;
+    }
+
+    public Timestamp getDemandTime() {
+        return demandTime;
+    }
+
+    public void setDemandTime(Timestamp demandTime) {
+        this.demandTime = demandTime;
     }
 
     public Timestamp getEndTime() {
