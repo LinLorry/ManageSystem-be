@@ -253,7 +253,11 @@ public class UserService {
      * @return the worker page.
      */
     public Page<User> loadALLWorkers(int pageNumber, int pageSize) {
-        return userRepository.loadAllByRole("ROLE_WORKER", PageRequest.of(pageNumber, pageSize));
+        return userRepository.loadAllByRoleAndEnable("ROLE_WORKER", PageRequest.of(pageNumber, pageSize));
+    }
+
+    public boolean checkWorker(@NotNull Long userId) {
+        return userRepository.existsByRoleAndUserId("ROLE_WORKER", Optional.of(userId).get());
     }
 
     /**

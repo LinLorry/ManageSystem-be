@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.work.model.Work;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityNotFoundException;
@@ -41,7 +42,8 @@ public class WorkController {
      * }
      */
     @PostMapping
-    public JSONObject createOrUpdate(@RequestBody JSONObject request) {
+    public JSONObject createOrUpdate(@RequestBody JSONObject request)
+            throws MissingServletRequestParameterException {
         JSONObject response = new JSONObject();
 
         Integer id = request.getInteger("id");
@@ -50,8 +52,11 @@ public class WorkController {
 
         try {
             if (id == null) {
-                // TODO 工序参数
-                response.put("data", workService.add(name, comment, new ArrayList<>()));
+                List<Integer> processes = Optional.ofNullable(request.getJSONArray("processes"))
+                        .orElseThrow(() -> new MissingServletRequestParameterException("processes", "array"))
+                        .toJavaList(Integer.TYPE);
+
+                response.put("data", workService.add(name, comment, processes));
                 response.put("message", "创建生产流程成功");
             } else {
                 response.put("data", workService.update(id, name, comment));
@@ -60,13 +65,17 @@ public class WorkController {
             response.put("status", 1);
         } catch (NullPointerException e) {
             response.put("status", 0);
-            response.put("message", "");
+            response.put("message", "名字不能为空");
         } catch (DataIntegrityViolationException e) {
             response.put("status", 0);
             response.put("message", "名称为" + name + "的生产流程已存在");
         } catch (EntityNotFoundException e) {
             response.put("status", 0);
-            response.put("message", "Id为" + id + "的生产流程不存在");
+            if (id == null) {
+                response.put("message", "工序不存在");
+            } else {
+                response.put("message", "Id为" + id + "的生产流程不存在");
+            }
         }
 
         return response;

@@ -108,6 +108,17 @@ public class WorkerController {
         return response;
     }
 
+    @GetMapping("/check")
+    public JSONObject checkWorker(@RequestParam Long id) {
+        JSONObject response = new JSONObject();
+
+        response.put("data", userService.checkWorker(id));
+        response.put("status", 1);
+        response.put("message", "Check Success");
+
+        return response;
+    }
+
     /**
      * Set Or Unset User To Worker Api
      * @param request {
