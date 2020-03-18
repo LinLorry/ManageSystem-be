@@ -14,6 +14,7 @@ spring:
     hibernate:
       ddl-auto: update
     open-in-view: false
+    database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
   session:
     store-type: jdbc
   datasource:
