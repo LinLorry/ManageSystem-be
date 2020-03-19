@@ -1,9 +1,7 @@
 package com.dghysc.hy.product;
 
-import com.dghysc.hy.product.model.CompleteProduct;
 import com.dghysc.hy.product.model.Product;
 import com.dghysc.hy.product.model.ProductProcess;
-import com.dghysc.hy.product.rep.CompleteProductRepository;
 import com.dghysc.hy.product.rep.ProductProcessRepository;
 import com.dghysc.hy.product.rep.ProductRepository;
 import com.dghysc.hy.user.model.User;
@@ -43,20 +41,16 @@ public class ProductService {
 
     private final ProductProcessRepository productProcessRepository;
 
-    private final CompleteProductRepository completeProductRepository;
-
     public ProductService(
             UserProcessRepository userProcessRepository,
             WorkRepository workRepository,
             ProductRepository productRepository,
-            ProductProcessRepository productProcessRepository,
-            CompleteProductRepository completeProductRepository
+            ProductProcessRepository productProcessRepository
     ) {
         this.userProcessRepository = userProcessRepository;
         this.workRepository = workRepository;
         this.productRepository = productRepository;
         this.productProcessRepository = productProcessRepository;
-        this.completeProductRepository = completeProductRepository;
     }
 
     /**
@@ -69,11 +63,24 @@ public class ProductService {
      * @throws EntityNotFoundException if work id is {@code workId} not exist
      */
     @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
-    Product add(@NotNull String serial, @Nullable Timestamp endTime, @NotNull Integer workId) {
+    Product add(
+            @NotNull String serial, @Nullable String IGT,
+            @Nullable String ERP, @Nullable String central,
+            @Nullable String area, @Nullable String design,
+            @Nullable Timestamp beginTime, @Nullable Timestamp demandTime,
+            @Nullable Timestamp endTime, @NotNull Integer workId
+    ) {
         Work work = workRepository.findById(Optional.of(workId).get())
                 .orElseThrow(EntityNotFoundException::new);
         Product product = new Product(serial, work, SecurityUtil.getUser());
 
+        product.setIGT(IGT);
+        product.setERP(ERP);
+        product.setCentral(central);
+        product.setArea(area);
+        product.setDesign(design);
+        product.setBeginTime(beginTime);
+        product.setDemandTime(demandTime);
         product.setEndTime(endTime);
 
         return productRepository.save(product);
@@ -87,7 +94,13 @@ public class ProductService {
      * @return the product.
      */
     @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
-    Product update(@NotNull Long id, @Nullable String serial, @Nullable Timestamp endTime) {
+    Product update(
+            @NotNull Long id, @Nullable String serial,
+            @Nullable String IGT, @Nullable String ERP,
+            @Nullable String central, @Nullable String area,
+            @Nullable String design, @Nullable Timestamp beginTime,
+            @Nullable Timestamp demandTime, @Nullable Timestamp endTime
+    ) {
         Timestamp now = new Timestamp(System.currentTimeMillis());
         User updater = SecurityUtil.getUser();
 
@@ -95,6 +108,14 @@ public class ProductService {
                 .orElseThrow(EntityNotFoundException::new);
 
         Optional.ofNullable(serial).ifPresent(product::setSerial);
+        Optional.ofNullable(IGT).ifPresent(product::setIGT);
+        Optional.ofNullable(ERP).ifPresent(product::setERP);
+        Optional.ofNullable(central).ifPresent(product::setCentral);
+        Optional.ofNullable(area).ifPresent(product::setArea);
+        Optional.ofNullable(design).ifPresent(product::setDesign);
+        Optional.ofNullable(beginTime).ifPresent(product::setBeginTime);
+        Optional.ofNullable(demandTime).ifPresent(product::setDemandTime);
+
         Optional.ofNullable(endTime).ifPresent(product::setEndTime);
         product.setUpdateUser(updater);
         product.setUpdateTime(now);
@@ -158,13 +179,15 @@ public class ProductService {
         Product product = productRepository.findById(Optional.of(id).get())
                 .orElseThrow(EntityNotFoundException::new);
 
-        if (product.getProductProcesses().size() !=
+        if (product.isComplete()) {
+            return true;
+        } else if (product.getProductProcesses().size() !=
                 product.getWork().getWorkProcesses().size()) {
             return false;
         }
 
-        completeProductRepository.save(new CompleteProduct(product, SecurityUtil.getUser()));
-        productRepository.deleteById(id);
+        product.setComplete();
+        productRepository.save(product);
 
         return true;
     }
@@ -179,36 +202,16 @@ public class ProductService {
      * @return the page of query result.
      */
     @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
-    Page<Product> load(Map<String, Object> likeMap, int pageNumber, int pageSize) {
+    Page<Product> load(Map<String, Object> likeMap, boolean complete, int pageNumber, int pageSize) {
 
         SpecificationUtil specificationUtil = new SpecificationUtil();
 
         specificationUtil.addLikeMap(likeMap);
+        specificationUtil.addEqualMap("complete", complete);
 
         Specification<Product> specification = specificationUtil.getSpecification();
 
         return productRepository.findAll(specification, PageRequest.of(pageNumber, pageSize));
-    }
-
-    /**
-     * Load Complete Product By Its Field
-     * @param likeMap {
-     *     "the complete product field": value will be equal by "%value%"
-     * }
-     * @param pageNumber page number.
-     * @param pageSize page size.
-     * @return the page of query result.
-     */
-    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
-    Page<CompleteProduct> loadComplete(Map<String, Object> likeMap, int pageNumber, int pageSize) {
-
-        SpecificationUtil specificationUtil = new SpecificationUtil();
-
-        specificationUtil.addLikeMap(likeMap);
-
-        Specification<CompleteProduct> specification = specificationUtil.getSpecification();
-
-        return completeProductRepository.findAll(specification, PageRequest.of(pageNumber, pageSize));
     }
 
     /**
@@ -223,17 +226,6 @@ public class ProductService {
     }
 
     /**
-     * Load Complete Product By Id Service
-     * @param id the complete product id.
-     * @return the complete product.
-     * @throws EntityNotFoundException if the complete product isn't exist throw this exception.
-     */
-    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
-    CompleteProduct loadCompleteById(@NotNull Long id) {
-        return completeProductRepository.findById(Optional.of(id).get()).orElseThrow(EntityNotFoundException::new);
-    }
-
-    /**
      * Load Product With Work And Processes By Id
      * @param id the product id.
      * @return the product with its work and processes.
@@ -243,24 +235,6 @@ public class ProductService {
     @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER', 'WORKER')")
     public Product loadWithProcessesById(@NotNull Long id) {
         Product product = productRepository.findById(Optional.of(id).get())
-                .orElseThrow(EntityNotFoundException::new);
-
-        product.getProductProcesses().size();
-        product.getWork().getWorkProcesses().size();
-
-        return product;
-    }
-
-    /**
-     * Load Complete Product With Work And Processes By Id
-     * @param id the complete product id.
-     * @return the complete product with its work and processes.
-     * @throws EntityNotFoundException if the complete product isn't exist throw this exception.
-     */
-    @Transactional(readOnly = true)
-    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
-    public CompleteProduct loadCompleteWithProcessesById(@NotNull Long id) {
-        CompleteProduct product = completeProductRepository.findById(Optional.of(id).get())
                 .orElseThrow(EntityNotFoundException::new);
 
         product.getProductProcesses().size();

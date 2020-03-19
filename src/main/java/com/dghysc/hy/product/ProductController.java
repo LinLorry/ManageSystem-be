@@ -1,7 +1,6 @@
 package com.dghysc.hy.product;
 
 import com.alibaba.fastjson.JSONObject;
-import com.dghysc.hy.product.model.CompleteProduct;
 import com.dghysc.hy.product.model.Product;
 import com.dghysc.hy.product.model.ProductProcess;
 import com.dghysc.hy.work.model.WorkProcess;
@@ -50,16 +49,38 @@ public class ProductController {
 
         Long id = request.getLong("id");
         String serial = request.getString("serial");
+
+        String IGT = request.getString("IGT");
+        String ERP = request.getString("ERP");
+        String central = request.getString("central");
+        String area = request.getString("area");
+        String design = request.getString("design");
+        Timestamp beginTime = request.getTimestamp("beginTime");
+        Timestamp demandTime = request.getTimestamp("demandTime");
         Timestamp endTime = request.getTimestamp("endTime");
         Integer workId = null;
 
         try {
             if (id == null) {
                 workId = request.getInteger("workId");
-                response.put("data", productService.add(serial, endTime, workId));
+
+                response.put("data", productService.add(
+                        serial, IGT, ERP,
+                        central, area, design,
+                        beginTime, demandTime, endTime,
+                        workId
+                ));
+
                 response.put("message", "创建订单成功");
             } else {
-                response.put("data", productService.update(id, serial, endTime));
+
+                response.put("data", productService.update(
+                        id, serial, IGT,
+                        ERP, central, area,
+                        design, beginTime, demandTime,
+                        endTime
+                ));
+
                 response.put("message", "修改订单成功");
             }
             response.put("status", 1);
@@ -120,53 +141,31 @@ public class ProductController {
     ) {
         JSONObject response = new JSONObject();
 
-        if (!complete) {
-            if (id != null) {
-                try {
-                    if (withProcesses) {
-                        response.put("data", formatProduct(productService.loadWithProcessesById(id)));
-                    } else {
-                        response.put("data", productService.loadById(id));
-                    }
-
-                    response.put("message", "获取订单成功");
-                } catch (EntityNotFoundException e) {
-                    response.put("message", "Id为" + id + "的订单不存在");
-                }
-            } else {
-                Map<String, Object> likeMap = new HashMap<>();
-                Optional.ofNullable(serial).ifPresent(s -> likeMap.put("serial", s));
-
-                if (create) {
-                    response.put("data", getAccordProducts(likeMap, true, accord, pageNumber, pageSize));
-                } else if (end) {
-                    response.put("data", getAccordProducts(likeMap, false, accord, pageNumber, pageSize));
+        if (id != null) {
+            try {
+                if (withProcesses) {
+                    response.put("data", formatProduct(productService.loadWithProcessesById(id)));
                 } else {
-                    response.put("data", formatPage(productService.load(likeMap, pageNumber, pageSize)));
+                    response.put("data", productService.loadById(id));
                 }
 
                 response.put("message", "获取订单成功");
+            } catch (EntityNotFoundException e) {
+                response.put("message", "Id为" + id + "的订单不存在");
             }
         } else {
-            if (id == null) {
-                Map<String, Object> likeMap = new HashMap<>();
-                Optional.ofNullable(serial).ifPresent(s -> likeMap.put("serial", s));
+            Map<String, Object> likeMap = new HashMap<>();
+            Optional.ofNullable(serial).ifPresent(s -> likeMap.put("serial", s));
 
-                response.put("data", formatPage(productService.loadComplete(likeMap, pageNumber, pageSize)));
-                response.put("message", "获取订单成功");
+            if (create) {
+                response.put("data", getAccordProducts(likeMap, true, accord, pageNumber, pageSize));
+            } else if (end) {
+                response.put("data", getAccordProducts(likeMap, false, accord, pageNumber, pageSize));
             } else {
-                try {
-                    if (withProcesses) {
-                        response.put("data", formatProduct(productService.loadCompleteWithProcessesById(id)));
-                    } else {
-                        response.put("data", productService.loadCompleteById(id));
-                    }
-
-                    response.put("message", "获取订单成功");
-                } catch (EntityNotFoundException e) {
-                    response.put("message", "Id为" + id + "的订单不存在");
-                }
+                response.put("data", formatPage(productService.load(likeMap, complete, pageNumber, pageSize)));
             }
+
+            response.put("message", "获取订单成功");
         }
 
         response.put("status", 1);
@@ -208,25 +207,15 @@ public class ProductController {
 
     @GetMapping("/processes")
     @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
-    public JSONObject getProcesses(@RequestParam Long id,
-                                   @RequestParam(defaultValue = "0") boolean complete) {
+    public JSONObject getProcesses(@RequestParam Long id) {
         JSONObject response = new JSONObject();
 
-        if (complete) {
-            CompleteProduct completeProduct = productService.loadCompleteWithProcessesById(id);
+        Product product = productService.loadWithProcessesById(id);
 
-            response.put("data", formatProcessesWithDetail(
-                    completeProduct.getWork().getWorkProcesses(),
-                    completeProduct.getProductProcesses()
-            ));
-        } else {
-            Product product = productService.loadWithProcessesById(id);
-
-            response.put("data", formatProcessesWithDetail(
-                    product.getWork().getWorkProcesses(),
-                    product.getProductProcesses()
-            ));
-        }
+        response.put("data", formatProcessesWithDetail(
+                product.getWork().getWorkProcesses(),
+                product.getProductProcesses()
+        ));
 
         response.put("status", 1);
         response.put("message", "获取工序完成情况成");
@@ -269,21 +258,13 @@ public class ProductController {
 
         data.put("id", product.getId());
         data.put("serial", product.getSerial());
-        data.put("endTime", product.getEndTime());
-        data.put("workName", product.getWorkName());
-
-        data.put("processes", formatProcesses(
-                product.getWork().getWorkProcesses(), product.getProductProcesses()
-        ));
-
-        return data;
-    }
-
-    private JSONObject formatProduct(CompleteProduct product) {
-        JSONObject data = new JSONObject();
-
-        data.put("id", product.getId());
-        data.put("serial", product.getSerial());
+        data.put("IGT", product.getIGT());
+        data.put("ERP", product.getERP());
+        data.put("central", product.getCentral());
+        data.put("area", product.getArea());
+        data.put("design", product.getDesign());
+        data.put("beginTime", product.getBeginTime());
+        data.put("demandTime", product.getDemandTime());
         data.put("endTime", product.getEndTime());
         data.put("workName", product.getWorkName());
 

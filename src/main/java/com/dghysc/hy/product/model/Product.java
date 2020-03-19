@@ -29,17 +29,22 @@ public class Product implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, columnDefinition = "char(8)")
     private String serial;
 
+    @Column(length = 32)
     private String IGT;
 
+    @Column(length = 32)
     private String ERP;
 
+    @Column(length = 32)
     private String central;
 
+    @Column(length = 64)
     private String area;
 
+    @Column(length = 32)
     private String design;
 
     private Timestamp beginTime;
@@ -75,6 +80,10 @@ public class Product implements Serializable {
     @NotFound(action = NotFoundAction.IGNORE)
     @JsonIgnore
     private User updateUser;
+
+    @JsonIgnore
+    @Column(nullable = false, columnDefinition = "Boolean default false")
+    private Boolean complete = false;
 
     public Product() { }
 
@@ -211,6 +220,18 @@ public class Product implements Serializable {
 
     public void setUpdateUser(User updateUser) {
         this.updateUser = updateUser;
+    }
+
+    public Boolean isComplete() {
+        return complete;
+    }
+
+    public void setComplete() {
+        this.complete = true;
+    }
+
+    public void setUnComplete() {
+        this.complete = false;
     }
 
     public Integer getWorkId() {

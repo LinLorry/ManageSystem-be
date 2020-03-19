@@ -1,7 +1,6 @@
 package com.dghysc.hy.product;
 
 import com.alibaba.fastjson.JSONObject;
-import com.dghysc.hy.product.model.CompleteProduct;
 import com.dghysc.hy.product.model.Product;
 import com.dghysc.hy.product.rep.ProductRepository;
 import com.dghysc.hy.util.TestUtil;
@@ -42,6 +41,10 @@ public class ProductControllerTest {
     @Before
     public void setUp() {
         testUtil.setAuthorities("ROLE_PRODUCT_MANAGER");
+
+        if (productRepository.count() == 0) {
+            create();
+        }
     }
 
     @Test
@@ -49,6 +52,13 @@ public class ProductControllerTest {
         JSONObject requestBody = new JSONObject();
 
         requestBody.put("serial", testUtil.nextString());
+        requestBody.put("IGT", testUtil.nextString());
+        requestBody.put("ERP", testUtil.nextString());
+        requestBody.put("central", testUtil.nextString());
+        requestBody.put("area", testUtil.nextString());
+        requestBody.put("design", testUtil.nextString());
+        requestBody.put("beginTime", new Timestamp(System.currentTimeMillis()));
+        requestBody.put("demandTime",  new Timestamp(System.currentTimeMillis()));
         requestBody.put("endTime", new Timestamp(System.currentTimeMillis() + 1000 * 60 * 60 * 28));
         requestBody.put("workId", testUtil.nextId(Work.class));
 
@@ -67,6 +77,13 @@ public class ProductControllerTest {
 
         requestBody.put("id", testUtil.nextId(Product.class));
         requestBody.put("serial", testUtil.nextString());
+        requestBody.put("IGT", testUtil.nextString());
+        requestBody.put("ERP", testUtil.nextString());
+        requestBody.put("central", testUtil.nextString());
+        requestBody.put("area", testUtil.nextString());
+        requestBody.put("design", testUtil.nextString());
+        requestBody.put("beginTime", new Timestamp(System.currentTimeMillis()));
+        requestBody.put("demandTime",  new Timestamp(System.currentTimeMillis()));
         requestBody.put("endTime", new Timestamp(System.currentTimeMillis()));
 
         HttpEntity<JSONObject> request = new HttpEntity<>(requestBody, testUtil.getTokenHeader());
@@ -92,38 +109,6 @@ public class ProductControllerTest {
         assertNotNull(response.getJSONObject("data").getInteger("total"));
 
         url += "?id=" + testUtil.nextId(Product.class);
-
-        responseEntity = restTemplate.exchange(
-                url, HttpMethod.GET, request, JSONObject.class
-        );
-
-        checkResponse(responseEntity);
-
-        url += "&withProcesses=1";
-        responseEntity = restTemplate.exchange(
-                url, HttpMethod.GET, request, JSONObject.class
-        );
-
-        response = checkResponse(responseEntity);
-        JSONObject product = response.getJSONObject("data");
-        assertNotNull(product);
-        assertNotNull(product.get("processes"));
-    }
-
-    @Test
-    public void getComplete() {
-        String url = baseUrl + "?complete=1";
-
-        HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
-
-        ResponseEntity<JSONObject> responseEntity = restTemplate
-                .exchange(url, HttpMethod.GET, request, JSONObject.class);
-
-        JSONObject response = checkResponse(responseEntity);
-        assertNotNull(response.getJSONObject("data"));
-        assertNotNull(response.getJSONObject("data").getInteger("total"));
-
-        url += "&id=" + testUtil.nextId(CompleteProduct.class);
 
         responseEntity = restTemplate.exchange(
                 url, HttpMethod.GET, request, JSONObject.class
@@ -232,16 +217,6 @@ public class ProductControllerTest {
         HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
 
         ResponseEntity<JSONObject> responseEntity = restTemplate
-                .exchange(url, HttpMethod.GET, request, JSONObject.class);
-
-        checkResponse(responseEntity);
-
-        id = testUtil.nextId(CompleteProduct.class);
-        url = baseUrl + "?complete=1&id=" + id;
-
-        request = new HttpEntity<>(testUtil.getTokenHeader());
-
-        responseEntity = restTemplate
                 .exchange(url, HttpMethod.GET, request, JSONObject.class);
 
         checkResponse(responseEntity);
