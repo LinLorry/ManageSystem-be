@@ -207,7 +207,9 @@ public class ProductController {
 
     /**
      * Complete Product Api
-     * @param id the product id.
+     * @param request {
+     *     "id": the product id: int
+     * }
      * @return if product exist and finish success return {
      *     "status": 1,
      *     "message": "Finish product success."
@@ -218,8 +220,12 @@ public class ProductController {
      */
     @PostMapping("/complete")
     @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
-    public JSONObject complete(@RequestParam Long id) {
+    public JSONObject complete(@RequestBody JSONObject request)
+            throws MissingServletRequestParameterException {
         JSONObject response = new JSONObject();
+
+        Long id = Optional.ofNullable(request.getLong("id"))
+                .orElseThrow(() -> new MissingServletRequestParameterException("id", "int"));
 
         try {
             if (productService.complete(id)) {
