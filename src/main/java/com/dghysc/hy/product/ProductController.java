@@ -6,6 +6,7 @@ import com.dghysc.hy.product.model.ProductProcess;
 import com.dghysc.hy.work.model.WorkProcess;
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityNotFoundException;
@@ -169,6 +170,37 @@ public class ProductController {
         }
 
         response.put("status", 1);
+
+        return response;
+    }
+
+    /**
+     * Complete Product Process Api.
+     * @param request {
+     *     "id": the product id: int
+     * }
+     * @return {
+     *     "status": if success is 1 else 0,
+     *     "message": message: str
+     * }
+     * @throws MissingServletRequestParameterException the {@code id} is {@literal null}
+     */
+    @PostMapping("/completeProcess")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER', 'WORKER')")
+    public JSONObject completeProcesses(@RequestBody JSONObject request)
+            throws MissingServletRequestParameterException {
+        JSONObject response = new JSONObject();
+
+        Long id = Optional.ofNullable(request.getLong("id"))
+                .orElseThrow(() -> new MissingServletRequestParameterException("id", "int"));
+
+        if (productService.completeProcess(id)) {
+            response.put("status", 1);
+            response.put("message", "完成成功");
+        } else {
+            response.put("status", 0);
+            response.put("message", "完成该工序失败，你不能完成这个工序或该工序已经完成");
+        }
 
         return response;
     }

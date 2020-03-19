@@ -178,6 +178,24 @@ public class ProductControllerTest {
         }
     }
 
+    @Test
+    public void completeProcess() {
+        testUtil.setAuthorities("ROLE_WORKER");
+        final String url = baseUrl + "/completeProcess";
+        JSONObject requestBody = new JSONObject();
+
+        requestBody.put("id", testUtil.nextId(Product.class));
+
+        HttpEntity<JSONObject> request = new HttpEntity<>(requestBody, testUtil.getTokenHeader());
+
+        ResponseEntity<JSONObject> responseEntity = restTemplate.exchange(
+                url, HttpMethod.POST, request, JSONObject.class
+        );
+
+        assert responseEntity.getBody() != null;
+        JSONObject responseBody = responseEntity.getBody();
+        System.out.println(responseBody);
+    }
 
     @Test
     @Transactional(readOnly = true)
