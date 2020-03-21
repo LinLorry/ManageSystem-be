@@ -5,6 +5,7 @@ import com.dghysc.hy.product.model.Product;
 import com.dghysc.hy.product.model.ProductProcess;
 import com.dghysc.hy.work.model.WorkProcess;
 import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
@@ -133,12 +134,18 @@ public class ProductController {
     public JSONObject get(
             @RequestParam(required = false) Long id,
             @RequestParam(required = false) String serial,
-            @RequestParam(required = false) Timestamp beginTimeAfter,
-            @RequestParam(required = false) Timestamp beginTimeBefore,
-            @RequestParam(required = false) Timestamp demandTimeAfter,
-            @RequestParam(required = false) Timestamp demandTimeBefore,
-            @RequestParam(required = false) Timestamp endTimeAfter,
-            @RequestParam(required = false) Timestamp endTimeBefore,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            @RequestParam(required = false) Date beginTimeAfter,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            @RequestParam(required = false) Date beginTimeBefore,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            @RequestParam(required = false) Date demandTimeAfter,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            @RequestParam(required = false) Date demandTimeBefore,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            @RequestParam(required = false) Date endTimeAfter,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            @RequestParam(required = false) Date endTimeBefore,
             @RequestParam(defaultValue = "0") int accord,
             @RequestParam(defaultValue = "0") boolean create,
             @RequestParam(defaultValue = "0") boolean end,
