@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 
 import static org.junit.Assert.*;
 import static com.dghysc.hy.util.TestUtil.checkResponse;
@@ -50,6 +51,7 @@ public class ProductControllerTest {
     @Test
     public void create() {
         JSONObject requestBody = new JSONObject();
+        LocalDate today = LocalDate.now();
 
         requestBody.put("serial", testUtil.nextString());
         requestBody.put("IGT", testUtil.nextString());
@@ -57,9 +59,9 @@ public class ProductControllerTest {
         requestBody.put("central", testUtil.nextString());
         requestBody.put("area", testUtil.nextString());
         requestBody.put("design", testUtil.nextString());
-        requestBody.put("beginTime", new Timestamp(System.currentTimeMillis()));
-        requestBody.put("demandTime",  new Timestamp(System.currentTimeMillis()));
-        requestBody.put("endTime", new Timestamp(System.currentTimeMillis() + 1000 * 60 * 60 * 28));
+        requestBody.put("beginTime", Timestamp.valueOf(today.plusDays(-testUtil.nextInt(365)).atStartOfDay()));
+        requestBody.put("demandTime", Timestamp.valueOf(today.plusDays(testUtil.nextInt(365)).atStartOfDay()));
+        requestBody.put("endTime", Timestamp.valueOf(today.plusDays(testUtil.nextInt(365)).atStartOfDay()));
         requestBody.put("workId", testUtil.nextId(Work.class));
 
         HttpEntity<JSONObject> request = new HttpEntity<>(requestBody, testUtil.getTokenHeader());
@@ -74,6 +76,7 @@ public class ProductControllerTest {
     @Test
     public void update() {
         JSONObject requestBody = new JSONObject();
+        LocalDate today = LocalDate.now();
 
         requestBody.put("id", testUtil.nextId(Product.class));
         requestBody.put("serial", testUtil.nextString());
@@ -82,9 +85,9 @@ public class ProductControllerTest {
         requestBody.put("central", testUtil.nextString());
         requestBody.put("area", testUtil.nextString());
         requestBody.put("design", testUtil.nextString());
-        requestBody.put("beginTime", new Timestamp(System.currentTimeMillis()));
-        requestBody.put("demandTime",  new Timestamp(System.currentTimeMillis()));
-        requestBody.put("endTime", new Timestamp(System.currentTimeMillis()));
+        requestBody.put("beginTime", Timestamp.valueOf(today.plusDays(-testUtil.nextInt(365)).atStartOfDay()));
+        requestBody.put("demandTime", Timestamp.valueOf(today.plusDays(testUtil.nextInt(365)).atStartOfDay()));
+        requestBody.put("endTime", Timestamp.valueOf(today.plusDays(testUtil.nextInt(365)).atStartOfDay()));
 
         HttpEntity<JSONObject> request = new HttpEntity<>(requestBody, testUtil.getTokenHeader());
 

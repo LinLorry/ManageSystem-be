@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Comparator;
 
@@ -70,15 +71,17 @@ public class ProductServiceTest {
 
     @Test
     public void add() {
+        LocalDate today = LocalDate.now();
+
         String serial = testUtil.nextString();
         String IGT = testUtil.nextString();
         String ERP = testUtil.nextString();
         String central = testUtil.nextString();
         String area = testUtil.nextString();
         String design = testUtil.nextString();
-        Timestamp beginTime = new Timestamp(System.currentTimeMillis());
-        Timestamp demandTime = new Timestamp(System.currentTimeMillis());
-        Timestamp endTime = new Timestamp(System.currentTimeMillis());
+        Timestamp beginTime = Timestamp.valueOf(today.plusDays(-testUtil.nextInt(365)).atStartOfDay());
+        Timestamp demandTime = Timestamp.valueOf(today.plusDays(testUtil.nextInt(365)).atStartOfDay());
+        Timestamp endTime = Timestamp.valueOf(today.plusDays(testUtil.nextInt(365)).atStartOfDay());
         Integer workId = testUtil.nextId(Work.class);
 
         Product product = productService.add(
@@ -94,6 +97,8 @@ public class ProductServiceTest {
 
     @Test
     public void update() {
+        LocalDate today = LocalDate.now();
+
         Long id = testUtil.nextId(Product.class);
         String serial = testUtil.nextString();
         String IGT = testUtil.nextString();
@@ -101,9 +106,9 @@ public class ProductServiceTest {
         String central = testUtil.nextString();
         String area = testUtil.nextString();
         String design = testUtil.nextString();
-        Timestamp beginTime = new Timestamp(System.currentTimeMillis());
-        Timestamp demandTime = new Timestamp(System.currentTimeMillis());
-        Timestamp endTime = new Timestamp(System.currentTimeMillis());
+        Timestamp beginTime = Timestamp.valueOf(today.plusDays(-testUtil.nextInt(365)).atStartOfDay());
+        Timestamp demandTime = Timestamp.valueOf(today.plusDays(testUtil.nextInt(365)).atStartOfDay());
+        Timestamp endTime = Timestamp.valueOf(today.plusDays(testUtil.nextInt(365)).atStartOfDay());
 
         Product product = productService.update(
                 id, serial, IGT,
