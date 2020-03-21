@@ -132,6 +132,12 @@ public class ProductController {
     public JSONObject get(
             @RequestParam(required = false) Long id,
             @RequestParam(required = false) String serial,
+            @RequestParam(required = false) Timestamp beginTimeAfter,
+            @RequestParam(required = false) Timestamp beginTimeBefore,
+            @RequestParam(required = false) Timestamp demandTimeAfter,
+            @RequestParam(required = false) Timestamp demandTimeBefore,
+            @RequestParam(required = false) Timestamp endTimeAfter,
+            @RequestParam(required = false) Timestamp endTimeBefore,
             @RequestParam(defaultValue = "0") int accord,
             @RequestParam(defaultValue = "0") boolean create,
             @RequestParam(defaultValue = "0") boolean end,
@@ -156,14 +162,26 @@ public class ProductController {
             }
         } else {
             Map<String, Object> likeMap = new HashMap<>();
+            Map<String, Date> dateGreaterMap = new HashMap<>();
+            Map<String, Date> dateLesserMap = new HashMap<>();
+
             Optional.ofNullable(serial).ifPresent(s -> likeMap.put("serial", s));
+
+            Optional.ofNullable(beginTimeAfter).ifPresent(t -> dateGreaterMap.put("beginTime", t));
+            Optional.ofNullable(beginTimeBefore).ifPresent(t -> dateLesserMap.put("beginTime", t));
+            Optional.ofNullable(demandTimeAfter).ifPresent(t -> dateGreaterMap.put("demandTime", t));
+            Optional.ofNullable(demandTimeBefore).ifPresent(t -> dateLesserMap.put("demandTime", t));
+            Optional.ofNullable(endTimeAfter).ifPresent(t -> dateGreaterMap.put("endTime", t));
+            Optional.ofNullable(endTimeBefore).ifPresent(t -> dateLesserMap.put("endTime", t));
 
             if (create) {
                 response.put("data", getAccordProducts(likeMap, true, accord, pageNumber, pageSize));
             } else if (end) {
                 response.put("data", getAccordProducts(likeMap, false, accord, pageNumber, pageSize));
             } else {
-                response.put("data", formatPage(productService.load(likeMap, complete, pageNumber, pageSize)));
+                response.put("data", formatPage(productService.load(
+                        likeMap, dateGreaterMap, dateLesserMap, complete, pageNumber, pageSize
+                )));
             }
 
             response.put("message", "获取订单成功");

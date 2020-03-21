@@ -16,6 +16,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.persistence.EntityNotFoundException;
 import java.sql.Timestamp;
@@ -128,6 +129,98 @@ public class ProductControllerTest {
         JSONObject product = response.getJSONObject("data");
         assertNotNull(product);
         assertNotNull(product.get("processes"));
+    }
+
+    @Test
+    public void conditionsGet() {
+        LocalDate today = LocalDate.now();
+
+        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(baseUrl);
+
+        builder.queryParam("beginTimeAfter", Timestamp.valueOf(
+                today.plusDays(-testUtil.nextInt(30)).atStartOfDay()
+        ));
+
+        builder.queryParam("beginTimeBefore", Timestamp.valueOf(
+                today.plusDays(testUtil.nextInt(30)).atStartOfDay()
+        ));
+
+        HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
+
+        ResponseEntity<JSONObject> responseEntity = restTemplate
+                .exchange(builder.build().toString(), HttpMethod.GET, request, JSONObject.class);
+
+        checkResponse(responseEntity);
+
+        builder = UriComponentsBuilder.fromUriString(baseUrl);
+        builder.queryParam("demandTimeAfter", Timestamp.valueOf(
+                today.plusDays(-testUtil.nextInt(365)).atStartOfDay()
+        ));
+
+        builder.queryParam("demandTimeBefore", Timestamp.valueOf(
+                today.plusDays(testUtil.nextInt(365)).atStartOfDay()
+        ));
+
+        responseEntity = restTemplate
+                .exchange(builder.build().toString(), HttpMethod.GET, request, JSONObject.class);
+        checkResponse(responseEntity);
+
+        builder = UriComponentsBuilder.fromUriString(baseUrl);
+        builder.queryParam("endTimeAfter", Timestamp.valueOf(
+                today.plusDays(-testUtil.nextInt(365)).atStartOfDay()
+        ));
+
+        builder.queryParam("endTimeBefore", Timestamp.valueOf(
+                today.plusDays(testUtil.nextInt(365)).atStartOfDay()
+        ));
+
+        responseEntity = restTemplate
+                .exchange(builder.build().toString(), HttpMethod.GET, request, JSONObject.class);
+        checkResponse(responseEntity);
+
+        builder = UriComponentsBuilder.fromUriString(baseUrl);
+
+        builder.queryParam("beginTimeAfter", Timestamp.valueOf(
+                today.plusDays(-testUtil.nextInt(30)).atStartOfDay()
+        ));
+
+        builder.queryParam("beginTimeBefore", Timestamp.valueOf(
+                today.plusDays(testUtil.nextInt(30)).atStartOfDay()
+        ));
+
+        builder.queryParam("demandTimeAfter", Timestamp.valueOf(
+                today.plusDays(-testUtil.nextInt(365)).atStartOfDay()
+        ));
+
+        builder.queryParam("demandTimeBefore", Timestamp.valueOf(
+                today.plusDays(testUtil.nextInt(365)).atStartOfDay()
+        ));
+
+        builder.queryParam("endTimeAfter", Timestamp.valueOf(
+                today.plusDays(-testUtil.nextInt(365)).atStartOfDay()
+        ));
+
+        builder.queryParam("endTimeBefore", Timestamp.valueOf(
+                today.plusDays(testUtil.nextInt(365)).atStartOfDay()
+        ));
+
+        responseEntity = restTemplate
+                .exchange(builder.build().toString(), HttpMethod.GET, request, JSONObject.class);
+        checkResponse(responseEntity);
+    }
+
+    @Test
+    public void getComplete() {
+        String url = baseUrl + "?complete=1";
+
+        HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
+
+        ResponseEntity<JSONObject> responseEntity = restTemplate
+                .exchange(url, HttpMethod.GET, request, JSONObject.class);
+
+        JSONObject response = checkResponse(responseEntity);
+        assertNotNull(response.getJSONObject("data"));
+        assertNotNull(response.getJSONObject("data").getInteger("total"));
     }
 
     @Test

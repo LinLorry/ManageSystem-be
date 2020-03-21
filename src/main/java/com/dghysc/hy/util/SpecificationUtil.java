@@ -45,7 +45,7 @@ public class SpecificationUtil {
     }
 
     public void addLessDateMap(Map<String, Date> dateMap) {
-        greaterDateMap.putAll(dateMap);
+        lessDateMap.putAll(dateMap);
     }
 
 

@@ -197,16 +197,29 @@ public class ProductService {
      * @param likeMap {
      *     "the product field": value will be equal by "%value%"
      * }
+     * @param dateGreaterMap {
+     *     "the product date field": value will be greater by "%value%"
+     * }
+     * @param dateLesserMap {
+     *     "the product date field": value will be lesser by "%value%"
+     * }
+     * @param complete load complete product or else.
      * @param pageNumber page number.
      * @param pageSize page size.
      * @return the page of query result.
      */
     @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
-    Page<Product> load(Map<String, Object> likeMap, boolean complete, int pageNumber, int pageSize) {
+    Page<Product> load(
+            @NotNull Map<String, Object> likeMap, @NotNull Map<String, Date> dateGreaterMap,
+            @NotNull Map<String, Date> dateLesserMap, boolean complete,
+            int pageNumber, int pageSize
+    ) {
 
         SpecificationUtil specificationUtil = new SpecificationUtil();
 
         specificationUtil.addLikeMap(likeMap);
+        specificationUtil.addGreaterDateMap(dateGreaterMap);
+        specificationUtil.addLessDateMap(dateLesserMap);
         specificationUtil.addEqualMap("complete", complete);
 
         Specification<Product> specification = specificationUtil.getSpecification();
