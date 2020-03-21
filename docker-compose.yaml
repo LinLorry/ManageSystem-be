@@ -11,3 +11,7 @@ services:
       - DATABASE_PWD=${DATABASE_PWD}
       - WECHAT_APPID=${WECHAT_APPID}
       - WECHAT_SECRET=${WECHAT_SECRET}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
