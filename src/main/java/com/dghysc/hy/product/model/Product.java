@@ -30,28 +30,28 @@ public class Product implements Serializable {
     private Long id;
 
     @Column(nullable = false, columnDefinition = "char(8)")
-    private String serial;
+    private String serial;              // Serial号
 
     @Column(length = 32)
-    private String IGT;
+    private String IGT;                 // IGT号
 
     @Column(length = 32)
-    private String ERP;
+    private String ERP;                 // ERP号
 
     @Column(length = 32)
-    private String central;
+    private String central;             // central号
 
     @Column(length = 64)
-    private String area;
+    private String area;                // 地区
 
     @Column(length = 32)
-    private String design;
+    private String design;              // 花色
 
-    private Timestamp beginTime;
+    private Timestamp beginTime;        // 下单时间
 
-    private Timestamp demandTime;
+    private Timestamp demandTime;       // 需求时间
 
-    private Timestamp endTime;
+    private Timestamp endTime;          // 发货时间
 
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false, updatable = false)
@@ -81,9 +81,8 @@ public class Product implements Serializable {
     @JsonIgnore
     private User updateUser;
 
-    @JsonIgnore
     @Column(nullable = false, columnDefinition = "Boolean default false")
-    private Boolean complete = false;
+    private Boolean complete = false;   // 订单是否完成标识
 
     public Product() { }
 
