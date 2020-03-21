@@ -10,6 +10,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityNotFoundException;
+import javax.validation.constraints.NotNull;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.*;
@@ -174,10 +175,8 @@ public class ProductController {
             Optional.ofNullable(endTimeAfter).ifPresent(t -> dateGreaterMap.put("endTime", t));
             Optional.ofNullable(endTimeBefore).ifPresent(t -> dateLesserMap.put("endTime", t));
 
-            if (create) {
-                response.put("data", getAccordProducts(likeMap, true, accord, pageNumber, pageSize));
-            } else if (end) {
-                response.put("data", getAccordProducts(likeMap, false, accord, pageNumber, pageSize));
+            if (create || end) {
+                response.put("data", getAccordProducts(likeMap, dateGreaterMap, dateLesserMap, create, accord, pageNumber, pageSize));
             } else {
                 response.put("data", formatPage(productService.load(
                         likeMap, dateGreaterMap, dateLesserMap, complete, pageNumber, pageSize
@@ -280,9 +279,9 @@ public class ProductController {
     }
 
     private JSONObject getAccordProducts(
-            Map<String, Object> likeMap,
-            boolean flag, int accord,
-            int pageNumber, int pageSize
+            @NotNull Map<String, Object> likeMap, @NotNull Map<String, Date> dateGreaterMap,
+            @NotNull Map<String, Date> dateLesserMap, boolean flag,
+            int accord, int pageNumber, int pageSize
     ) {
         LocalDate today = LocalDate.now().plusDays(accord);
 
@@ -290,14 +289,14 @@ public class ProductController {
         Timestamp tomorrowTimestamp = Timestamp.valueOf(today.plusDays(1).atStartOfDay());
 
         if (flag) {
-            return formatPage(productService.loadByCreateTimeInterval(
-                    todayTimestamp, tomorrowTimestamp, likeMap, pageNumber, pageSize
-            ));
+            dateGreaterMap.put("createTime", todayTimestamp);
+            dateLesserMap.put("createTime", tomorrowTimestamp);
         } else {
-            return formatPage(productService.loadByEndTimeInterval(
-                    todayTimestamp, tomorrowTimestamp, likeMap, pageNumber, pageSize
-            ));
+            dateGreaterMap.put("endTime", todayTimestamp);
+            dateLesserMap.put("endTime", tomorrowTimestamp);
         }
+
+        return formatPage(productService.load(likeMap, dateGreaterMap, dateLesserMap, false, pageNumber, pageSize));
     }
 
     private <T> JSONObject formatPage(Page<T> page) {
