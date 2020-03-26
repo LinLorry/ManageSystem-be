@@ -171,4 +171,16 @@ public class ProductServiceTest {
             assertFalse(result);
         }
     }
+
+    @Test
+    public void count() {
+        int count = productService.countNotStart();
+        System.out.println(count);
+
+        count = productService.countStart();
+        System.out.println(count);
+
+        count = productService.countCanComplete();
+        System.out.println(count);
+    }
 }

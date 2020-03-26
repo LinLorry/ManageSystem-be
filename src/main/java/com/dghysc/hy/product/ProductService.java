@@ -256,6 +256,21 @@ public class ProductService {
         return product;
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
+    public int countNotStart() {
+        return productRepository.countAllNotStart();
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
+    public int countStart() {
+        return productRepository.countALLStart();
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
+    public int countCanComplete() {
+        return productRepository.countAllCanComplete();
+    }
+
     /**
      * Load Products By Create Time Interval
      * @param after the product's create time after this.
