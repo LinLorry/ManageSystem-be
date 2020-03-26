@@ -41,13 +41,6 @@ public class ProductProcess implements Serializable {
     @JsonIgnore
     private Product product;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id",  nullable = false,
-            insertable = false, updatable = false)
-    @NotFound(action = NotFoundAction.IGNORE)
-    @JsonIgnore
-    private CompleteProduct completeProduct;
-
     @Id
     @ManyToOne(optional = false)
     @JoinColumn(name = "process_id", nullable = false,
@@ -104,16 +97,8 @@ public class ProductProcess implements Serializable {
         return product;
     }
 
-    public CompleteProduct getCompleteProduct() {
-        return completeProduct;
-    }
-
     public Process getProcess() {
         return process;
-    }
-
-    private void setProcess(Process process) {
-        this.process = process;
     }
 
     public User getFinisher() {

@@ -1,15 +1,17 @@
 package com.dghysc.hy.product;
 
 import com.alibaba.fastjson.JSONObject;
-import com.dghysc.hy.product.model.CompleteProduct;
 import com.dghysc.hy.product.model.Product;
 import com.dghysc.hy.product.model.ProductProcess;
 import com.dghysc.hy.work.model.WorkProcess;
 import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityNotFoundException;
+import javax.validation.constraints.NotNull;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.*;
@@ -50,16 +52,38 @@ public class ProductController {
 
         Long id = request.getLong("id");
         String serial = request.getString("serial");
+
+        String IGT = request.getString("IGT");
+        String ERP = request.getString("ERP");
+        String central = request.getString("central");
+        String area = request.getString("area");
+        String design = request.getString("design");
+        Timestamp beginTime = request.getTimestamp("beginTime");
+        Timestamp demandTime = request.getTimestamp("demandTime");
         Timestamp endTime = request.getTimestamp("endTime");
         Integer workId = null;
 
         try {
             if (id == null) {
                 workId = request.getInteger("workId");
-                response.put("data", productService.add(serial, endTime, workId));
+
+                response.put("data", productService.add(
+                        serial, IGT, ERP,
+                        central, area, design,
+                        beginTime, demandTime, endTime,
+                        workId
+                ));
+
                 response.put("message", "创建订单成功");
             } else {
-                response.put("data", productService.update(id, serial, endTime));
+
+                response.put("data", productService.update(
+                        id, serial, IGT,
+                        ERP, central, area,
+                        design, beginTime, demandTime,
+                        endTime
+                ));
+
                 response.put("message", "修改订单成功");
             }
             response.put("status", 1);
@@ -110,6 +134,18 @@ public class ProductController {
     public JSONObject get(
             @RequestParam(required = false) Long id,
             @RequestParam(required = false) String serial,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            @RequestParam(required = false) Date beginTimeAfter,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            @RequestParam(required = false) Date beginTimeBefore,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            @RequestParam(required = false) Date demandTimeAfter,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            @RequestParam(required = false) Date demandTimeBefore,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            @RequestParam(required = false) Date endTimeAfter,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            @RequestParam(required = false) Date endTimeBefore,
             @RequestParam(defaultValue = "0") int accord,
             @RequestParam(defaultValue = "0") boolean create,
             @RequestParam(defaultValue = "0") boolean end,
@@ -120,53 +156,41 @@ public class ProductController {
     ) {
         JSONObject response = new JSONObject();
 
-        if (!complete) {
-            if (id != null) {
-                try {
-                    if (withProcesses) {
-                        response.put("data", formatProduct(productService.loadWithProcessesById(id)));
-                    } else {
-                        response.put("data", productService.loadById(id));
-                    }
-
-                    response.put("message", "获取订单成功");
-                } catch (EntityNotFoundException e) {
-                    response.put("message", "Id为" + id + "的订单不存在");
-                }
-            } else {
-                Map<String, Object> likeMap = new HashMap<>();
-                Optional.ofNullable(serial).ifPresent(s -> likeMap.put("serial", s));
-
-                if (create) {
-                    response.put("data", getAccordProducts(likeMap, true, accord, pageNumber, pageSize));
-                } else if (end) {
-                    response.put("data", getAccordProducts(likeMap, false, accord, pageNumber, pageSize));
+        if (id != null) {
+            try {
+                if (withProcesses) {
+                    response.put("data", formatProduct(productService.loadWithProcessesById(id)));
                 } else {
-                    response.put("data", formatPage(productService.load(likeMap, pageNumber, pageSize)));
+                    response.put("data", productService.loadById(id));
                 }
 
                 response.put("message", "获取订单成功");
+            } catch (EntityNotFoundException e) {
+                response.put("message", "Id为" + id + "的订单不存在");
             }
         } else {
-            if (id == null) {
-                Map<String, Object> likeMap = new HashMap<>();
-                Optional.ofNullable(serial).ifPresent(s -> likeMap.put("serial", s));
+            Map<String, Object> likeMap = new HashMap<>();
+            Map<String, Date> dateGreaterMap = new HashMap<>();
+            Map<String, Date> dateLesserMap = new HashMap<>();
 
-                response.put("data", formatPage(productService.loadComplete(likeMap, pageNumber, pageSize)));
-                response.put("message", "获取订单成功");
+            Optional.ofNullable(serial).ifPresent(s -> likeMap.put("serial", s));
+
+            Optional.ofNullable(beginTimeAfter).ifPresent(t -> dateGreaterMap.put("beginTime", t));
+            Optional.ofNullable(beginTimeBefore).ifPresent(t -> dateLesserMap.put("beginTime", t));
+            Optional.ofNullable(demandTimeAfter).ifPresent(t -> dateGreaterMap.put("demandTime", t));
+            Optional.ofNullable(demandTimeBefore).ifPresent(t -> dateLesserMap.put("demandTime", t));
+            Optional.ofNullable(endTimeAfter).ifPresent(t -> dateGreaterMap.put("endTime", t));
+            Optional.ofNullable(endTimeBefore).ifPresent(t -> dateLesserMap.put("endTime", t));
+
+            if (create || end) {
+                response.put("data", getAccordProducts(likeMap, dateGreaterMap, dateLesserMap, create, accord, pageNumber, pageSize));
             } else {
-                try {
-                    if (withProcesses) {
-                        response.put("data", formatProduct(productService.loadCompleteWithProcessesById(id)));
-                    } else {
-                        response.put("data", productService.loadCompleteById(id));
-                    }
-
-                    response.put("message", "获取订单成功");
-                } catch (EntityNotFoundException e) {
-                    response.put("message", "Id为" + id + "的订单不存在");
-                }
+                response.put("data", formatPage(productService.load(
+                        likeMap, dateGreaterMap, dateLesserMap, complete, pageNumber, pageSize
+                )));
             }
+
+            response.put("message", "获取订单成功");
         }
 
         response.put("status", 1);
@@ -175,8 +199,41 @@ public class ProductController {
     }
 
     /**
+     * Complete Product Process Api.
+     * @param request {
+     *     "id": the product id: int
+     * }
+     * @return {
+     *     "status": if success is 1 else 0,
+     *     "message": message: str
+     * }
+     * @throws MissingServletRequestParameterException the {@code id} is {@literal null}
+     */
+    @PostMapping("/completeProcess")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER', 'WORKER')")
+    public JSONObject completeProcesses(@RequestBody JSONObject request)
+            throws MissingServletRequestParameterException {
+        JSONObject response = new JSONObject();
+
+        Long id = Optional.ofNullable(request.getLong("id"))
+                .orElseThrow(() -> new MissingServletRequestParameterException("id", "int"));
+
+        if (productService.completeProcess(id)) {
+            response.put("status", 1);
+            response.put("message", "完成成功");
+        } else {
+            response.put("status", 0);
+            response.put("message", "完成该工序失败，你不能完成这个工序或该工序已经完成");
+        }
+
+        return response;
+    }
+
+    /**
      * Complete Product Api
-     * @param id the product id.
+     * @param request {
+     *     "id": the product id: int
+     * }
      * @return if product exist and finish success return {
      *     "status": 1,
      *     "message": "Finish product success."
@@ -187,8 +244,12 @@ public class ProductController {
      */
     @PostMapping("/complete")
     @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
-    public JSONObject complete(@RequestParam Long id) {
+    public JSONObject complete(@RequestBody JSONObject request)
+            throws MissingServletRequestParameterException {
         JSONObject response = new JSONObject();
+
+        Long id = Optional.ofNullable(request.getLong("id"))
+                .orElseThrow(() -> new MissingServletRequestParameterException("id", "int"));
 
         try {
             if (productService.complete(id)) {
@@ -208,25 +269,15 @@ public class ProductController {
 
     @GetMapping("/processes")
     @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
-    public JSONObject getProcesses(@RequestParam Long id,
-                                   @RequestParam(defaultValue = "0") boolean complete) {
+    public JSONObject getProcesses(@RequestParam Long id) {
         JSONObject response = new JSONObject();
 
-        if (complete) {
-            CompleteProduct completeProduct = productService.loadCompleteWithProcessesById(id);
+        Product product = productService.loadWithProcessesById(id);
 
-            response.put("data", formatProcessesWithDetail(
-                    completeProduct.getWork().getWorkProcesses(),
-                    completeProduct.getProductProcesses()
-            ));
-        } else {
-            Product product = productService.loadWithProcessesById(id);
-
-            response.put("data", formatProcessesWithDetail(
-                    product.getWork().getWorkProcesses(),
-                    product.getProductProcesses()
-            ));
-        }
+        response.put("data", formatProcessesWithDetail(
+                product.getWork().getWorkProcesses(),
+                product.getProductProcesses()
+        ));
 
         response.put("status", 1);
         response.put("message", "获取工序完成情况成");
@@ -235,9 +286,9 @@ public class ProductController {
     }
 
     private JSONObject getAccordProducts(
-            Map<String, Object> likeMap,
-            boolean flag, int accord,
-            int pageNumber, int pageSize
+            @NotNull Map<String, Object> likeMap, @NotNull Map<String, Date> dateGreaterMap,
+            @NotNull Map<String, Date> dateLesserMap, boolean flag,
+            int accord, int pageNumber, int pageSize
     ) {
         LocalDate today = LocalDate.now().plusDays(accord);
 
@@ -245,14 +296,14 @@ public class ProductController {
         Timestamp tomorrowTimestamp = Timestamp.valueOf(today.plusDays(1).atStartOfDay());
 
         if (flag) {
-            return formatPage(productService.loadByCreateTimeInterval(
-                    todayTimestamp, tomorrowTimestamp, likeMap, pageNumber, pageSize
-            ));
+            dateGreaterMap.put("createTime", todayTimestamp);
+            dateLesserMap.put("createTime", tomorrowTimestamp);
         } else {
-            return formatPage(productService.loadByEndTimeInterval(
-                    todayTimestamp, tomorrowTimestamp, likeMap, pageNumber, pageSize
-            ));
+            dateGreaterMap.put("endTime", todayTimestamp);
+            dateLesserMap.put("endTime", tomorrowTimestamp);
         }
+
+        return formatPage(productService.load(likeMap, dateGreaterMap, dateLesserMap, false, pageNumber, pageSize));
     }
 
     private <T> JSONObject formatPage(Page<T> page) {
@@ -269,21 +320,13 @@ public class ProductController {
 
         data.put("id", product.getId());
         data.put("serial", product.getSerial());
-        data.put("endTime", product.getEndTime());
-        data.put("workName", product.getWorkName());
-
-        data.put("processes", formatProcesses(
-                product.getWork().getWorkProcesses(), product.getProductProcesses()
-        ));
-
-        return data;
-    }
-
-    private JSONObject formatProduct(CompleteProduct product) {
-        JSONObject data = new JSONObject();
-
-        data.put("id", product.getId());
-        data.put("serial", product.getSerial());
+        data.put("IGT", product.getIGT());
+        data.put("ERP", product.getERP());
+        data.put("central", product.getCentral());
+        data.put("area", product.getArea());
+        data.put("design", product.getDesign());
+        data.put("beginTime", product.getBeginTime());
+        data.put("demandTime", product.getDemandTime());
         data.put("endTime", product.getEndTime());
         data.put("workName", product.getWorkName());
 

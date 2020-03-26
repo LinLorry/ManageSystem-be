@@ -29,10 +29,29 @@ public class Product implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String serial;
+    @Column(nullable = false, columnDefinition = "char(8)")
+    private String serial;              // Serial号
 
-    private Timestamp endTime;
+    @Column(length = 32)
+    private String IGT;                 // IGT号
+
+    @Column(length = 32)
+    private String ERP;                 // ERP号
+
+    @Column(length = 32)
+    private String central;             // central号
+
+    @Column(length = 64)
+    private String area;                // 地区
+
+    @Column(length = 32)
+    private String design;              // 花色
+
+    private Timestamp beginTime;        // 下单时间
+
+    private Timestamp demandTime;       // 需求时间
+
+    private Timestamp endTime;          // 发货时间
 
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false, updatable = false)
@@ -61,6 +80,9 @@ public class Product implements Serializable {
     @NotFound(action = NotFoundAction.IGNORE)
     @JsonIgnore
     private User updateUser;
+
+    @Column(nullable = false, columnDefinition = "Boolean default false")
+    private Boolean complete = false;   // 订单是否完成标识
 
     public Product() { }
 
@@ -97,6 +119,62 @@ public class Product implements Serializable {
 
     public void setSerial(String serial) {
         this.serial = serial;
+    }
+
+    public String getIGT() {
+        return IGT;
+    }
+
+    public void setIGT(String IGT) {
+        this.IGT = IGT;
+    }
+
+    public String getERP() {
+        return ERP;
+    }
+
+    public void setERP(String ERP) {
+        this.ERP = ERP;
+    }
+
+    public String getCentral() {
+        return central;
+    }
+
+    public void setCentral(String central) {
+        this.central = central;
+    }
+
+    public String getArea() {
+        return area;
+    }
+
+    public void setArea(String area) {
+        this.area = area;
+    }
+
+    public String getDesign() {
+        return design;
+    }
+
+    public void setDesign(String design) {
+        this.design = design;
+    }
+
+    public Timestamp getBeginTime() {
+        return beginTime;
+    }
+
+    public void setBeginTime(Timestamp beginTime) {
+        this.beginTime = beginTime;
+    }
+
+    public Timestamp getDemandTime() {
+        return demandTime;
+    }
+
+    public void setDemandTime(Timestamp demandTime) {
+        this.demandTime = demandTime;
     }
 
     public Timestamp getEndTime() {
@@ -141,6 +219,18 @@ public class Product implements Serializable {
 
     public void setUpdateUser(User updateUser) {
         this.updateUser = updateUser;
+    }
+
+    public Boolean isComplete() {
+        return complete;
+    }
+
+    public void setComplete() {
+        this.complete = true;
+    }
+
+    public void setUnComplete() {
+        this.complete = false;
     }
 
     public Integer getWorkId() {

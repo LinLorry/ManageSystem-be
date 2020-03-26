@@ -1,9 +1,7 @@
 package com.dghysc.hy.product;
 
-import com.dghysc.hy.product.model.CompleteProduct;
 import com.dghysc.hy.product.model.Product;
 import com.dghysc.hy.product.model.ProductProcessId;
-import com.dghysc.hy.product.rep.CompleteProductRepository;
 import com.dghysc.hy.product.rep.ProductProcessRepository;
 import com.dghysc.hy.product.rep.ProductRepository;
 import com.dghysc.hy.user.model.User;
@@ -26,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Comparator;
 
@@ -52,9 +51,6 @@ public class ProductServiceTest {
     public ProductProcessRepository productProcessRepository;
 
     @Autowired
-    public CompleteProductRepository completeProductRepository;
-
-    @Autowired
     public ProductService productService;
 
     @Before
@@ -75,11 +71,25 @@ public class ProductServiceTest {
 
     @Test
     public void add() {
+        LocalDate today = LocalDate.now();
+
         String serial = testUtil.nextString();
-        Timestamp endTime = new Timestamp(System.currentTimeMillis());
+        String IGT = testUtil.nextString();
+        String ERP = testUtil.nextString();
+        String central = testUtil.nextString();
+        String area = testUtil.nextString();
+        String design = testUtil.nextString();
+        Timestamp beginTime = Timestamp.valueOf(today.plusDays(-testUtil.nextInt(365)).atStartOfDay());
+        Timestamp demandTime = Timestamp.valueOf(today.plusDays(testUtil.nextInt(365)).atStartOfDay());
+        Timestamp endTime = Timestamp.valueOf(today.plusDays(testUtil.nextInt(365)).atStartOfDay());
         Integer workId = testUtil.nextId(Work.class);
 
-        Product product = productService.add(serial, endTime, workId);
+        Product product = productService.add(
+                serial, IGT, ERP,
+                central, area, design,
+                beginTime, demandTime, endTime,
+                workId
+        );
 
         assertEquals(serial, product.getSerial());
         assertEquals(workId, product.getWork().getId());
@@ -87,11 +97,25 @@ public class ProductServiceTest {
 
     @Test
     public void update() {
+        LocalDate today = LocalDate.now();
+
         Long id = testUtil.nextId(Product.class);
         String serial = testUtil.nextString();
-        Timestamp endTime = new Timestamp(System.currentTimeMillis());
+        String IGT = testUtil.nextString();
+        String ERP = testUtil.nextString();
+        String central = testUtil.nextString();
+        String area = testUtil.nextString();
+        String design = testUtil.nextString();
+        Timestamp beginTime = Timestamp.valueOf(today.plusDays(-testUtil.nextInt(365)).atStartOfDay());
+        Timestamp demandTime = Timestamp.valueOf(today.plusDays(testUtil.nextInt(365)).atStartOfDay());
+        Timestamp endTime = Timestamp.valueOf(today.plusDays(testUtil.nextInt(365)).atStartOfDay());
 
-        Product product = productService.update(id, serial, endTime);
+        Product product = productService.update(
+                id, serial, IGT,
+                ERP, central, area,
+                design, beginTime, demandTime,
+                endTime
+        );
 
         assertEquals(id, product.getId());
         assertEquals(serial, product.getSerial());
@@ -143,14 +167,8 @@ public class ProductServiceTest {
 
         if (complete) {
             assertTrue(result);
-            CompleteProduct completeProduct = completeProductRepository.findById(id)
-                    .orElseThrow(EntityNotFoundException::new);
-
-            assertEquals(product.getSerial(), completeProduct.getSerial());
         } else {
             assertFalse(result);
-            assertTrue(productRepository.existsById(id));
-            assertFalse(completeProductRepository.existsById(id));
         }
     }
 }

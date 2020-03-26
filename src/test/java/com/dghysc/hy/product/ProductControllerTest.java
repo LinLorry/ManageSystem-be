@@ -1,7 +1,6 @@
 package com.dghysc.hy.product;
 
 import com.alibaba.fastjson.JSONObject;
-import com.dghysc.hy.product.model.CompleteProduct;
 import com.dghysc.hy.product.model.Product;
 import com.dghysc.hy.product.rep.ProductRepository;
 import com.dghysc.hy.util.TestUtil;
@@ -17,9 +16,11 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.persistence.EntityNotFoundException;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 
 import static org.junit.Assert.*;
 import static com.dghysc.hy.util.TestUtil.checkResponse;
@@ -42,14 +43,26 @@ public class ProductControllerTest {
     @Before
     public void setUp() {
         testUtil.setAuthorities("ROLE_PRODUCT_MANAGER");
+
+        if (productRepository.count() == 0) {
+            create();
+        }
     }
 
     @Test
     public void create() {
         JSONObject requestBody = new JSONObject();
+        LocalDate today = LocalDate.now();
 
         requestBody.put("serial", testUtil.nextString());
-        requestBody.put("endTime", new Timestamp(System.currentTimeMillis() + 1000 * 60 * 60 * 28));
+        requestBody.put("IGT", testUtil.nextString());
+        requestBody.put("ERP", testUtil.nextString());
+        requestBody.put("central", testUtil.nextString());
+        requestBody.put("area", testUtil.nextString());
+        requestBody.put("design", testUtil.nextString());
+        requestBody.put("beginTime", Timestamp.valueOf(today.plusDays(-testUtil.nextInt(365)).atStartOfDay()));
+        requestBody.put("demandTime", Timestamp.valueOf(today.plusDays(testUtil.nextInt(365)).atStartOfDay()));
+        requestBody.put("endTime", Timestamp.valueOf(today.plusDays(testUtil.nextInt(365)).atStartOfDay()));
         requestBody.put("workId", testUtil.nextId(Work.class));
 
         HttpEntity<JSONObject> request = new HttpEntity<>(requestBody, testUtil.getTokenHeader());
@@ -64,10 +77,18 @@ public class ProductControllerTest {
     @Test
     public void update() {
         JSONObject requestBody = new JSONObject();
+        LocalDate today = LocalDate.now();
 
         requestBody.put("id", testUtil.nextId(Product.class));
         requestBody.put("serial", testUtil.nextString());
-        requestBody.put("endTime", new Timestamp(System.currentTimeMillis()));
+        requestBody.put("IGT", testUtil.nextString());
+        requestBody.put("ERP", testUtil.nextString());
+        requestBody.put("central", testUtil.nextString());
+        requestBody.put("area", testUtil.nextString());
+        requestBody.put("design", testUtil.nextString());
+        requestBody.put("beginTime", Timestamp.valueOf(today.plusDays(-testUtil.nextInt(365)).atStartOfDay()));
+        requestBody.put("demandTime", Timestamp.valueOf(today.plusDays(testUtil.nextInt(365)).atStartOfDay()));
+        requestBody.put("endTime", Timestamp.valueOf(today.plusDays(testUtil.nextInt(365)).atStartOfDay()));
 
         HttpEntity<JSONObject> request = new HttpEntity<>(requestBody, testUtil.getTokenHeader());
 
@@ -111,6 +132,84 @@ public class ProductControllerTest {
     }
 
     @Test
+    public void conditionsGet() {
+        LocalDate today = LocalDate.now();
+
+        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(baseUrl);
+
+        builder.queryParam("beginTimeAfter", Timestamp.valueOf(
+                today.plusDays(-testUtil.nextInt(30)).atStartOfDay()
+        ));
+
+        builder.queryParam("beginTimeBefore", Timestamp.valueOf(
+                today.plusDays(testUtil.nextInt(30)).atStartOfDay()
+        ));
+
+        HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
+
+        ResponseEntity<JSONObject> responseEntity = restTemplate
+                .exchange(builder.build().toString(), HttpMethod.GET, request, JSONObject.class);
+
+        checkResponse(responseEntity);
+
+        builder = UriComponentsBuilder.fromUriString(baseUrl);
+        builder.queryParam("demandTimeAfter", Timestamp.valueOf(
+                today.plusDays(-testUtil.nextInt(365)).atStartOfDay()
+        ));
+
+        builder.queryParam("demandTimeBefore", Timestamp.valueOf(
+                today.plusDays(testUtil.nextInt(365)).atStartOfDay()
+        ));
+
+        responseEntity = restTemplate
+                .exchange(builder.build().toString(), HttpMethod.GET, request, JSONObject.class);
+        checkResponse(responseEntity);
+
+        builder = UriComponentsBuilder.fromUriString(baseUrl);
+        builder.queryParam("endTimeAfter", Timestamp.valueOf(
+                today.plusDays(-testUtil.nextInt(365)).atStartOfDay()
+        ));
+
+        builder.queryParam("endTimeBefore", Timestamp.valueOf(
+                today.plusDays(testUtil.nextInt(365)).atStartOfDay()
+        ));
+
+        responseEntity = restTemplate
+                .exchange(builder.build().toString(), HttpMethod.GET, request, JSONObject.class);
+        checkResponse(responseEntity);
+
+        builder = UriComponentsBuilder.fromUriString(baseUrl);
+
+        builder.queryParam("beginTimeAfter", Timestamp.valueOf(
+                today.plusDays(-testUtil.nextInt(30)).atStartOfDay()
+        ));
+
+        builder.queryParam("beginTimeBefore", Timestamp.valueOf(
+                today.plusDays(testUtil.nextInt(30)).atStartOfDay()
+        ));
+
+        builder.queryParam("demandTimeAfter", Timestamp.valueOf(
+                today.plusDays(-testUtil.nextInt(365)).atStartOfDay()
+        ));
+
+        builder.queryParam("demandTimeBefore", Timestamp.valueOf(
+                today.plusDays(testUtil.nextInt(365)).atStartOfDay()
+        ));
+
+        builder.queryParam("endTimeAfter", Timestamp.valueOf(
+                today.plusDays(-testUtil.nextInt(365)).atStartOfDay()
+        ));
+
+        builder.queryParam("endTimeBefore", Timestamp.valueOf(
+                today.plusDays(testUtil.nextInt(365)).atStartOfDay()
+        ));
+
+        responseEntity = restTemplate
+                .exchange(builder.build().toString(), HttpMethod.GET, request, JSONObject.class);
+        checkResponse(responseEntity);
+    }
+
+    @Test
     public void getComplete() {
         String url = baseUrl + "?complete=1";
 
@@ -122,24 +221,6 @@ public class ProductControllerTest {
         JSONObject response = checkResponse(responseEntity);
         assertNotNull(response.getJSONObject("data"));
         assertNotNull(response.getJSONObject("data").getInteger("total"));
-
-        url += "&id=" + testUtil.nextId(CompleteProduct.class);
-
-        responseEntity = restTemplate.exchange(
-                url, HttpMethod.GET, request, JSONObject.class
-        );
-
-        checkResponse(responseEntity);
-
-        url += "&withProcesses=1";
-        responseEntity = restTemplate.exchange(
-                url, HttpMethod.GET, request, JSONObject.class
-        );
-
-        response = checkResponse(responseEntity);
-        JSONObject product = response.getJSONObject("data");
-        assertNotNull(product);
-        assertNotNull(product.get("processes"));
     }
 
     @Test
@@ -193,6 +274,24 @@ public class ProductControllerTest {
         }
     }
 
+    @Test
+    public void completeProcess() {
+        testUtil.setAuthorities("ROLE_WORKER");
+        final String url = baseUrl + "/completeProcess";
+        JSONObject requestBody = new JSONObject();
+
+        requestBody.put("id", testUtil.nextId(Product.class));
+
+        HttpEntity<JSONObject> request = new HttpEntity<>(requestBody, testUtil.getTokenHeader());
+
+        ResponseEntity<JSONObject> responseEntity = restTemplate.exchange(
+                url, HttpMethod.POST, request, JSONObject.class
+        );
+
+        assert responseEntity.getBody() != null;
+        JSONObject responseBody = responseEntity.getBody();
+        System.out.println(responseBody);
+    }
 
     @Test
     @Transactional(readOnly = true)
@@ -232,16 +331,6 @@ public class ProductControllerTest {
         HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
 
         ResponseEntity<JSONObject> responseEntity = restTemplate
-                .exchange(url, HttpMethod.GET, request, JSONObject.class);
-
-        checkResponse(responseEntity);
-
-        id = testUtil.nextId(CompleteProduct.class);
-        url = baseUrl + "?complete=1&id=" + id;
-
-        request = new HttpEntity<>(testUtil.getTokenHeader());
-
-        responseEntity = restTemplate
                 .exchange(url, HttpMethod.GET, request, JSONObject.class);
 
         checkResponse(responseEntity);
