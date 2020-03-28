@@ -3,6 +3,7 @@ package com.dghysc.hy.product;
 import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.product.model.Product;
 import com.dghysc.hy.product.model.ProductProcess;
+import com.dghysc.hy.util.ZoneIdUtil;
 import com.dghysc.hy.work.model.WorkProcess;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -13,7 +14,8 @@ import org.springframework.web.bind.annotation.*;
 import javax.persistence.EntityNotFoundException;
 import javax.validation.constraints.NotNull;
 import java.sql.Timestamp;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.*;
 
 /**
@@ -290,10 +292,14 @@ public class ProductController {
             @NotNull Map<String, Date> dateLesserMap, boolean flag,
             int accord, int pageNumber, int pageSize
     ) {
-        LocalDate today = LocalDate.now().plusDays(accord);
+        LocalDateTime localDateTime = LocalDateTime.now(ZoneIdUtil.CST);
+        ZonedDateTime today = localDateTime
+                .toLocalDate()
+                .atStartOfDay(ZoneIdUtil.CST)
+                .plusDays(accord);
 
-        Timestamp todayTimestamp = Timestamp.valueOf(today.atStartOfDay());
-        Timestamp tomorrowTimestamp = Timestamp.valueOf(today.plusDays(1).atStartOfDay());
+        Timestamp todayTimestamp = Timestamp.from(today.toInstant());
+        Timestamp tomorrowTimestamp = Timestamp.from(today.plusDays(1).toInstant());
 
         if (flag) {
             dateGreaterMap.put("createTime", todayTimestamp);
