@@ -33,6 +33,8 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityNotFoundException;
 import javax.validation.constraints.NotNull;
 import java.lang.reflect.Method;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
@@ -40,6 +42,9 @@ import static org.junit.Assert.assertNotNull;
 
 @Component
 public class TestUtil extends Random {
+
+    private static final DateTimeFormatter formatter =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
 
     @Value("${manage.authentication.name}")
     private String authenticationName;
@@ -198,5 +203,9 @@ public class TestUtil extends Random {
         assertEquals(1, response.getIntValue("status"));
 
         return response;
+    }
+
+    public String formatTime(ZonedDateTime time) {
+        return formatter.format(time);
     }
 }
