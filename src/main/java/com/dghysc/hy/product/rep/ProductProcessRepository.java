@@ -5,6 +5,9 @@ import com.dghysc.hy.product.model.ProductProcessId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Timestamp;
+import java.util.List;
+
 /**
  * Product Process Repository
  * @author lorry
@@ -12,4 +15,8 @@ import org.springframework.stereotype.Repository;
  * @see org.springframework.data.jpa.repository.JpaRepository
  */
 @Repository
-public interface ProductProcessRepository extends JpaRepository<ProductProcess, ProductProcessId> { }
+public interface ProductProcessRepository extends JpaRepository<ProductProcess, ProductProcessId> {
+
+    List<ProductProcess> findAllByFinishTimeAfterAndFinishTimeBefore(Timestamp after, Timestamp before);
+
+}

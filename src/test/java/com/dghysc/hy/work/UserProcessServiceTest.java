@@ -2,6 +2,7 @@ package com.dghysc.hy.work;
 
 import com.dghysc.hy.exception.UserNoFoundException;
 import com.dghysc.hy.exception.UserNotWorkerException;
+import com.dghysc.hy.product.model.ProductProcess;
 import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.util.TestUtil;
 import com.dghysc.hy.work.model.Process;
@@ -75,5 +76,14 @@ public class UserProcessServiceTest {
             System.out.println(process.getId());
             System.out.println(process);
         }
+    }
+
+    @Test
+    public void loadAllTodayFinish() {
+        testUtil.setAuthorities("ROLE_WORKER_MANAGER");
+
+        List<ProductProcess> productProcesses = userProcessService.loadAllTodayFinish();
+
+        assertNotNull(productProcesses);
     }
 }

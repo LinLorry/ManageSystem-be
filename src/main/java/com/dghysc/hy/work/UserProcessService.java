@@ -2,6 +2,9 @@ package com.dghysc.hy.work;
 
 import com.dghysc.hy.exception.UserNoFoundException;
 import com.dghysc.hy.exception.UserNotWorkerException;
+import com.dghysc.hy.product.model.ProductProcess;
+import com.dghysc.hy.product.rep.ProductProcessRepository;
+import com.dghysc.hy.util.ZoneIdUtil;
 import com.dghysc.hy.work.model.Process;
 import com.dghysc.hy.work.model.UserProcess;
 import com.dghysc.hy.work.repo.UserProcessRepository;
@@ -14,6 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
 import javax.validation.constraints.NotNull;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.*;
 
 /**
@@ -30,13 +36,18 @@ public class UserProcessService {
 
     private final UserProcessRepository userProcessRepository;
 
+    private final ProductProcessRepository productProcessRepository;
+
     public UserProcessService(
             UserRepository userRepository,
             ProcessRepository processRepository,
-            UserProcessRepository userProcessRepository) {
+            UserProcessRepository userProcessRepository,
+            ProductProcessRepository productProcessRepository
+    ) {
         this.userRepository = userRepository;
         this.processRepository = processRepository;
         this.userProcessRepository = userProcessRepository;
+        this.productProcessRepository = productProcessRepository;
     }
 
     /**
@@ -105,6 +116,24 @@ public class UserProcessService {
     public List<Process> loadByUserId(@NotNull Long userId) {
         return toProcessList(userProcessRepository
                 .findAllByUserId(Optional.of(userId).get()));
+    }
+
+    /**
+     * Load All Today Finish Product Processes Service
+     * @return the list of today finish product processes.
+     */
+    public List<ProductProcess> loadAllTodayFinish() {
+        LocalDateTime localDateTime = LocalDateTime.now(ZoneIdUtil.CST);
+        ZonedDateTime today = localDateTime
+                .toLocalDate()
+                .atStartOfDay(ZoneIdUtil.CST);
+
+        Timestamp todayTimestamp = Timestamp.from(today.toInstant());
+        Timestamp tomorrowTimestamp = Timestamp.from(today.plusDays(1).toInstant());
+
+        return productProcessRepository.findAllByFinishTimeAfterAndFinishTimeBefore(
+                todayTimestamp, tomorrowTimestamp
+        );
     }
 
     private static List<Process> toProcessList(@NotNull List<UserProcess> userProcesses) {
