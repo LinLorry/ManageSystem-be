@@ -233,7 +233,7 @@ public class ProductService {
      * @return the product.
      * @throws EntityNotFoundException if the product isn't exist throw this exception.
      */
-    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER', 'WORKER_MANAGER')")
     Product loadById(@NotNull Long id) {
         return productRepository.findById(Optional.of(id).get()).orElseThrow(EntityNotFoundException::new);
     }
@@ -245,7 +245,7 @@ public class ProductService {
      * @throws EntityNotFoundException if the product isn't exist throw this exception.
      */
     @Transactional(readOnly = true)
-    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER', 'WORKER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER', 'WORKER_MANAGER', 'WORKER')")
     public Product loadWithProcessesById(@NotNull Long id) {
         Product product = productRepository.findById(Optional.of(id).get())
                 .orElseThrow(EntityNotFoundException::new);
