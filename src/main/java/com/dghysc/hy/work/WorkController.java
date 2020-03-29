@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.work.model.Work;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,6 +43,7 @@ public class WorkController {
      * }
      */
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'WORKER_MANAGER')")
     public JSONObject createOrUpdate(@RequestBody JSONObject request)
             throws MissingServletRequestParameterException {
         JSONObject response = new JSONObject();
@@ -103,6 +105,7 @@ public class WorkController {
      * }
      */
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'WORKER_MANAGER', 'PRODUCT_MANAGER')")
     public JSONObject get(
             @RequestParam(required = false) Integer id,
             @RequestParam(required = false) String name,
@@ -158,6 +161,7 @@ public class WorkController {
      * }
      */
     @GetMapping("/processes")
+    @PreAuthorize("hasAnyRole('ADMIN', 'WORKER_MANAGER', 'PRODUCT_MANAGER')")
     public JSONObject getProcesses(@RequestParam Integer id) {
         JSONObject response = new JSONObject();
 

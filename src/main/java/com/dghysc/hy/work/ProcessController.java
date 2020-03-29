@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.work.model.Process;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityNotFoundException;
@@ -18,6 +19,7 @@ import java.util.Optional;
  */
 @RestController
 @RequestMapping("/api/process")
+@PreAuthorize("hasAnyRole('ADMIN', 'WORKER_MANAGER')")
 public class ProcessController {
 
     private final ProcessService processService;
