@@ -123,6 +123,17 @@ public class UserControllerTest {
     }
 
     @Test
+    public void getDynamic() {
+        String url = baseUrl + "/dynamic";
+
+        HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
+
+        ResponseEntity<JSONObject> responseEntity = restTemplate
+                .exchange(url, HttpMethod.GET, request, JSONObject.class);
+        checkResponse(responseEntity);
+    }
+
+    @Test
     public void getAuthority() {
         String url = baseUrl + "/authority?id=" + testUtil.nextId(User.class);
         HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
