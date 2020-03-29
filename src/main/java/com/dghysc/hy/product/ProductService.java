@@ -233,7 +233,7 @@ public class ProductService {
      * @return the product.
      * @throws EntityNotFoundException if the product isn't exist throw this exception.
      */
-    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER', 'WORKER_MANAGER')")
     Product loadById(@NotNull Long id) {
         return productRepository.findById(Optional.of(id).get()).orElseThrow(EntityNotFoundException::new);
     }
@@ -245,7 +245,7 @@ public class ProductService {
      * @throws EntityNotFoundException if the product isn't exist throw this exception.
      */
     @Transactional(readOnly = true)
-    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER', 'WORKER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER', 'WORKER_MANAGER', 'WORKER')")
     public Product loadWithProcessesById(@NotNull Long id) {
         Product product = productRepository.findById(Optional.of(id).get())
                 .orElseThrow(EntityNotFoundException::new);
@@ -269,59 +269,5 @@ public class ProductService {
     @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
     public int countCanComplete() {
         return productRepository.countAllCanComplete();
-    }
-
-    /**
-     * Load Products By Create Time Interval
-     * @param after the product's create time after this.
-     * @param before the product's create time before this.
-     * @param likeMap {
-     *     "the product field": value will be equal by "%value%"
-     * }
-     * @param pageNumber the page number.
-     * @param pageSize page size.
-     * @return the page of the result.
-     */
-    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
-    Page<Product> loadByCreateTimeInterval(Timestamp after, Timestamp before,
-                                           Map<String, Object> likeMap,
-                                           Integer pageNumber, Integer pageSize) {
-        SpecificationUtil specificationUtil = new SpecificationUtil();
-
-        specificationUtil.addLikeMap(likeMap);
-
-        Optional.ofNullable(after).ifPresent(t -> specificationUtil.addGreaterDateMap("createTime", t));
-        Optional.ofNullable(before).ifPresent(t -> specificationUtil.addLessDateMap("createTime", t));
-
-        return productRepository.findAll(
-                specificationUtil.getSpecification(),
-                PageRequest.of(pageNumber, pageSize));
-    }
-
-    /**
-     * Load Products By End Time Interval
-     * @param after the product's end time after this.
-     * @param before the product's end time before this.
-     * @param likeMap {
-     *     "the product field": value will be equal by "%value%"
-     * }
-     * @param pageNumber the page number.
-     * @param pageSize page size.
-     * @return the page of the result.
-     */
-    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
-    Page<Product> loadByEndTimeInterval(Timestamp after, Timestamp before,
-                                        Map<String, Object> likeMap,
-                                        Integer pageNumber, Integer pageSize) {
-        SpecificationUtil specificationUtil = new SpecificationUtil();
-
-        specificationUtil.addLikeMap(likeMap);
-
-        Optional.ofNullable(after).ifPresent(t -> specificationUtil.addGreaterDateMap("endTime", t));
-        Optional.ofNullable(before).ifPresent(t -> specificationUtil.addLessDateMap("endTime", t));
-
-        return productRepository.findAll(
-                specificationUtil.getSpecification(),
-                PageRequest.of(pageNumber, pageSize));
     }
 }
