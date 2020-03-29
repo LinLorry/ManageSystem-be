@@ -12,6 +12,7 @@ import com.dghysc.hy.user.model.Role;
 import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.user.repo.UserRepository;
 import com.dghysc.hy.work.repo.ProcessRepository;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -122,6 +123,7 @@ public class UserProcessService {
      * Load All Today Finish Product Processes Service
      * @return the list of today finish product processes.
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'WORKER_MANAGER')")
     public List<ProductProcess> loadAllTodayFinish() {
         LocalDateTime localDateTime = LocalDateTime.now(ZoneIdUtil.CST);
         ZonedDateTime today = localDateTime
