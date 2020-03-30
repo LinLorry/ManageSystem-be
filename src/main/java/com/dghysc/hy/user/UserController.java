@@ -414,6 +414,7 @@ public class UserController {
         productInfo.put("start", productService.countStart());
         productInfo.put("notStart", productService.countNotStart());
         productInfo.put("canComplete", productService.countCanComplete());
+        productInfo.put("created", productService.countCreateProductDuringTheMonth());
 
         return productInfo;
     }
