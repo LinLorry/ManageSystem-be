@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Timestamp;
+
 /**
  * Product Repository
  * @author lorry
@@ -52,4 +54,6 @@ public interface ProductRepository extends CrudRepository<Product, Long>, JpaSpe
                 "HAVING COUNT(productProcess.productId) = count(workProcesses)" +
             ")")
     int countAllCanComplete();
+
+    int countAllByCreateTimeAfterAndCreateTimeBefore(Timestamp after, Timestamp before);
 }

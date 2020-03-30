@@ -7,6 +7,7 @@ import com.dghysc.hy.product.rep.ProductRepository;
 import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.util.SecurityUtil;
 import com.dghysc.hy.util.SpecificationUtil;
+import com.dghysc.hy.util.ZoneIdUtil;
 import com.dghysc.hy.work.model.UserProcess;
 import com.dghysc.hy.work.model.Work;
 import com.dghysc.hy.work.model.WorkProcess;
@@ -23,6 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityNotFoundException;
 import javax.validation.constraints.NotNull;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 
 /**
@@ -256,18 +259,51 @@ public class ProductService {
         return product;
     }
 
+    /**
+     * Count Not Start Product Service
+     * @return the number of han't started products.
+     */
     @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
     public int countNotStart() {
         return productRepository.countAllNotStart();
     }
 
+    /**
+     * Count Start Product Service
+     * @return the number of have started products.
+     */
     @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
     public int countStart() {
         return productRepository.countALLStart();
     }
 
+    /**
+     * Count Can Complete Product Service
+     * @return the number of can complete products.
+     */
     @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
     public int countCanComplete() {
         return productRepository.countAllCanComplete();
+    }
+
+    /**
+     * Count Create Product During Month Service
+     * @return the number of product which created in this month.
+     */
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
+    public int countCreateProductDuringTheMonth() {
+        LocalDateTime localDateTime = LocalDateTime.now(ZoneIdUtil.CST);
+
+        Timestamp first = Timestamp.from(
+                localDateTime.with(TemporalAdjusters.firstDayOfMonth())
+                        .atZone(ZoneIdUtil.CST).toInstant()
+        );
+        Timestamp last = Timestamp.from(
+                localDateTime.with(TemporalAdjusters.lastDayOfMonth())
+                        .atZone(ZoneIdUtil.CST).toInstant()
+        );
+
+        return productRepository
+                .countAllByCreateTimeAfterAndCreateTimeBefore(first, last);
     }
 }

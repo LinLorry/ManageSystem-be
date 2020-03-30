@@ -182,5 +182,9 @@ public class ProductServiceTest {
 
         count = productService.countCanComplete();
         System.out.println(count);
+
+
+        count = productService.countCreateProductDuringTheMonth();
+        System.out.println(count);
     }
 }
