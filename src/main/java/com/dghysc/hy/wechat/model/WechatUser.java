@@ -48,9 +48,6 @@ public class WechatUser implements Serializable {
     @JoinColumn
     private User user;
 
-    @JsonIgnore
-    private Long oldUserId;
-
     public WechatUser() {
     }
 
@@ -152,13 +149,5 @@ public class WechatUser implements Serializable {
 
     public void setUser(User user) {
         this.user = user;
-    }
-
-    public Long getOldUserId() {
-        return oldUserId;
-    }
-
-    public void setOldUserId(Long oldUserId) {
-        this.oldUserId = oldUserId;
     }
 }

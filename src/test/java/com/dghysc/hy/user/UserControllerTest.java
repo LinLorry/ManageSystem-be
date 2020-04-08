@@ -144,6 +144,16 @@ public class UserControllerTest {
     }
 
     @Test
+    public void getLevel() {
+        final String url = baseUrl + "/level";
+        HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
+
+        ResponseEntity<JSONObject> responseEntity = restTemplate
+                .exchange(url, HttpMethod.GET, request, JSONObject.class);
+        checkResponse(responseEntity);
+    }
+
+    @Test
     public void getProcesses() {
         String url = baseUrl + "/processes";
 

@@ -187,7 +187,7 @@ public class WechatController {
         wechatUser = wechatUserService.update(wechatUser.getId(), name);
 
         response.put("status", 1);
-        response.put("message", "获取个人信息成功");
+        response.put("message", "提交个人信息成功");
         response.put("data", wechatUser);
 
         return response;
