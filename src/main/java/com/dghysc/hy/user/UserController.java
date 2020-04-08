@@ -352,6 +352,44 @@ public class UserController {
     }
 
     /**
+     * Get Level Api
+     * @return {
+     *     "status": 1,
+     *     "message": "获取权限信息成功",
+     *     "data": [ level: str, ... ]
+     * }
+     */
+    @GetMapping("/level")
+    public JSONObject getLevel() {
+        JSONObject response = new JSONObject();
+
+        List<String> levelList = new ArrayList<>(SecurityUtil.getAuthorities().size());
+
+        SecurityUtil.getAuthorities().forEach(authority -> {
+            switch (authority.getAuthority()) {
+                case "ROLE_ADMIN":
+                    levelList.add("admin");
+                    break;
+                case "ROLE_WORKER_MANAGER":
+                    levelList.add("worker manager");
+                    break;
+                case "ROLE_PRODUCT_MANAGER":
+                    levelList.add("product manager");
+                    break;
+                case "ROLE_WORKER":
+                    levelList.add("worker");
+            }
+        });
+
+
+        response.put("status", 1);
+        response.put("message", "获取权限信息成功");
+        response.put("data", levelList);
+
+        return response;
+    }
+
+    /**
      * Get User Processes Api
      * @return {
      *     "status": 1,
