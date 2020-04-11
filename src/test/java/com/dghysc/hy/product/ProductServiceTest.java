@@ -132,7 +132,8 @@ public class ProductServiceTest {
             product = productRepository.findById(testUtil.nextId(Product.class))
                     .orElseThrow(EntityNotFoundException::new);
             if (product.getWork().getWorkProcesses().size() == product.getProductProcesses().size()) {
-                assertFalse(productService.completeProcess(product.getId()));
+                assertFalse(productService.completeProcess(product.getId(),
+                        product.getWork().getWorkProcesses().iterator().next().getProcessId()));
             } else {
                 break;
             }
@@ -144,7 +145,7 @@ public class ProductServiceTest {
 
         boolean userCanDo = userProcessRepository.existsById(
                 new UserProcessId(SecurityUtil.getUserId(), process.getId()));
-        boolean result = productService.completeProcess(product.getId());
+        boolean result = productService.completeProcess(product.getId(), process.getId());
 
         if (userCanDo) {
             assertTrue(result);

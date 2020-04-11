@@ -2,6 +2,7 @@ package com.dghysc.hy.product;
 
 import com.dghysc.hy.product.model.Product;
 import com.dghysc.hy.product.model.ProductProcess;
+import com.dghysc.hy.product.model.ProductProcessId;
 import com.dghysc.hy.product.rep.ProductProcessRepository;
 import com.dghysc.hy.product.rep.ProductRepository;
 import com.dghysc.hy.user.model.User;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.lang.Nullable;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -128,43 +130,59 @@ public class ProductService {
 
     /**
      * User Complete Product Process Service
-     * @param id the product id
+     * @param productId the product productId
      * @return complete result:
      *      if product's all process have been complete, return false.
      *      if execute complete user can't complete this process return false.
      *      if complete success return true.
      * @throws EntityNotFoundException the product not exist.
-     * @throws NullPointerException the {@code id} is {@literal null}
+     * @throws NullPointerException the {@code productId} is {@literal null}
      */
     @Transactional
     @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER', 'WORKER')")
-    public boolean completeProcess(@NotNull Long id) {
-        Product product = productRepository.findById(Optional.of(id).get())
+    public boolean completeProcess(@NotNull Long productId, @NotNull Integer processId) {
+        Product product = productRepository.findById(productId)
                 .orElseThrow(EntityNotFoundException::new);
 
-        int processSequence = product.getProductProcesses().size();
-        WorkProcess[] workProcesses = product.getWork().getWorkProcesses().toArray(new WorkProcess[0]);
-
-        if (processSequence == workProcesses.length) return false;
-
-        Arrays.sort(workProcesses, Comparator.comparing(WorkProcess::getSequenceNumber));
-
-        Integer nowProcessId = workProcesses[processSequence].getProcessId();
-
-        List<UserProcess> userProcesses = userProcessRepository.findAllByUserId(SecurityUtil.getUserId());
-
-        boolean canNotDO = true;
-
-        for (UserProcess userProcess : userProcesses) {
-            if (nowProcessId.equals(userProcess.getProcessId())) {
-                canNotDO = false;
+        boolean exist = false;
+        for (WorkProcess workProcess : product.getWork().getWorkProcesses()) {
+            if (workProcess.getProcessId().equals(processId)) {
+                exist = true;
                 break;
             }
         }
 
-        if (canNotDO) return false;
+        if (!exist) return false;
 
-        ProductProcess productProcess = new ProductProcess(id, nowProcessId, SecurityUtil.getUser());
+        if (productProcessRepository.findById(
+                new ProductProcessId(productId, processId)
+        ).isPresent()) {
+            return false;
+        }
+
+        boolean canDo = false;
+
+        for (GrantedAuthority authority : SecurityUtil.getAuthorities()) {
+            if ("ROLE_ADMIN".equals(authority.getAuthority())) {
+                canDo = true;
+            } else if ("ROLE_PRODUCT_MANAGER".equals(authority.getAuthority())) {
+                canDo = true;
+            }
+        }
+
+        if (!canDo) {
+            List<UserProcess> userProcesses = userProcessRepository.findAllByUserId(SecurityUtil.getUserId());
+
+            for (UserProcess userProcess : userProcesses) {
+                if (processId.equals(userProcess.getProcessId())) {
+                    canDo = true;
+                    break;
+                }
+            }
+        }
+        if (!canDo) return false;
+
+        ProductProcess productProcess = new ProductProcess(productId, processId, SecurityUtil.getUser());
 
         productProcessRepository.save(productProcess);
 

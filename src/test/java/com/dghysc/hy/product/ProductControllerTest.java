@@ -5,6 +5,7 @@ import com.dghysc.hy.product.model.Product;
 import com.dghysc.hy.product.rep.ProductRepository;
 import com.dghysc.hy.util.TestUtil;
 import com.dghysc.hy.util.ZoneIdUtil;
+import com.dghysc.hy.work.model.Process;
 import com.dghysc.hy.work.model.Work;
 import org.junit.Before;
 import org.junit.Test;
@@ -285,7 +286,8 @@ public class ProductControllerTest {
         final String url = baseUrl + "/completeProcess";
         JSONObject requestBody = new JSONObject();
 
-        requestBody.put("id", testUtil.nextId(Product.class));
+        requestBody.put("productId", testUtil.nextId(Product.class));
+        requestBody.put("processId", testUtil.nextId(Process.class));
 
         HttpEntity<JSONObject> request = new HttpEntity<>(requestBody, testUtil.getTokenHeader());
 

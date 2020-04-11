@@ -203,7 +203,8 @@ public class ProductController {
     /**
      * Complete Product Process Api.
      * @param request {
-     *     "id": the product id: int
+     *     "productId": the product id: int,
+     *     "processId": the processes id: int
      * }
      * @return {
      *     "status": if success is 1 else 0,
@@ -217,10 +218,12 @@ public class ProductController {
             throws MissingServletRequestParameterException {
         JSONObject response = new JSONObject();
 
-        Long id = Optional.ofNullable(request.getLong("id"))
-                .orElseThrow(() -> new MissingServletRequestParameterException("id", "int"));
+        Long productId = Optional.ofNullable(request.getLong("productId"))
+                .orElseThrow(() -> new MissingServletRequestParameterException("productId", "int"));
+        Integer processId = Optional.ofNullable(request.getInteger("processId"))
+                .orElseThrow(() -> new MissingServletRequestParameterException("productId", "int"));
 
-        if (productService.completeProcess(id)) {
+        if (productService.completeProcess(productId, processId)) {
             response.put("status", 1);
             response.put("message", "完成成功");
         } else {
