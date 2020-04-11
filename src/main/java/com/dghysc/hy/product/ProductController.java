@@ -326,8 +326,8 @@ public class ProductController {
 
         data.put("id", product.getId());
         data.put("serial", product.getSerial());
-        data.put("IGT", product.getIGT());
-        data.put("ERP", product.getERP());
+        data.put("igt", product.getIGT());
+        data.put("erp", product.getERP());
         data.put("central", product.getCentral());
         data.put("area", product.getArea());
         data.put("design", product.getDesign());
