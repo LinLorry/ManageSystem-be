@@ -349,6 +349,7 @@ public class ProductController {
         for (WorkProcess workProcess : workProcesses) {
             JSONObject one = new JSONObject();
 
+            one.put("id", workProcess.getProcess().getId());
             one.put("name", workProcess.getProcess().getName());
             one.put("sequence", workProcess.getSequenceNumber());
             one.put("complete", false);
@@ -372,6 +373,7 @@ public class ProductController {
         for (WorkProcess workProcess : workProcesses) {
             JSONObject one = new JSONObject();
 
+            one.put("id", workProcess.getProcess().getId());
             one.put("name", workProcess.getProcess().getName());
             one.put("sequence", workProcess.getSequenceNumber());
 
