@@ -295,13 +295,9 @@ public class ProductController {
                 .orElseThrow(() -> new MissingServletRequestParameterException("id", "int"));
 
         try {
-            if (productService.complete(id)) {
-                response.put("status", 1);
-                response.put("message", "完成订单成功");
-            } else {
-                response.put("status", 0);
-                response.put("message", "完成订单失败，该订单还有工序未完成");
-            }
+            productService.complete(id);
+            response.put("status", 1);
+            response.put("message", "完成订单成功");
         } catch (EntityNotFoundException e) {
             response.put("status", 0);
             response.put("message", "Id为" + id + "的订单不存在");

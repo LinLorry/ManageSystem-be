@@ -205,25 +205,16 @@ public class ProductService {
     /**
      * Complete Product
      * @param id the product id.
-     * @return the complete product.
      */
-    @Transactional
     @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
-    public boolean complete(@NotNull Long id) {
+    public void complete(@NotNull Long id) {
         Product product = productRepository.findById(Optional.of(id).get())
                 .orElseThrow(EntityNotFoundException::new);
 
-        if (product.isComplete()) {
-            return true;
-        } else if (product.getProductProcesses().size() !=
-                product.getWork().getWorkProcesses().size()) {
-            return false;
+        if (!product.isComplete()) {
+            product.setComplete();
+            productRepository.save(product);
         }
-
-        product.setComplete();
-        productRepository.save(product);
-
-        return true;
     }
 
     /**

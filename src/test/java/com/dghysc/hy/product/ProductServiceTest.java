@@ -180,18 +180,7 @@ public class ProductServiceTest {
     @Rollback(false)
     @Transactional
     public void complete() {
-        Long id = testUtil.nextId(Product.class);
-        Product product = productRepository.findById(id)
-                .orElseThrow(EntityNotFoundException::new);
-
-        boolean complete = product.getProductProcesses().size() == product.getWork().getWorkProcesses().size();
-        boolean result = productService.complete(id);
-
-        if (complete) {
-            assertTrue(result);
-        } else {
-            assertFalse(result);
-        }
+        productService.complete(testUtil.nextId(Product.class));
     }
 
     @Test
