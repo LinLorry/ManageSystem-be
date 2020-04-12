@@ -14,6 +14,7 @@ import com.dghysc.hy.work.model.Work;
 import com.dghysc.hy.work.model.WorkProcess;
 import com.dghysc.hy.work.repo.UserProcessRepository;
 import com.dghysc.hy.work.repo.WorkRepository;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
@@ -187,6 +188,18 @@ public class ProductService {
         productProcessRepository.save(productProcess);
 
         return true;
+    }
+
+    /**
+     * Un Complete Product Process Service.
+     * @param productId the product id.
+     * @param processId the process id.
+     * @throws EmptyResultDataAccessException if product process not exists.
+     */
+    @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
+    public void unCompleteProcess(@NotNull Long productId, @NotNull Integer processId) {
+        productProcessRepository.deleteById(new ProductProcessId(productId, processId));
     }
 
     /**

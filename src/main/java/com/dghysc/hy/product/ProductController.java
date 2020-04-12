@@ -5,6 +5,7 @@ import com.dghysc.hy.product.model.Product;
 import com.dghysc.hy.product.model.ProductProcess;
 import com.dghysc.hy.util.ZoneIdUtil;
 import com.dghysc.hy.work.model.WorkProcess;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -210,7 +211,8 @@ public class ProductController {
      *     "status": if success is 1 else 0,
      *     "message": message: str
      * }
-     * @throws MissingServletRequestParameterException the {@code id} is {@literal null}
+     * @throws MissingServletRequestParameterException the {@code productId} or {@code processId}
+     *                                                 is {@literal null}
      */
     @PostMapping("/completeProcess")
     @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER', 'WORKER')")
@@ -229,6 +231,42 @@ public class ProductController {
         } else {
             response.put("status", 0);
             response.put("message", "完成该工序失败，你不能完成这个工序或该工序已经完成");
+        }
+
+        return response;
+    }
+
+    /**
+     * Un Complete Product Process Api.
+     * @param request {
+     *     "productId": the product id: int,
+     *     "processId": the processes id: int
+     * }
+     * @return {
+     *     "status": if success is 1 else 0,
+     *     "message": message: str
+     * }
+     * @throws MissingServletRequestParameterException the {@code productId} or {@code processId}
+     *                                                 is {@literal null}
+     */
+    @PostMapping("/unCompleteProcess")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
+    public JSONObject unCompleteProcesses(@RequestBody JSONObject request)
+            throws MissingServletRequestParameterException {
+        JSONObject response = new JSONObject();
+
+        Long productId = Optional.ofNullable(request.getLong("productId"))
+                .orElseThrow(() -> new MissingServletRequestParameterException("productId", "int"));
+        Integer processId = Optional.ofNullable(request.getInteger("processId"))
+                .orElseThrow(() -> new MissingServletRequestParameterException("productId", "int"));
+
+        try {
+            productService.unCompleteProcess(productId, processId);
+            response.put("status", 1);
+            response.put("message", "取消工序完成成功！");
+        } catch (EmptyResultDataAccessException e) {
+            response.put("status", 0);
+            response.put("message", "该工序还未被标记完成");
         }
 
         return response;

@@ -158,6 +158,27 @@ public class ProductServiceTest {
     @Test
     @Rollback(false)
     @Transactional
+    public void unCompleteProcess() {
+        Product product;
+
+        do {
+            product = productRepository.findById(testUtil.nextId(Product.class))
+                    .orElseThrow(EntityNotFoundException::new);
+        } while (product.getProductProcesses().size() == 0);
+
+        int processId = product.getProductProcesses().iterator().next().getProcessId();
+
+        productService.unCompleteProcess(
+                product.getId(),
+                processId
+        );
+
+        assertFalse(productProcessRepository.existsById(new ProductProcessId(product.getId(), processId)));
+    }
+
+    @Test
+    @Rollback(false)
+    @Transactional
     public void complete() {
         Long id = testUtil.nextId(Product.class);
         Product product = productRepository.findById(id)

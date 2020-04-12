@@ -302,6 +302,35 @@ public class ProductControllerTest {
 
     @Test
     @Transactional(readOnly = true)
+    public void unCompleteProcess() {
+        final String url = baseUrl + "/unCompleteProcess";
+        Product product;
+
+        do {
+            product = productRepository.findById(testUtil.nextId(Product.class))
+                    .orElseThrow(EntityNotFoundException::new);
+        } while (product.getProductProcesses().size() == 0);
+
+        int processId = product.getProductProcesses().iterator().next().getProcessId();
+
+        JSONObject requestBody = new JSONObject();
+
+        requestBody.put("productId", product.getId());
+        requestBody.put("processId", processId);
+
+        HttpEntity<JSONObject> request = new HttpEntity<>(requestBody, testUtil.getTokenHeader());
+
+        ResponseEntity<JSONObject> responseEntity = restTemplate.exchange(
+                url, HttpMethod.POST, request, JSONObject.class
+        );
+
+        assert responseEntity.getBody() != null;
+        JSONObject responseBody = responseEntity.getBody();
+        System.out.println(responseBody);
+    }
+
+    @Test
+    @Transactional(readOnly = true)
     public void complete() {
         Long id = testUtil.nextId(Product.class);
         final String url = baseUrl + "/complete";
