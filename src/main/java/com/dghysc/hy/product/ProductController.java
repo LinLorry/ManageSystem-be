@@ -3,6 +3,7 @@ package com.dghysc.hy.product;
 import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.product.model.Product;
 import com.dghysc.hy.product.model.ProductProcess;
+import com.dghysc.hy.util.SecurityUtil;
 import com.dghysc.hy.util.ZoneIdUtil;
 import com.dghysc.hy.work.model.WorkProcess;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -209,7 +210,11 @@ public class ProductController {
      * }
      * @return {
      *     "status": if success is 1 else 0,
-     *     "message": message: str
+     *     "message": message: str,
+     *     "data": {
+     *         "completeUserName": complete user name: str,
+     *         "completeTime": complete time: time
+     *     }
      * }
      * @throws MissingServletRequestParameterException the {@code productId} or {@code processId}
      *                                                 is {@literal null}
@@ -226,8 +231,14 @@ public class ProductController {
                 .orElseThrow(() -> new MissingServletRequestParameterException("productId", "int"));
 
         if (productService.completeProcess(productId, processId)) {
+            JSONObject data = new JSONObject();
+
+            data.put("completeUserName", SecurityUtil.getUser().getName());
+            data.put("completeTime", new Timestamp(System.currentTimeMillis()));
+
             response.put("status", 1);
             response.put("message", "完成成功");
+            response.put("data", data);
         } else {
             response.put("status", 0);
             response.put("message", "完成该工序失败，你不能完成这个工序或该工序已经完成");
