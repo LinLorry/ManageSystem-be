@@ -53,6 +53,8 @@ public class Product implements Serializable {
 
     private Timestamp endTime;          // 发货时间
 
+    private Timestamp completeTime;     // 完成时间
+
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false, updatable = false)
     @NotFound(action = NotFoundAction.IGNORE)
@@ -185,6 +187,10 @@ public class Product implements Serializable {
         this.endTime = endTime;
     }
 
+    public Timestamp getCompleteTime() {
+        return completeTime;
+    }
+
     public Set<ProductProcess> getProductProcesses() {
         return productProcesses;
     }
@@ -227,6 +233,7 @@ public class Product implements Serializable {
 
     public void setComplete() {
         this.complete = true;
+        this.completeTime = new Timestamp(System.currentTimeMillis());
     }
 
     public void setUnComplete() {
