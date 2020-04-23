@@ -37,6 +37,8 @@ public class ProductControllerTest {
 
     private static final ZoneId zoneId = ZoneIdUtil.UTC;
 
+    private static final ZonedDateTime today = LocalDate.now().atStartOfDay(zoneId);
+
     @Autowired
     private TestRestTemplate restTemplate;
 
@@ -139,46 +141,49 @@ public class ProductControllerTest {
 
     @Test
     public void conditionsGet() {
-        ZonedDateTime today = LocalDate.now().atStartOfDay(zoneId);
-
-        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(baseUrl);
-
-        builder.queryParam("beginTimeAfter", testUtil.formatTime(
-                today.plusDays(-testUtil.nextInt(365))
-        ));
-
-        builder.queryParam("beginTimeBefore", testUtil.formatTime(
-                today.plusDays(testUtil.nextInt(365))
-        ));
-
+        UriComponentsBuilder builder;
         HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
+        ResponseEntity<JSONObject> responseEntity;
 
-        ResponseEntity<JSONObject> responseEntity = restTemplate
+        builder = UriComponentsBuilder.fromUriString(baseUrl);
+        addDateQueryParam(builder, "createTimeAfter", false);
+        addDateQueryParam(builder, "createTimeBefore", true);
+
+        System.out.println(builder.toUriString());
+
+        responseEntity = restTemplate
                 .exchange(builder.build().toString(), HttpMethod.GET, request, JSONObject.class);
 
         checkResponse(responseEntity);
 
         builder = UriComponentsBuilder.fromUriString(baseUrl);
-        builder.queryParam("demandTimeAfter", testUtil.formatTime(
-                today.plusDays(-testUtil.nextInt(365))
-        ));
-
-        builder.queryParam("demandTimeBefore", testUtil.formatTime(
-                today.plusDays(testUtil.nextInt(365))
-        ));
+        addDateQueryParam(builder, "beginTimeAfter", false);
+        addDateQueryParam(builder, "beginTimeBefore", true);
 
         responseEntity = restTemplate
                 .exchange(builder.build().toString(), HttpMethod.GET, request, JSONObject.class);
         checkResponse(responseEntity);
 
         builder = UriComponentsBuilder.fromUriString(baseUrl);
-        builder.queryParam("endTimeAfter", testUtil.formatTime(
-                today.plusDays(-testUtil.nextInt(365))
-        ));
+        addDateQueryParam(builder, "demandTimeAfter", false);
+        addDateQueryParam(builder, "demandTimeBefore", true);
 
-        builder.queryParam("endTimeBefore", testUtil.formatTime(
-                today.plusDays(testUtil.nextInt(365))
-        ));
+        responseEntity = restTemplate
+                .exchange(builder.build().toString(), HttpMethod.GET, request, JSONObject.class);
+        checkResponse(responseEntity);
+
+        builder = UriComponentsBuilder.fromUriString(baseUrl);
+        addDateQueryParam(builder, "endTimeAfter", false);
+        addDateQueryParam(builder, "endTimeBefore", true);
+
+        responseEntity = restTemplate
+                .exchange(builder.build().toString(), HttpMethod.GET, request, JSONObject.class);
+        checkResponse(responseEntity);
+
+        builder = UriComponentsBuilder.fromUriString(baseUrl);
+        addDateQueryParam(builder, "completeTimeAfter", false);
+        addDateQueryParam(builder, "completeTimeBefore", true);
+        builder.queryParam("complete", true);
 
         responseEntity = restTemplate
                 .exchange(builder.build().toString(), HttpMethod.GET, request, JSONObject.class);
@@ -186,29 +191,14 @@ public class ProductControllerTest {
 
         builder = UriComponentsBuilder.fromUriString(baseUrl);
 
-        builder.queryParam("beginTimeAfter", testUtil.formatTime(
-                today.plusDays(-testUtil.nextInt(365))
-        ));
-
-        builder.queryParam("beginTimeBefore", testUtil.formatTime(
-                today.plusDays(testUtil.nextInt(365))
-        ));
-
-        builder.queryParam("demandTimeAfter", testUtil.formatTime(
-                today.plusDays(-testUtil.nextInt(365))
-        ));
-
-        builder.queryParam("demandTimeBefore", testUtil.formatTime(
-                today.plusDays(testUtil.nextInt(365))
-        ));
-
-        builder.queryParam("endTimeAfter", testUtil.formatTime(
-                today.plusDays(-testUtil.nextInt(365))
-        ));
-
-        builder.queryParam("endTimeBefore", testUtil.formatTime(
-                today.plusDays(testUtil.nextInt(365))
-        ));
+        addDateQueryParam(builder, "createTimeAfter", false);
+        addDateQueryParam(builder, "createTimeBefore", true);
+        addDateQueryParam(builder, "beginTimeAfter", false);
+        addDateQueryParam(builder, "beginTimeBefore", true);
+        addDateQueryParam(builder, "demandTimeAfter", false);
+        addDateQueryParam(builder, "demandTimeBefore", true);
+        addDateQueryParam(builder, "endTimeAfter", false);
+        addDateQueryParam(builder, "endTimeBefore", true);
 
         responseEntity = restTemplate
                 .exchange(builder.build().toString(), HttpMethod.GET, request, JSONObject.class);
@@ -227,57 +217,6 @@ public class ProductControllerTest {
         JSONObject response = checkResponse(responseEntity);
         assertNotNull(response.getJSONObject("data"));
         assertNotNull(response.getJSONObject("data").getInteger("total"));
-    }
-
-    @Test
-    public void todayCreate() {
-        final String url = baseUrl + "?create=1";
-
-        HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
-
-        ResponseEntity<JSONObject> responseEntity = restTemplate
-                .exchange(url, HttpMethod.GET, request, JSONObject.class);
-
-        checkResponse(responseEntity);
-    }
-
-    @Test
-    public void accordEnd() {
-        final String url = baseUrl + "?end=1";
-
-        String tomorrow = url + "&accord=1";
-        String dayAfterTomorrow = url + "&accord=2";
-
-        HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
-
-        ResponseEntity<JSONObject> todayResponseEntity = restTemplate
-                .exchange(url, HttpMethod.GET, request, JSONObject.class);
-        ResponseEntity<JSONObject> tomorrowResponseEntity = restTemplate
-                .exchange(tomorrow, HttpMethod.GET, request, JSONObject.class);
-        ResponseEntity<JSONObject> dayAfterTomorrowResponseEntity = restTemplate
-                .exchange(dayAfterTomorrow, HttpMethod.GET, request, JSONObject.class);
-
-        JSONObject todayResponse = checkResponse(todayResponseEntity);
-        JSONObject tomorrowResponse = checkResponse(tomorrowResponseEntity);
-        JSONObject dayAfterTomorrowResponse = checkResponse(dayAfterTomorrowResponseEntity);
-
-        System.out.println("today:");
-        for (Object obj : todayResponse.getJSONObject("data").getJSONArray("products")) {
-            JSONObject json = (JSONObject) obj;
-            System.out.println(json.getInteger("id") + ": " + json.getTimestamp("endTime"));
-        }
-
-        System.out.println("tomorrow:");
-        for (Object obj : tomorrowResponse.getJSONObject("data").getJSONArray("products")) {
-            JSONObject json = (JSONObject) obj;
-            System.out.println(json.getInteger("id") + ": " + json.getTimestamp("endTime"));
-        }
-
-        System.out.println("dayAfterTomorrow:");
-        for (Object obj : dayAfterTomorrowResponse.getJSONObject("data").getJSONArray("products")) {
-            JSONObject json = (JSONObject) obj;
-            System.out.println(json.getInteger("id") + ": " + json.getTimestamp("endTime"));
-        }
     }
 
     @Test
@@ -374,5 +313,11 @@ public class ProductControllerTest {
                 .exchange(url, HttpMethod.GET, request, JSONObject.class);
 
         checkResponse(responseEntity);
+    }
+
+    private void addDateQueryParam(UriComponentsBuilder builder, String param, boolean positive) {
+        int num = testUtil.nextInt(365);
+        if (!positive) num = -num;
+        builder.queryParam(param, testUtil.formatTime(today.plusDays(num)));
     }
 }

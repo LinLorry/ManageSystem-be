@@ -4,11 +4,11 @@ import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.product.model.Product;
 import com.dghysc.hy.product.model.ProductProcess;
 import com.dghysc.hy.util.SecurityUtil;
-import com.dghysc.hy.util.ZoneIdUtil;
 import com.dghysc.hy.work.model.WorkProcess;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.lang.Nullable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
@@ -16,8 +16,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.persistence.EntityNotFoundException;
 import javax.validation.constraints.NotNull;
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
 import java.util.*;
 
 /**
@@ -114,9 +112,8 @@ public class ProductController {
      * Get Product Api
      * @param id product id, only get one product if provide this.
      * @param serial serial the serial product contains.
-     * @param accord accord the according day number
-     * @param create accord the created day number.
      * @param withProcesses get product with processes, only when get one product.
+     * @param complete return the complete products.
      * @param pageNumber the page number.
      * @param pageSize the page size.
      * @return if id provide return {
@@ -128,6 +125,7 @@ public class ProductController {
      *     "message": message: str,
      *     "data": {
      *         "total": total page number,
+     *         "pageSize: page size,
      *         "products": [
      *              product...
      *         ]
@@ -138,6 +136,10 @@ public class ProductController {
     public JSONObject get(
             @RequestParam(required = false) Long id,
             @RequestParam(required = false) String serial,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            @RequestParam(required = false) Date createTimeAfter,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            @RequestParam(required = false) Date createTimeBefore,
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             @RequestParam(required = false) Date beginTimeAfter,
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
@@ -150,9 +152,10 @@ public class ProductController {
             @RequestParam(required = false) Date endTimeAfter,
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             @RequestParam(required = false) Date endTimeBefore,
-            @RequestParam(defaultValue = "0") int accord,
-            @RequestParam(defaultValue = "0") boolean create,
-            @RequestParam(defaultValue = "0") boolean end,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            @RequestParam(required = false) Date completeTimeAfter,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            @RequestParam(required = false) Date completeTimeBefore,
             @RequestParam(defaultValue = "0") boolean withProcesses,
             @RequestParam(defaultValue = "0") boolean complete,
             @RequestParam(defaultValue = "0") int pageNumber,
@@ -179,20 +182,20 @@ public class ProductController {
 
             Optional.ofNullable(serial).ifPresent(s -> likeMap.put("serial", s));
 
-            Optional.ofNullable(beginTimeAfter).ifPresent(t -> dateGreaterMap.put("beginTime", t));
-            Optional.ofNullable(beginTimeBefore).ifPresent(t -> dateLesserMap.put("beginTime", t));
-            Optional.ofNullable(demandTimeAfter).ifPresent(t -> dateGreaterMap.put("demandTime", t));
-            Optional.ofNullable(demandTimeBefore).ifPresent(t -> dateLesserMap.put("demandTime", t));
-            Optional.ofNullable(endTimeAfter).ifPresent(t -> dateGreaterMap.put("endTime", t));
-            Optional.ofNullable(endTimeBefore).ifPresent(t -> dateLesserMap.put("endTime", t));
+            setDateMap(createTimeAfter, "createTime", dateGreaterMap);
+            setDateMap(createTimeBefore, "createTime", dateLesserMap);
+            setDateMap(beginTimeAfter, "beginTime", dateGreaterMap);
+            setDateMap(beginTimeBefore, "beginTime", dateLesserMap);
+            setDateMap(demandTimeAfter, "demandTime", dateGreaterMap);
+            setDateMap(demandTimeBefore, "demandTime", dateLesserMap);
+            setDateMap(endTimeAfter, "endTime", dateGreaterMap);
+            setDateMap(endTimeBefore, "endTime", dateLesserMap);
+            setDateMap(completeTimeAfter, "completeTime", dateGreaterMap);
+            setDateMap(completeTimeBefore, "completeTime", dateLesserMap);
 
-            if (create || end) {
-                response.put("data", getAccordProducts(likeMap, dateGreaterMap, dateLesserMap, create, accord, pageNumber, pageSize));
-            } else {
-                response.put("data", formatPage(productService.load(
-                        likeMap, dateGreaterMap, dateLesserMap, complete, pageNumber, pageSize
-                )));
-            }
+            response.put("data", formatPage(productService.load(
+                    likeMap, dateGreaterMap, dateLesserMap, complete, pageNumber, pageSize
+            )));
 
             response.put("message", "获取订单成功");
         }
@@ -335,35 +338,16 @@ public class ProductController {
         return response;
     }
 
-    private JSONObject getAccordProducts(
-            @NotNull Map<String, Object> likeMap, @NotNull Map<String, Date> dateGreaterMap,
-            @NotNull Map<String, Date> dateLesserMap, boolean flag,
-            int accord, int pageNumber, int pageSize
-    ) {
-        LocalDateTime localDateTime = LocalDateTime.now(ZoneIdUtil.CST);
-        ZonedDateTime today = localDateTime
-                .toLocalDate()
-                .atStartOfDay(ZoneIdUtil.CST)
-                .plusDays(accord);
-
-        Timestamp todayTimestamp = Timestamp.from(today.toInstant());
-        Timestamp tomorrowTimestamp = Timestamp.from(today.plusDays(1).toInstant());
-
-        if (flag) {
-            dateGreaterMap.put("createTime", todayTimestamp);
-            dateLesserMap.put("createTime", tomorrowTimestamp);
-        } else {
-            dateGreaterMap.put("endTime", todayTimestamp);
-            dateLesserMap.put("endTime", tomorrowTimestamp);
-        }
-
-        return formatPage(productService.load(likeMap, dateGreaterMap, dateLesserMap, false, pageNumber, pageSize));
+    private static void setDateMap(@Nullable Date date, @NotNull String key,
+                                   @NotNull Map<String, Date> dateMap) {
+        Optional.ofNullable(date).ifPresent(d -> dateMap.put(key, date));
     }
 
     private <T> JSONObject formatPage(Page<T> page) {
         JSONObject data = new JSONObject();
 
         data.put("total", page.getTotalPages());
+        data.put("pageSize", page.getSize());
         data.put("products", page.getContent());
 
         return data;
