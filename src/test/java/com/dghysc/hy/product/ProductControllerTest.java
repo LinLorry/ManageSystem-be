@@ -220,6 +220,21 @@ public class ProductControllerTest {
     }
 
     @Test
+    public void getCompleteProcesses() {
+        final String url = baseUrl + "/completeProcess";
+
+        HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
+
+        ResponseEntity<JSONObject> responseEntity = restTemplate
+                .exchange(url, HttpMethod.GET, request, JSONObject.class);
+
+        JSONObject response = checkResponse(responseEntity);
+
+        assertNotNull(response.getJSONObject("data"));
+        assertNotNull(response.getJSONObject("data").getInteger("total"));
+    }
+
+    @Test
     public void completeProcess() {
         testUtil.setAuthorities("ROLE_WORKER");
         final String url = baseUrl + "/completeProcess";

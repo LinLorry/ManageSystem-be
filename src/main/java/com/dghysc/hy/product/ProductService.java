@@ -282,6 +282,17 @@ public class ProductService {
     }
 
     /**
+     * Load Product Processes Service
+     * @param pageNumber the page number.
+     * @param pageSize the page size.
+     * @return the product processes page.
+     */
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER', 'WORKER_MANAGER')")
+    Page<ProductProcess> loadProductProcesses(int pageNumber, int pageSize) {
+        return productProcessRepository.findAllByOrderByFinishTimeDesc(PageRequest.of(pageNumber, pageSize));
+    }
+
+    /**
      * Count Not Start Product Service
      * @return the number of han't started products.
      */

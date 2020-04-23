@@ -1,9 +1,12 @@
 package com.dghysc.hy.product;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.product.model.Product;
 import com.dghysc.hy.product.model.ProductProcess;
+import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.util.SecurityUtil;
+import com.dghysc.hy.work.model.Process;
 import com.dghysc.hy.work.model.WorkProcess;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
@@ -201,6 +204,74 @@ public class ProductController {
         }
 
         response.put("status", 1);
+
+        return response;
+    }
+
+    /**
+     * Get Complete Processes Api
+     * @param pageNumber the page number.
+     * @param pageSize the page size.
+     * @return {
+     *     "status": 1,
+     *     "message": "获取最近完成工序信息成功",
+     *     "data": {
+     *         "total": total page number,
+     *         "pageSize: page size,
+     *         "productProcesses": [
+     *              {
+     *                  "productId": product id: int,
+     *                  "processId": process id: int,
+     *                  "finisherId": finisher id: int,
+     *                  "serial": product serial: str,
+     *                  "finishTime": finish time: timestamp,
+     *                  "processName": process name: str,
+     *                  "finisherName": finisher name: str
+     *              },
+     *              ...
+     *         ]
+     *     }
+     * }
+     */
+    @GetMapping("/completeProcess")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER', 'WORKER_MANAGER')")
+    public JSONObject getCompleteProcesses(
+            @RequestParam(defaultValue = "0") int pageNumber,
+            @RequestParam(defaultValue = "20") int pageSize
+    ) {
+        JSONObject response = new JSONObject();
+        JSONObject data = new JSONObject();
+        JSONArray productProcesses = new JSONArray();
+
+        Page<ProductProcess> page = productService
+                .loadProductProcesses(pageNumber, pageSize);
+
+        data.put("total", page.getTotalPages());
+        data.put("pageSize", page.getSize());
+        data.put("productProcesses", productProcesses);
+
+        for (ProductProcess productProcess : page) {
+            final Product product = productProcess.getProduct();
+            final Process process = productProcess.getProcess();
+            final User finisher = productProcess.getFinisher();
+
+            JSONObject one = new JSONObject();
+
+            one.put("productId", product.getId());
+            one.put("processId", process.getId());
+            one.put("finisherId", finisher.getId());
+
+            one.put("serial", product.getSerial());
+            one.put("finishTime", productProcess.getFinishTime());
+            one.put("processName", process.getName());
+            one.put("finisherName", finisher.getName());
+
+            productProcesses.add(one);
+        }
+
+        response.put("status", 1);
+        response.put("message", "获取最近完成工序信息成功");
+        response.put("data", data);
 
         return response;
     }

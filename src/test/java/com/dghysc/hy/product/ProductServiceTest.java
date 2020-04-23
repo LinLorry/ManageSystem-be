@@ -1,6 +1,7 @@
 package com.dghysc.hy.product;
 
 import com.dghysc.hy.product.model.Product;
+import com.dghysc.hy.product.model.ProductProcess;
 import com.dghysc.hy.product.model.ProductProcessId;
 import com.dghysc.hy.product.rep.ProductProcessRepository;
 import com.dghysc.hy.product.rep.ProductRepository;
@@ -18,6 +19,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
@@ -197,5 +199,16 @@ public class ProductServiceTest {
 
         count = productService.countCreateProductDuringTheMonth();
         System.out.println(count);
+    }
+
+    @Test
+    public void loadProductProcesses() {
+        Page<ProductProcess> productProcesses = productService.loadProductProcesses(0, 20);
+
+        assertNotNull(productProcesses);
+        for (ProductProcess productProcess : productProcesses) {
+            System.out.println(productProcess.getProduct());
+            System.out.println(productProcess.getProcess());
+        }
     }
 }

@@ -2,6 +2,8 @@ package com.dghysc.hy.product.rep;
 
 import com.dghysc.hy.product.model.ProductProcess;
 import com.dghysc.hy.product.model.ProductProcessId;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -16,6 +18,8 @@ import java.util.List;
  */
 @Repository
 public interface ProductProcessRepository extends JpaRepository<ProductProcess, ProductProcessId> {
+
+    Page<ProductProcess> findAllByOrderByFinishTimeDesc(Pageable pageable);
 
     List<ProductProcess> findAllByFinishTimeAfterAndFinishTimeBefore(Timestamp after, Timestamp before);
 
