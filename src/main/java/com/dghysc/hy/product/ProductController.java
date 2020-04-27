@@ -8,6 +8,12 @@ import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.util.SecurityUtil;
 import com.dghysc.hy.work.model.Process;
 import com.dghysc.hy.work.model.WorkProcess;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -15,9 +21,11 @@ import org.springframework.lang.Nullable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.EntityNotFoundException;
 import javax.validation.constraints.NotNull;
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.*;
 
@@ -31,6 +39,21 @@ import java.util.*;
 public class ProductController {
 
     private final ProductService productService;
+
+    private final static Map<String, PutValueInJSONObject> fieldActionMap = new HashMap<>();
+
+    static {
+        // TODO special field.
+        fieldActionMap.put("serial", (json, cell) -> json.put("serial", cell.getStringCellValue()));
+        fieldActionMap.put("IGT", (json, cell) -> json.put("IGT", cell.getStringCellValue()));
+        fieldActionMap.put("ERP", (json, cell) -> json.put("ERP", cell.getStringCellValue()));
+        fieldActionMap.put("central", (json, cell) -> json.put("central", cell.toString()));
+        fieldActionMap.put("area", (json, cell) -> json.put("area", cell.getStringCellValue()));
+        fieldActionMap.put("design", (json, cell) -> json.put("design", cell.getStringCellValue()));
+        fieldActionMap.put("beginTime", (json, cell) -> json.put("beginTime", cell.getDateCellValue()));
+        fieldActionMap.put("demandTime", (json, cell) -> json.put("demandTime", cell.getDateCellValue()));
+        fieldActionMap.put("endTime", (json, cell) -> json.put("endTime", cell.getDateCellValue()));
+    }
 
     public ProductController(ProductService productService) {
         this.productService = productService;
@@ -107,6 +130,99 @@ public class ProductController {
                 response.put("message", "生产流程Id不能为空");
             }
         }
+
+        return response;
+    }
+
+    /**
+     * Analysis Excel Api
+     * @param file the excel file.
+     * @return {
+     *     "status": 1 is success, 0 is error,
+     *     "message": str,
+     *     "data": [
+     *          analysis result: object, contains file provide data
+     *          ...
+     *     ]: only on success.
+     * }
+     */
+    @PostMapping("/analysisExcel")
+    public JSONObject analysisExcel(@RequestParam("file") MultipartFile file) {
+        JSONObject response = new JSONObject();
+        JSONArray data = new JSONArray();
+        Workbook workbook;
+
+        String fileName = file.getOriginalFilename();
+        String extension = null;
+
+        if (fileName == null) {
+            response.put("status", 0);
+            response.put("message", "上传文件有误。");
+            return response;
+        }
+
+        int index = fileName.lastIndexOf('.');
+        if (index > 0) {
+            extension = fileName.substring(index+1);
+        }
+
+        try {
+            if ("xls".equals(extension)) {
+                workbook = new HSSFWorkbook(file.getInputStream());
+            } else if ("xlsx".equals(extension)) {
+                workbook = new XSSFWorkbook(file.getInputStream());
+            } else {
+                response.put("status", 0);
+                response.put("message", "上传文件格式不正确，仅支持.xls和.xlsx格式的文件。");
+                return response;
+            }
+        } catch (IOException e) {
+            response.put("status", 0);
+            response.put("message", "服务出现错误，请重试！");
+            return response;
+        }
+
+        Sheet sheet = workbook.getSheetAt(0);
+
+        Iterator<Row> rowIterator = sheet.iterator();
+
+        if (!rowIterator.hasNext()) {
+            response.put("status", 0);
+            response.put("message", "没有数据。");
+            return response;
+        }
+
+        Row field = rowIterator.next();
+        Map<Integer, PutValueInJSONObject> locationActionMap = new HashMap<>();
+        for (int i = 0; locationActionMap.size() != fieldActionMap.size() &&
+                i < field.getPhysicalNumberOfCells() + 5; ++i) {
+            final int finalI = i;
+            Optional.ofNullable(field.getCell(i))
+                    .flatMap(cell -> Optional.ofNullable(cell.getStringCellValue()))
+                    .flatMap(str -> Optional.ofNullable(fieldActionMap.get(str)))
+                    .ifPresent(action -> locationActionMap.put(finalI, action));
+        }
+
+        if (locationActionMap.size() == 0) {
+            response.put("status", 0);
+            response.put("message", "提供的数据不足或命名不规范，请调整后再尝试导入！");
+            return response;
+        }
+
+        while (rowIterator.hasNext()) {
+            final Row one = rowIterator.next();
+            final JSONObject productInfo = new JSONObject();
+
+            locationActionMap.forEach((key, value) ->
+                    Optional.ofNullable(one.getCell(key))
+                            .ifPresent(cell -> value.put(productInfo, cell)));
+
+            data.add(productInfo);
+        }
+
+        response.put("status", 1);
+        response.put("message", "解析数据成功");
+        response.put("data", data);
 
         return response;
     }
@@ -407,6 +523,11 @@ public class ProductController {
         response.put("message", "获取工序完成情况成");
 
         return response;
+    }
+
+    @FunctionalInterface
+    private interface PutValueInJSONObject {
+        void put(JSONObject json, Cell value);
     }
 
     private static void setDateMap(@Nullable Date date, @NotNull String key,
