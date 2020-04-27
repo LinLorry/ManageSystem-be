@@ -93,6 +93,81 @@ public class ProductService {
     }
 
     /**
+     * Add All Products Service
+     * @param serialList the serial list.
+     * @param IGTList the IGT list.
+     * @param ERPList the ERP list
+     * @param centralList the central list.
+     * @param areaList the area list.
+     * @param designList the design list.
+     * @param beginTimeList the begin time list.
+     * @param demandTimeList the demand time list.
+     * @param endTimeList the end time list.
+     * @param workIdList the work id list.
+     * @return the products.
+     * @throws IllegalArgumentException if argument list size not equal.
+     */
+    @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
+    public Iterable<Product> addAll(
+            @NotNull List<String> serialList, @NotNull List<String> IGTList,
+            @NotNull List<String> ERPList, @NotNull List<String> centralList,
+            @NotNull List<String> areaList, @NotNull List<String> designList,
+            @NotNull List<Timestamp> beginTimeList, @NotNull List<Timestamp> demandTimeList,
+            @NotNull List<Timestamp> endTimeList, @NotNull List<Integer> workIdList
+    ) {
+        if (
+                serialList == null || IGTList == null ||
+                ERPList == null || centralList == null ||
+                areaList == null || designList == null ||
+                beginTimeList == null || demandTimeList == null ||
+                endTimeList == null || workIdList == null
+        ) {
+            throw new NullPointerException();
+        }
+        final int size = serialList.size();
+
+        if (
+                IGTList.size() != size || ERPList.size() != size ||
+                centralList.size() != size || areaList.size() != size ||
+                designList.size() != size || beginTimeList.size() != size ||
+                demandTimeList.size() != size || endTimeList.size() != size ||
+                workIdList.size() != size
+        ) {
+            throw new IllegalArgumentException();
+        }
+
+        Iterable<Work> works = workRepository.findAllById(workIdList);
+        Iterator<Work> workIterator = works.iterator();
+        Map<Integer, Work> workMap = new HashMap<>();
+        while (workIterator.hasNext()) {
+            final Work work = workIterator.next();
+            workMap.put(work.getId(), work);
+        }
+
+        Product[] products = new Product[size];
+        final User user = SecurityUtil.getUser();
+
+        for (int i = 0; i < size; ++i) {
+            final Product product =
+                    new Product(serialList.get(i), workMap.get(workIdList.get(i)), user);
+
+            product.setIGT(IGTList.get(i));
+            product.setERP(ERPList.get(i));
+            product.setCentral(centralList.get(i));
+            product.setArea(areaList.get(i));
+            product.setDesign(designList.get(i));
+            product.setBeginTime(beginTimeList.get(i));
+            product.setDemandTime(demandTimeList.get(i));
+            product.setEndTime(endTimeList.get(i));
+
+            products[i] = product;
+        }
+
+        return productRepository.saveAll(Arrays.asList(products));
+    }
+
+    /**
      * Update Product Service.
      * @param id the product id.
      * @param serial the product serial.

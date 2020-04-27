@@ -27,8 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityNotFoundException;
 import java.sql.Timestamp;
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.Comparator;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -121,6 +120,56 @@ public class ProductServiceTest {
 
         assertEquals(id, product.getId());
         assertEquals(serial, product.getSerial());
+    }
+
+    @Test
+    public void addAll() {
+        LocalDate today = LocalDate.now();
+        int size = testUtil.nextInt(20) + 1;
+
+        List<String> serialList = new ArrayList<>(size);
+        List<String> IGTList = new ArrayList<>(size);
+        List<String> ERPList = new ArrayList<>(size);
+        List<String> centralList = new ArrayList<>(size);
+        List<String> areaList = new ArrayList<>(size);
+        List<String> designList = new ArrayList<>(size);
+        List<Timestamp> beginTimeList = new ArrayList<>(size);
+        List<Timestamp> demandTimeList = new ArrayList<>(size);
+        List<Timestamp> endTimeList = new ArrayList<>(size);
+        List<Integer> workIdList = new ArrayList<>(size);
+
+        for (int i = 0; i < size; ++i) {
+            serialList.add(i, testUtil.nextString());
+            IGTList.add(i, testUtil.nextString());
+            ERPList.add(i, testUtil.nextString());
+            centralList.add(i, testUtil.nextString());
+            areaList.add(i, testUtil.nextString());
+            designList.add(i, testUtil.nextString());
+            beginTimeList.add(i, Timestamp.valueOf(today.plusDays(-testUtil.nextInt(365)).atStartOfDay()));
+            demandTimeList.add(i, Timestamp.valueOf(today.plusDays(testUtil.nextInt(365)).atStartOfDay()));
+            endTimeList.add(i, Timestamp.valueOf(today.plusDays(testUtil.nextInt(365)).atStartOfDay()));
+            workIdList.add(i, testUtil.nextId(Work.class));
+        }
+
+        Iterable<Product> products = productService.addAll(serialList, IGTList, ERPList, centralList, areaList, designList, beginTimeList, demandTimeList, endTimeList, workIdList);
+        Iterator<Product> productIterator = products.iterator();
+
+        int tmp = 0;
+        while (productIterator.hasNext()) {
+            final Product product = productIterator.next();
+
+            assertEquals(serialList.get(tmp), product.getSerial());
+            assertEquals(IGTList.get(tmp), product.getIGT());
+            assertEquals(ERPList.get(tmp), product.getERP());
+            assertEquals(centralList.get(tmp), product.getCentral());
+            assertEquals(areaList.get(tmp), product.getArea());
+            assertEquals(designList.get(tmp), product.getDesign());
+            assertEquals(workIdList.get(tmp), product.getWorkId());
+
+            tmp++;
+        }
+
+        assertEquals(size, tmp);
     }
 
     @Test
