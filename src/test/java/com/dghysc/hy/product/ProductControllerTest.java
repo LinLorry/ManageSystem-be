@@ -1,5 +1,6 @@
 package com.dghysc.hy.product;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.product.model.Product;
 import com.dghysc.hy.product.rep.ProductRepository;
@@ -102,6 +103,40 @@ public class ProductControllerTest {
 
         ResponseEntity<JSONObject> responseEntity = restTemplate.exchange(
                 baseUrl, HttpMethod.POST, request, JSONObject.class
+        );
+
+        checkResponse(responseEntity);
+    }
+
+    @Test
+    public void createAll() {
+        final String url = baseUrl + "/createAll";
+
+        final int size = testUtil.nextInt(20) + 1;
+        JSONArray requestBody = new JSONArray(size);
+
+        for (int i = 0; i < size; ++i) {
+            JSONObject one = new JSONObject();
+            LocalDate today = LocalDate.now();
+
+            one.put("serial", testUtil.nextString());
+            one.put("IGT", testUtil.nextString());
+            one.put("ERP", testUtil.nextString());
+            one.put("central", testUtil.nextString());
+            one.put("area", testUtil.nextString());
+            one.put("design", testUtil.nextString());
+            one.put("beginTime", Timestamp.valueOf(today.plusDays(-testUtil.nextInt(365)).atStartOfDay()));
+            one.put("demandTime", Timestamp.valueOf(today.plusDays(testUtil.nextInt(365)).atStartOfDay()));
+            one.put("endTime", Timestamp.valueOf(today.plusDays(testUtil.nextInt(365)).atStartOfDay()));
+            one.put("workId", testUtil.nextId(Work.class));
+
+            requestBody.add(one);
+        }
+
+        HttpEntity<JSONArray> request = new HttpEntity<>(requestBody, testUtil.getTokenHeader());
+
+        ResponseEntity<JSONObject> responseEntity = restTemplate.exchange(
+                url, HttpMethod.POST, request, JSONObject.class
         );
 
         checkResponse(responseEntity);

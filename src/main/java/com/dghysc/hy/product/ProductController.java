@@ -134,6 +134,52 @@ public class ProductController {
         return response;
     }
 
+    @PostMapping("/createAll")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
+    public JSONObject createOrUpdate(@RequestBody JSONArray request) {
+        JSONObject response = new JSONObject();
+
+        int size = request.size();
+
+        List<String> serialList = new ArrayList<>(size);
+        List<String> IGTList = new ArrayList<>(size);
+        List<String> ERPList = new ArrayList<>(size);
+        List<String> centralList = new ArrayList<>(size);
+        List<String> areaList = new ArrayList<>(size);
+        List<String> designList = new ArrayList<>(size);
+        List<Timestamp> beginTimeList = new ArrayList<>(size);
+        List<Timestamp> demandTimeList = new ArrayList<>(size);
+        List<Timestamp> endTimeList = new ArrayList<>(size);
+        List<Integer> workIdList = new ArrayList<>(size);
+
+        for (int i = 0; i < size; ++i) {
+            final JSONObject one = request.getJSONObject(i);
+
+            serialList.add(i, one.getString("serial"));
+            IGTList.add(i, one.getString("IGT"));
+            ERPList.add(i, one.getString("ERP"));
+            centralList.add(i, one.getString("central"));
+            areaList.add(i, one.getString("area"));
+            designList.add(i, one.getString("design"));
+            beginTimeList.add(i, one.getTimestamp("beginTime"));
+            demandTimeList.add(i, one.getTimestamp("demandTime"));
+            endTimeList.add(i, one.getTimestamp("endTime"));
+            workIdList.add(i, one.getInteger("workId"));
+        }
+
+        response.put("data", productService.addAll(
+                serialList, IGTList,
+                ERPList, centralList,
+                areaList, designList,
+                beginTimeList, demandTimeList,
+                endTimeList, workIdList
+        ));
+        response.put("status", 1);
+        response.put("message", "批量创建订单成功");
+
+        return response;
+    }
+
     /**
      * Analysis Excel Api
      * @param file the excel file.
