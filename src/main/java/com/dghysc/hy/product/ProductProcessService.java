@@ -9,8 +9,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
+import javax.validation.constraints.NotNull;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Product Process Service
@@ -47,9 +49,13 @@ public class ProductProcessService {
      * @param after load finish time after this.
      * @param before load finish time before this.
      * @return the product processes.
+     * @throws NullPointerException if {@literal after} or {@literal before} is {@literal null}.
      */
     @PreAuthorize("hasAnyRole('ADMIN', 'WORKER_MANAGER')")
-    public List<ProductProcess> loadAllByFinishTimeAfterAndFinishTimeBefore(Timestamp after, Timestamp before) {
-        return productProcessRepository.findAllByFinishTimeAfterAndFinishTimeBefore(after, before);
+    public List<ProductProcess> loadAllByFinishTimeAfterAndFinishTimeBefore(
+            @NotNull Timestamp after, @NotNull Timestamp before) {
+        return productProcessRepository.findAllByFinishTimeAfterAndFinishTimeBefore(
+                Optional.of(after).get(), Optional.of(before).get()
+        );
     }
 }
