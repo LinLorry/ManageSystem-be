@@ -2,7 +2,6 @@ package com.dghysc.hy.work;
 
 import com.dghysc.hy.exception.UserNoFoundException;
 import com.dghysc.hy.exception.UserNotWorkerException;
-import com.dghysc.hy.product.model.ProductProcess;
 import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.util.TestUtil;
 import com.dghysc.hy.work.model.Process;
@@ -13,7 +12,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Page;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.ArrayList;
@@ -76,26 +74,6 @@ public class UserProcessServiceTest {
         for (Process process : processes) {
             System.out.println(process.getId());
             System.out.println(process);
-        }
-    }
-
-    @Test
-    public void loadAllTodayFinish() {
-        testUtil.setAuthorities("ROLE_WORKER_MANAGER");
-
-        List<ProductProcess> productProcesses = userProcessService.loadAllTodayFinish();
-
-        assertNotNull(productProcesses);
-    }
-
-    @Test
-    public void loadAllSelfFinish() {
-        testUtil.setAuthorities("ROLE_ADMIN");
-        Page<ProductProcess> productProcesses = userProcessService.loadAllSelfFinish(0, 20);
-        assertNotNull(productProcesses);
-
-        for (ProductProcess productProcess : productProcesses) {
-            System.out.println(productProcess.getFinishTime());
         }
     }
 }

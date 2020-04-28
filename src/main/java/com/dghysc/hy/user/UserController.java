@@ -2,12 +2,14 @@ package com.dghysc.hy.user;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.dghysc.hy.product.ProductProcessService;
 import com.dghysc.hy.product.ProductService;
 import com.dghysc.hy.product.model.Product;
 import com.dghysc.hy.product.model.ProductProcess;
 import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.util.SecurityUtil;
 import com.dghysc.hy.util.TokenUtil;
+import com.dghysc.hy.util.ZoneIdUtil;
 import com.dghysc.hy.work.UserProcessService;
 import com.dghysc.hy.work.model.Process;
 import org.springframework.data.domain.Page;
@@ -16,6 +18,9 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityNotFoundException;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.*;
 
 /**
@@ -35,14 +40,18 @@ public class UserController {
 
     private final ProductService productService;
 
+    private final ProductProcessService productProcessService;
+
     public UserController(
             TokenUtil tokenUtil, UserService userService,
-            UserProcessService userProcessService, ProductService productService
+            UserProcessService userProcessService, ProductService productService,
+            ProductProcessService productProcessService
     ) {
         this.tokenUtil = tokenUtil;
         this.userService = userService;
         this.userProcessService = userProcessService;
         this.productService = productService;
+        this.productProcessService = productProcessService;
     }
 
     /**
@@ -281,7 +290,7 @@ public class UserController {
         JSONObject response = new JSONObject();
         JSONObject data = new JSONObject();
 
-        Page<ProductProcess> page = userProcessService.loadAllSelfFinish(pageNumber, pageSize);
+        Page<ProductProcess> page = productProcessService.loadAllSelfFinish(pageNumber, pageSize);
         JSONArray productProcesses = new JSONArray(page.getNumberOfElements());
 
         for (ProductProcess productProcess : page) {
@@ -326,8 +335,19 @@ public class UserController {
         JSONArray finishInfo = new JSONArray();
         JSONArray finisherInfo = new JSONArray();
 
+        LocalDateTime localDateTime = LocalDateTime.now(ZoneIdUtil.CST);
+        ZonedDateTime today = localDateTime
+                .toLocalDate()
+                .atStartOfDay(ZoneIdUtil.CST);
+
+        Timestamp todayTimestamp = Timestamp.from(today.toInstant());
+        Timestamp tomorrowTimestamp = Timestamp.from(today.plusDays(1).toInstant());
+
         Map<Long, List<ProductProcess>> finisherProductProcessesMap = new HashMap<>();
-        List<ProductProcess> productProcesses = userProcessService.loadAllTodayFinish();
+        List<ProductProcess> productProcesses = productProcessService
+                .loadAllByFinishTimeAfterAndFinishTimeBefore(
+                        todayTimestamp, tomorrowTimestamp
+                );
 
         productProcesses.forEach(productProcess -> {
             JSONObject one = new JSONObject();
