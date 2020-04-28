@@ -2,6 +2,10 @@ package com.dghysc.hy.product.rep;
 
 import com.dghysc.hy.product.model.ProductProcess;
 import com.dghysc.hy.product.model.ProductProcessId;
+import com.dghysc.hy.user.model.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -18,5 +22,7 @@ import java.util.List;
 public interface ProductProcessRepository extends JpaRepository<ProductProcess, ProductProcessId> {
 
     List<ProductProcess> findAllByFinishTimeAfterAndFinishTimeBefore(Timestamp after, Timestamp before);
+
+    Page<ProductProcess> findAllByFinisher(User finisher, Pageable pageable);
 
 }
