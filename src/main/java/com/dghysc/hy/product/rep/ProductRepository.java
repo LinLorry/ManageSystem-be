@@ -56,4 +56,6 @@ public interface ProductRepository extends CrudRepository<Product, Long>, JpaSpe
     int countAllCanComplete();
 
     int countAllByCreateTimeAfterAndCreateTimeBefore(Timestamp after, Timestamp before);
+
+    int countAllByCompleteTimeAfterAndCompleteTimeBefore(Timestamp after, Timestamp before);
 }
