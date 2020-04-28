@@ -61,4 +61,9 @@ public class WorkerControllerTest {
         JSONObject response = checkResponse(responseEntity);
         assertEquals(isWorker, response.getBooleanValue("data"));
     }
+
+    @Test
+    public void statisticalWorkerFinishProductProcesses() {
+
+    }
 }
