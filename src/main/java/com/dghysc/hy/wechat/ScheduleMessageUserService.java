@@ -40,4 +40,12 @@ public class ScheduleMessageUserService {
     public void remove(@NotNull String id) {
         scheduleMessageUserRepository.deleteById(id);
     }
+
+    /**
+     * Load All Schedule Message User
+     * @return the schedule message users.
+     */
+    public Iterable<ScheduleMessageUser> loadAll() {
+        return scheduleMessageUserRepository.findAll();
+    }
 }
