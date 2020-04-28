@@ -1,16 +1,25 @@
 package com.dghysc.hy.work;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.dghysc.hy.product.ProductProcessService;
+import com.dghysc.hy.product.model.Product;
+import com.dghysc.hy.product.model.ProductProcess;
 import com.dghysc.hy.user.UserService;
 import com.dghysc.hy.user.model.Role;
 import com.dghysc.hy.user.model.User;
+import com.dghysc.hy.util.ZoneIdUtil;
+import com.dghysc.hy.work.model.Process;
 import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityNotFoundException;
-import java.util.Optional;
+import java.sql.Timestamp;
+import java.time.ZonedDateTime;
+import java.util.*;
 
 /**
  * Worker Controller
@@ -24,8 +33,11 @@ public class WorkerController {
 
     private final UserService userService;
 
-    public WorkerController(UserService userService) {
+    private final ProductProcessService productProcessService;
+
+    public WorkerController(UserService userService, ProductProcessService productProcessService) {
         this.userService = userService;
+        this.productProcessService = productProcessService;
     }
 
     /**
@@ -156,6 +168,87 @@ public class WorkerController {
             response.put("status", 0);
             response.put("message", "Id为：" + id + "的用户不存在");
         }
+
+        return response;
+    }
+
+    /**
+     * Statistical Worker Finish Product Processes Api
+     * @param mouth the mouth: timestamp
+     * @return {
+     *     "status": 1,
+     *     "message": message: str,
+     *     "data": [
+     *          {
+     *              "id": finisher id: int,
+     *              "name": finisher name: str,
+     *              "finishList": [
+     *                  {
+     *                      "productId": the product id: int,
+     *                      "serial": the product serial: str,
+     *                      "processId": the process id: int,
+     *                      "processName": the process name: str,
+     *                      "finishTime": finish time: timestamp
+     *                  },
+     *                  ...
+     *              ]
+     *          },
+     *          ...
+     *     ]
+     * }
+     */
+    @GetMapping("/statistical")
+    public JSONObject statisticalWorkerFinishProductProcesses(
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            @RequestParam Date mouth
+    ) {
+        JSONObject response = new JSONObject();
+        JSONArray data = new JSONArray();
+        Map<Long, JSONObject> workerFinishMap = new HashMap<>();
+
+        ZonedDateTime zonedDateTime = mouth.toInstant().atZone(ZoneIdUtil.CST);
+
+        Timestamp thisMouth = Timestamp.from(zonedDateTime.toInstant());
+        Timestamp nextMouth = Timestamp.from(zonedDateTime.plusMonths(1).toInstant());
+
+        List<ProductProcess> productProcesses = productProcessService.loadAllByFinishTimeAfterAndFinishTimeBefore(thisMouth, nextMouth);
+
+        for (ProductProcess productProcess : productProcesses) {
+            final Product product = productProcess.getProduct();
+            final Process process = productProcess.getProcess();
+
+            final User finisher = productProcess.getFinisher();
+            final JSONObject finishInfo;
+            final JSONArray finishList;
+            final JSONObject one = new JSONObject();
+
+            if (workerFinishMap.containsKey(finisher.getId())) {
+                finishInfo = workerFinishMap.get(finisher.getId());
+                finishList = finishInfo.getJSONArray("finishList");
+            } else {
+                finishInfo = new JSONObject();
+                finishList = new JSONArray();
+
+                data.add(finishInfo);
+
+                workerFinishMap.put(finisher.getId(), finishInfo);
+
+                finishInfo.put("id", finisher.getId());
+                finishInfo.put("name", finisher.getName());
+                finishInfo.put("finishList", finishList);
+            }
+            finishList.add(one);
+
+            one.put("productId", product.getId());
+            one.put("serial", product.getSerial());
+            one.put("processId", process.getId());
+            one.put("processName", process.getName());
+            one.put("finishTime", productProcess.getFinishTime());
+        }
+
+        response.put("data", data);
+        response.put("status", 1);
+        response.put("message", "获取员工" + zonedDateTime.getMonth() + "月工作统计成功");
 
         return response;
     }
