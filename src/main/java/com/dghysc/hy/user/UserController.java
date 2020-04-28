@@ -9,6 +9,8 @@ import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.util.SecurityUtil;
 import com.dghysc.hy.util.TokenUtil;
 import com.dghysc.hy.work.UserProcessService;
+import com.dghysc.hy.work.model.Process;
+import org.springframework.data.domain.Page;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
@@ -243,6 +245,67 @@ public class UserController {
         response.put("status", 1);
         response.put("message", "获取工序成功");
         response.put("data", userProcessService.loadByUserId(SecurityUtil.getUserId()));
+
+        return response;
+    }
+
+    /**
+     * Get Self Finish Product Processes Api
+     * @param pageNumber the page number.
+     * @param pageSize the page size.
+     * @return {
+     *     "status": 1,
+     *     "message": message: str,
+     *     "data": {
+     *         "total": total page number: int,
+     *         "size": page size: int,
+     *         "productProcesses": [
+     *              {
+     *                  "productId": the product id: int,
+     *                  "processId": the process id: int,
+     *                  "finishTime": the finish time: timestamp,
+     *                  "processName": the process name: str,
+     *                  "productSerial": the product serial: str,
+     *                  "design": " the design: str
+     *              },
+     *              ...
+     *         ]
+     *     }
+     * }
+     */
+    @GetMapping("/selfFinish")
+    public JSONObject getSelfFinishProductProcesses(
+            @RequestParam(defaultValue = "0") int pageNumber,
+            @RequestParam(defaultValue = "20") int pageSize
+    ) {
+        JSONObject response = new JSONObject();
+        JSONObject data = new JSONObject();
+
+        Page<ProductProcess> page = userProcessService.loadAllSelfFinish(pageNumber, pageSize);
+        JSONArray productProcesses = new JSONArray(page.getNumberOfElements());
+
+        for (ProductProcess productProcess : page) {
+            final JSONObject json = new JSONObject();
+            final Product product = productProcess.getProduct();
+            final Process process = productProcess.getProcess();
+
+            json.put("productId", productProcess.getProductId());
+            json.put("processId", productProcess.getProcessId());
+            json.put("finishTime", productProcess.getFinishTime());
+            json.put("processName", process.getName());
+            json.put("productSerial", product.getSerial());
+            json.put("design", product.getDesign());
+
+            productProcesses.add(json);
+        }
+
+        data.put("total", page.getTotalPages());
+        data.put("size", page.getSize());
+        data.put("productProcesses", productProcesses);
+
+        response.put("status", 1);
+        response.put("message", "");
+        response.put("data", data);
 
         return response;
     }

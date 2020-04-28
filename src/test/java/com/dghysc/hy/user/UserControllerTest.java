@@ -69,4 +69,18 @@ public class UserControllerTest {
 
         checkResponse(responseEntity);
     }
+
+    @Test
+    public void getSelfFinishProductProcesses() {
+        testUtil.setAuthorities("ROLE_WORKER");
+
+        String url = baseUrl + "/selfFinish";
+
+        HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
+
+        ResponseEntity<JSONObject> responseEntity = restTemplate
+                .exchange(url, HttpMethod.GET, request, JSONObject.class);
+
+        checkResponse(responseEntity);
+    }
 }
