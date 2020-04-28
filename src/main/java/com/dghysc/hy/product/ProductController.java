@@ -193,6 +193,7 @@ public class ProductController {
      * }
      */
     @PostMapping("/analysisExcel")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
     public JSONObject analysisExcel(@RequestParam("file") MultipartFile file) {
         JSONObject response = new JSONObject();
         JSONArray data = new JSONArray();
