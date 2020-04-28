@@ -3,13 +3,11 @@ package com.dghysc.hy.work;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.product.ProductProcessService;
-import com.dghysc.hy.product.model.Product;
 import com.dghysc.hy.product.model.ProductProcess;
 import com.dghysc.hy.user.UserService;
 import com.dghysc.hy.user.model.Role;
 import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.util.ZoneIdUtil;
-import com.dghysc.hy.work.model.Process;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -213,14 +211,13 @@ public class WorkerController {
 
         List<ProductProcess> productProcesses = productProcessService.loadAllByFinishTimeAfterAndFinishTimeBefore(thisMouth, nextMouth);
 
-        for (ProductProcess productProcess : productProcesses) {
-            final Product product = productProcess.getProduct();
-            final Process process = productProcess.getProcess();
-
-            final User finisher = productProcess.getFinisher();
+        productProcesses.forEach(productProcess ->
+                Optional.ofNullable(productProcess.getFinisher()).ifPresent(finisher-> {
             final JSONObject finishInfo;
             final JSONArray finishList;
             final JSONObject one = new JSONObject();
+
+            one.put("finishTime", productProcess.getFinishTime());
 
             if (workerFinishMap.containsKey(finisher.getId())) {
                 finishInfo = workerFinishMap.get(finisher.getId());
@@ -239,12 +236,24 @@ public class WorkerController {
             }
             finishList.add(one);
 
-            one.put("productId", product.getId());
-            one.put("serial", product.getSerial());
-            one.put("processId", process.getId());
-            one.put("processName", process.getName());
-            one.put("finishTime", productProcess.getFinishTime());
-        }
+            Optional.ofNullable(productProcess.getProduct())
+                    .ifPresentOrElse(product -> {
+                        one.put("productId", product.getId());
+                        one.put("serial", product.getSerial());
+                    }, () -> {
+                        one.put("productId", -1);
+                        one.put("serial", "null");
+                    });
+
+            Optional.ofNullable(productProcess.getProcess())
+                    .ifPresentOrElse(process -> {
+                        one.put("processId", process.getId());
+                        one.put("processName", process.getName());
+                    }, () -> {
+                        one.put("processId", -1);
+                        one.put("processName", "null");
+                    });
+        }));
 
         response.put("data", data);
         response.put("status", 1);
