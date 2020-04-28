@@ -136,7 +136,7 @@ public class ProductController {
 
     @PostMapping("/createAll")
     @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
-    public JSONObject createOrUpdate(@RequestBody JSONArray request) {
+    public JSONObject createAll(@RequestBody JSONArray request) {
         JSONObject response = new JSONObject();
 
         int size = request.size();
