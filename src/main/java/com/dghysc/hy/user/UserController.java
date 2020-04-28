@@ -9,6 +9,7 @@ import com.dghysc.hy.product.model.ProductProcess;
 import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.util.SecurityUtil;
 import com.dghysc.hy.util.TokenUtil;
+import com.dghysc.hy.util.ZoneIdUtil;
 import com.dghysc.hy.work.UserProcessService;
 import com.dghysc.hy.work.model.Process;
 import org.springframework.data.domain.Page;
@@ -17,6 +18,9 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityNotFoundException;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.*;
 
 /**
@@ -331,8 +335,19 @@ public class UserController {
         JSONArray finishInfo = new JSONArray();
         JSONArray finisherInfo = new JSONArray();
 
+        LocalDateTime localDateTime = LocalDateTime.now(ZoneIdUtil.CST);
+        ZonedDateTime today = localDateTime
+                .toLocalDate()
+                .atStartOfDay(ZoneIdUtil.CST);
+
+        Timestamp todayTimestamp = Timestamp.from(today.toInstant());
+        Timestamp tomorrowTimestamp = Timestamp.from(today.plusDays(1).toInstant());
+
         Map<Long, List<ProductProcess>> finisherProductProcessesMap = new HashMap<>();
-        List<ProductProcess> productProcesses = productProcessService.loadAllTodayFinish();
+        List<ProductProcess> productProcesses = productProcessService
+                .loadAllByFinishTimeAfterAndFinishTimeBefore(
+                        todayTimestamp, tomorrowTimestamp
+                );
 
         productProcesses.forEach(productProcess -> {
             JSONObject one = new JSONObject();

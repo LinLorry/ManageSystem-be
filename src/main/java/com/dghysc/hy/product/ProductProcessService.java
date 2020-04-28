@@ -3,7 +3,6 @@ package com.dghysc.hy.product;
 import com.dghysc.hy.product.model.ProductProcess;
 import com.dghysc.hy.product.rep.ProductProcessRepository;
 import com.dghysc.hy.util.SecurityUtil;
-import com.dghysc.hy.util.ZoneIdUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -11,8 +10,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
 import java.util.List;
 
 /**
@@ -30,25 +27,6 @@ public class ProductProcessService {
     }
 
     /**
-     * Load All Today Finish Product Processes Service
-     * @return the list of today finish product processes.
-     */
-    @PreAuthorize("hasAnyRole('ADMIN', 'WORKER_MANAGER')")
-    public List<ProductProcess> loadAllTodayFinish() {
-        LocalDateTime localDateTime = LocalDateTime.now(ZoneIdUtil.CST);
-        ZonedDateTime today = localDateTime
-                .toLocalDate()
-                .atStartOfDay(ZoneIdUtil.CST);
-
-        Timestamp todayTimestamp = Timestamp.from(today.toInstant());
-        Timestamp tomorrowTimestamp = Timestamp.from(today.plusDays(1).toInstant());
-
-        return productProcessRepository.findAllByFinishTimeAfterAndFinishTimeBefore(
-                todayTimestamp, tomorrowTimestamp
-        );
-    }
-
-    /**
      * Load All Self Finish Product Processes
      * @param pageNumber the page number.
      * @param pageSize the page size
@@ -62,5 +40,16 @@ public class ProductProcessService {
                         Sort.by("finishTime").descending()
                 )
         );
+    }
+
+    /**
+     * Load All Product Processes By Finish Time Scope
+     * @param after load finish time after this.
+     * @param before load finish time before this.
+     * @return the product processes.
+     */
+    @PreAuthorize("hasAnyRole('ADMIN', 'WORKER_MANAGER')")
+    public List<ProductProcess> loadAllByFinishTimeAfterAndFinishTimeBefore(Timestamp after, Timestamp before) {
+        return productProcessRepository.findAllByFinishTimeAfterAndFinishTimeBefore(after, before);
     }
 }
