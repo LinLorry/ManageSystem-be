@@ -1,8 +1,10 @@
 package com.dghysc.hy.wechat;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.exception.*;
 import com.dghysc.hy.util.TokenUtil;
+import com.dghysc.hy.wechat.model.ScheduleMessageUser;
 import com.dghysc.hy.wechat.model.WechatUser;
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -31,13 +33,16 @@ public class WechatController {
 
     private final WechatUserService wechatUserService;
 
+    private final ScheduleMessageUserService scheduleMessageUserService;
+
     public WechatController(
             TokenUtil tokenUtil, WechatServer wechatServer,
-            WechatUserService wechatUserService
-    ) {
+            WechatUserService wechatUserService,
+            ScheduleMessageUserService scheduleMessageUserService) {
         this.tokenUtil = tokenUtil;
         this.wechatServer = wechatServer;
         this.wechatUserService = wechatUserService;
+        this.scheduleMessageUserService = scheduleMessageUserService;
     }
 
     /**
@@ -189,6 +194,52 @@ public class WechatController {
         response.put("status", 1);
         response.put("message", "提交个人信息成功");
         response.put("data", wechatUser);
+
+        return response;
+    }
+
+    /**
+     * Get Schedule Message User Api
+     * @return {
+     *     "status": 1,
+     *     "message": "get schedule message users success",
+     *     "data": [
+     *          {
+     *              "id": the user id: int,
+     *              "wechatId": the wechat user id: int,
+     *              "username": the user username: str,
+     *              "name": the user name: str
+     *          }
+     *     ]
+     * }
+     */
+    @GetMapping("/scheduleMessage")
+    @PreAuthorize("hasRole('ADMIN')")
+    public JSONObject getScheduleMessageUser() {
+        JSONObject response = new JSONObject();
+        JSONArray data = new JSONArray();
+
+        Iterable<ScheduleMessageUser> scheduleMessageUsers = scheduleMessageUserService.loadAll();
+        scheduleMessageUsers.forEach(scheduleMessageUser -> {
+            final JSONObject one = new JSONObject();
+            one.put("wechatId", scheduleMessageUser.getId());
+            Optional.ofNullable(scheduleMessageUser.getWechatUser())
+                    .flatMap(wechatUser -> Optional.ofNullable(wechatUser.getUser()))
+                    .ifPresentOrElse( user -> {
+                        one.put("id", user.getId());
+                        one.put("name", user.getName());
+                        one.put("username", user.getUsername());
+                    }, () -> {
+                        one.put("id", "null");
+                        one.put("name", "null");
+                        one.put("username", "null");
+                    });
+            data.add(one);
+        });
+
+        response.put("status", 1);
+        response.put("message", "get schedule message users success");
+        response.put("data", data);
 
         return response;
     }

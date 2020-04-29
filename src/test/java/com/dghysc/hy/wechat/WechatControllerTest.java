@@ -74,4 +74,16 @@ public class WechatControllerTest {
 
         checkResponse(responseEntity);
     }
+
+    @Test
+    public void getScheduleMessageUser() {
+        String url = baseUrl + "/scheduleMessage";
+        HttpEntity<JSONObject> request = new HttpEntity<>(testUtil.getTokenHeader());
+
+        ResponseEntity<JSONObject> responseEntity = restTemplate.exchange(
+                url, HttpMethod.GET, request, JSONObject.class
+        );
+
+        checkResponse(responseEntity);
+    }
 }

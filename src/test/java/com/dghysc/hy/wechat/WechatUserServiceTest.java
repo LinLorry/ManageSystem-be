@@ -12,6 +12,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 
+import javax.persistence.EntityNotFoundException;
+
 import static org.junit.Assert.*;
 
 @SpringBootTest
@@ -53,5 +55,18 @@ public class WechatUserServiceTest {
         wechatUser = wechatUserService.addUser(id);
 
         assertNotNull(wechatUser.getUser());
+    }
+
+    @Test
+    public void loadByUserId() {
+        WechatUser wechatUser;
+        do {
+            wechatUser = wechatUserRepository.findById(testUtil.nextId(WechatUser.class))
+                    .orElseThrow(EntityNotFoundException::new);
+        } while (wechatUser.getUser() == null);
+        final Long id = wechatUser.getUser().getId();
+        WechatUser result = wechatUserService.loadByUserId(id);
+
+        assertEquals(wechatUser.getId(), result.getId());
     }
 }

@@ -183,6 +183,18 @@ public class WechatUserService {
     }
 
     /**
+     * Load Wechat User By User Id
+     * @param id the user id.
+     * @return the wechat user.
+     * @throws NullPointerException {@code id} is {@literal null}
+     * @throws EntityNotFoundException wechat user not exist.
+     */
+    public WechatUser loadByUserId(@NotNull Long id) {
+        return wechatUserRepository.findByUserId(Optional.of(id).get())
+                .orElseThrow(EntityNotFoundException::new);
+    }
+
+    /**
      * Load Wechat Users Service
      * @param likeMap {
      *      "the wechat user field": value will be equal by "%value%"

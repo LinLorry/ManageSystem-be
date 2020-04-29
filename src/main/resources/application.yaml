@@ -35,7 +35,9 @@ manage:
   wechat:
     appId: ${WECHAT_APPID:appid}
     secret: ${WECHAT_SECRET:secret}
+    dailyReportTemplateId: ${WECHAT_DAILY_REPORT_TEMPLATE_ID:id}
     accessTokenURL: ${WECHAT_ACCESS_TOKEN_URL:https://api.weixin.qq.com/cgi-bin/token}
     userAccessTokenURL: ${WECHAT_USER_ACCESS_TOKEN_URL:https://api.weixin.qq.com/sns/oauth2/access_token}
     refreshAccessTokenURL: ${WECHAT_REFRESH_ACCESS_TOKEN_URL:https://api.weixin.qq.com/sns/oauth2/refresh_token}
     userInfoURL: ${WECHAT_USER_INFO_URL:https://api.weixin.qq.com/sns/userinfo}
+    messageURL: ${WECHAT_MESSAGE_URL:https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=}
