@@ -49,4 +49,9 @@ public class ScheduleMessageUserServiceTest {
             System.out.println(scheduleMessageUser.getWechatUser().getName());
         }
     }
+
+    @Test
+    public void sendMessage() {
+        scheduleMessageUserService.sendDailyMessage();
+    }
 }

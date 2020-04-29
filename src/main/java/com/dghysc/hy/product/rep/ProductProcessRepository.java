@@ -26,4 +26,6 @@ public interface ProductProcessRepository extends JpaRepository<ProductProcess, 
 
     Page<ProductProcess> findAllByFinisher(User finisher, Pageable pageable);
 
+    int countAllByFinishTimeAfterAndFinishTimeBefore(Timestamp after, Timestamp before);
+
 }
