@@ -4,8 +4,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.dghysc.hy.exception.WechatConfigWrongException;
 import com.dghysc.hy.exception.WechatServiceDownException;
 import com.dghysc.hy.wechat.WechatServer;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -25,8 +23,6 @@ public class WechatMessageUtil {
 
     private final WechatServer wechatServer;
 
-    private final Log logger;
-
     private final RestTemplate restTemplate;
 
     public WechatMessageUtil(
@@ -34,7 +30,6 @@ public class WechatMessageUtil {
             WechatServer wechatServer) {
         this.messageURL = messageURL;
         this.wechatServer = wechatServer;
-        this.logger = LogFactory.getLog(this.getClass());
         this.restTemplate = new RestTemplate();
     }
 
@@ -63,34 +58,26 @@ public class WechatMessageUtil {
                 .exchange(messageURL, HttpMethod.POST, requestEntity, JSONObject.class);
 
         if (!responseEntity.getStatusCode().is2xxSuccessful()) {
-            String message = "Send wechat template message failed.\n" +
-                    "Return status: " + responseEntity.getStatusCode();
-            logger.error(message);
-            throw new WechatServiceDownException(message);
+            throw new WechatServiceDownException("Send wechat template message failed.\n" +
+                    "Return status: " + responseEntity.getStatusCode());
         }
 
         JSONObject response = Optional.ofNullable(responseEntity.getBody())
-                .orElseThrow(() -> {
-                    String message = "Send wechat template message response body null.";
-                    logger.error(message);
-                    return new WechatServiceDownException(message);
-                });
+                .orElseThrow(() ->
+                        new WechatServiceDownException("Send wechat template message response body null.")
+                );
 
 
-        int errcode =
-                Optional.ofNullable(response.getInteger("errcode"))
-                .orElseThrow(() -> {
-                    String message = "Send wechat template message response defect 'errcode'.\n" +
-                            "Response: " + response;
-                    logger.error(message);
-                    return new WechatServiceDownException(message);
-                });
+        int errcode = Optional.ofNullable(response.getInteger("errcode"))
+                .orElseThrow(() ->
+                        new WechatServiceDownException("Send wechat template message response defect 'errcode'.\n" +
+                                "Response: " + response)
+                );
 
         if (errcode != 0) {
-            String message = "Send wechat template message failed. \n" +
-                    "Errcode: " + errcode;
-            logger.error(message);
-            throw new WechatConfigWrongException(message);
+            throw new WechatConfigWrongException("Send wechat template message failed. \n" +
+                    "Errcode: " + errcode +
+                    "\nErrmsg" + response.getString("errmsg"));
         }
     }
 }
