@@ -2,18 +2,27 @@ package com.dghysc.hy.product;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.dghysc.hy.exception.WechatConfigWrongException;
+import com.dghysc.hy.exception.WechatServiceDownException;
 import com.dghysc.hy.product.model.Product;
 import com.dghysc.hy.product.model.ProductProcess;
 import com.dghysc.hy.user.model.User;
 import com.dghysc.hy.util.SecurityUtil;
+import com.dghysc.hy.util.WechatMessageUtil;
+import com.dghysc.hy.util.ZoneIdUtil;
+import com.dghysc.hy.wechat.WechatUserService;
+import com.dghysc.hy.wechat.model.WechatUser;
 import com.dghysc.hy.work.model.Process;
 import com.dghysc.hy.work.model.WorkProcess;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -27,7 +36,10 @@ import javax.persistence.EntityNotFoundException;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+
+import static com.dghysc.hy.util.WechatMessageUtil.createData;
 
 /**
  * Product Controller
@@ -38,7 +50,17 @@ import java.util.*;
 @RequestMapping("/api/product")
 public class ProductController {
 
+    private final String finishProcessTemplateId;
+
     private final ProductService productService;
+
+    private final ProductProcessService productProcessService;
+
+    private final WechatUserService wechatUserService;
+
+    private final WechatMessageUtil wechatMessageUtil;
+
+    private final Log logger;
 
     private final static Map<String, PutValueInJSONObject> fieldActionMap = new HashMap<>();
 
@@ -55,8 +77,19 @@ public class ProductController {
         fieldActionMap.put("endTime", (json, cell) -> json.put("endTime", cell.getDateCellValue()));
     }
 
-    public ProductController(ProductService productService) {
+    public ProductController(
+            @Value("${manage.wechat.finishProcessTemplateId}") String finishProcessTemplateId,
+            ProductService productService,
+            ProductProcessService productProcessService,
+            WechatUserService wechatUserService,
+            WechatMessageUtil wechatMessageUtil
+    ) {
+        this.finishProcessTemplateId = finishProcessTemplateId;
         this.productService = productService;
+        this.productProcessService = productProcessService;
+        this.wechatUserService = wechatUserService;
+        this.wechatMessageUtil = wechatMessageUtil;
+        this.logger = LogFactory.getLog(this.getClass());
     }
 
     /**
@@ -468,6 +501,20 @@ public class ProductController {
                 .orElseThrow(() -> new MissingServletRequestParameterException("productId", "int"));
 
         if (productService.completeProcess(productId, processId)) {
+
+            try {
+                sendProcessFinishMessage(
+                        productProcessService.loadById(productId, processId)
+                );
+            } catch (WechatServiceDownException | WechatConfigWrongException e) {
+                logger.error(
+                        SecurityUtil.getUser().getUsername() +
+                                " finish product: " + productId +
+                                " process: " + processId +
+                                ", send wechat message failed."
+                );
+                logger.error(e.getMessage());
+            }
             JSONObject data = new JSONObject();
 
             data.put("completeUserName", SecurityUtil.getUser().getName());
@@ -664,5 +711,36 @@ public class ProductController {
         }
 
         return processes;
+    }
+
+    private void sendProcessFinishMessage(ProductProcess productProcess)
+            throws WechatServiceDownException, WechatConfigWrongException {
+        final Product product = productProcess.getProduct();
+        final Process process = productProcess.getProcess();
+        final User finisher = productProcess.getFinisher();
+        WechatUser wechatUser;
+        try {
+            wechatUser = wechatUserService.loadByUserId(finisher.getId());
+        } catch (EntityNotFoundException e) {
+            return;
+        }
+
+        final Map<String, JSONObject> data = new HashMap<>();
+
+        data.put("first", createData(
+                "您已完成\"" + process.getName() + "\"工序")
+        );
+
+        data.put("keyword1", createData(product.getSerial()));
+        data.put("keyword2", createData(process.getName()));
+        data.put("keyword3", createData(finisher.getName()));
+        data.put("keyword4", createData(productProcess.getFinishTime().toInstant().atZone(ZoneIdUtil.CST).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)));
+
+        // TODO keyword5
+        data.put("keyword5", createData(null));
+        data.put("remark", createData("谢谢你的使用，工序确认成功。"));
+        wechatMessageUtil.sendTemplateMessage(
+                finishProcessTemplateId, wechatUser.getId(), null, null, data
+        );
     }
 }
