@@ -16,7 +16,9 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityNotFoundException;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.time.ZonedDateTime;
+import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 
 /**
@@ -172,7 +174,7 @@ public class WorkerController {
 
     /**
      * Statistical Worker Finish Product Processes Api
-     * @param mouth the mouth: timestamp
+     * @param month the month: timestamp
      * @return {
      *     "status": 1,
      *     "message": message: str,
@@ -198,13 +200,21 @@ public class WorkerController {
     @GetMapping("/statistical")
     public JSONObject statisticalWorkerFinishProductProcesses(
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            @RequestParam Date mouth
+            @RequestParam(required = false) Date month
     ) {
         JSONObject response = new JSONObject();
         JSONArray data = new JSONArray();
         Map<Long, JSONObject> workerFinishMap = new HashMap<>();
+        ZonedDateTime zonedDateTime;
 
-        ZonedDateTime zonedDateTime = mouth.toInstant().atZone(ZoneIdUtil.CST);
+        if (month == null) {
+            zonedDateTime = LocalDate
+                    .now(ZoneIdUtil.CST)
+                    .with(TemporalAdjusters.firstDayOfMonth())
+                    .atStartOfDay(ZoneIdUtil.CST);
+        } else {
+            zonedDateTime = month.toInstant().atZone(ZoneIdUtil.CST);
+        }
 
         Timestamp thisMouth = Timestamp.from(zonedDateTime.toInstant());
         Timestamp nextMouth = Timestamp.from(zonedDateTime.plusMonths(1).toInstant());
@@ -212,52 +222,52 @@ public class WorkerController {
         List<ProductProcess> productProcesses = productProcessService.loadAllByFinishTimeAfterAndFinishTimeBefore(thisMouth, nextMouth);
 
         productProcesses.forEach(productProcess ->
-                Optional.ofNullable(productProcess.getFinisher()).ifPresent(finisher-> {
-            final JSONObject finishInfo;
-            final JSONArray finishList;
-            final JSONObject one = new JSONObject();
+                Optional.ofNullable(productProcess.getFinisher()).ifPresent(finisher -> {
+                    final JSONObject finishInfo;
+                    final JSONArray finishList;
+                    final JSONObject one = new JSONObject();
 
-            one.put("finishTime", productProcess.getFinishTime());
+                    one.put("finishTime", productProcess.getFinishTime());
 
-            if (workerFinishMap.containsKey(finisher.getId())) {
-                finishInfo = workerFinishMap.get(finisher.getId());
-                finishList = finishInfo.getJSONArray("finishList");
-            } else {
-                finishInfo = new JSONObject();
-                finishList = new JSONArray();
+                    if (workerFinishMap.containsKey(finisher.getId())) {
+                        finishInfo = workerFinishMap.get(finisher.getId());
+                        finishList = finishInfo.getJSONArray("finishList");
+                    } else {
+                        finishInfo = new JSONObject();
+                        finishList = new JSONArray();
 
-                data.add(finishInfo);
+                        data.add(finishInfo);
 
-                workerFinishMap.put(finisher.getId(), finishInfo);
+                        workerFinishMap.put(finisher.getId(), finishInfo);
 
-                finishInfo.put("id", finisher.getId());
-                finishInfo.put("name", finisher.getName());
-                finishInfo.put("finishList", finishList);
-            }
-            finishList.add(one);
+                        finishInfo.put("id", finisher.getId());
+                        finishInfo.put("name", finisher.getName());
+                        finishInfo.put("finishList", finishList);
+                    }
+                    finishList.add(one);
 
-            Optional.ofNullable(productProcess.getProduct())
-                    .ifPresentOrElse(product -> {
-                        one.put("productId", product.getId());
-                        one.put("serial", product.getSerial());
-                    }, () -> {
-                        one.put("productId", -1);
-                        one.put("serial", "null");
-                    });
+                    Optional.ofNullable(productProcess.getProduct())
+                            .ifPresentOrElse(product -> {
+                                one.put("productId", product.getId());
+                                one.put("serial", product.getSerial());
+                            }, () -> {
+                                one.put("productId", -1);
+                                one.put("serial", "null");
+                            });
 
-            Optional.ofNullable(productProcess.getProcess())
-                    .ifPresentOrElse(process -> {
-                        one.put("processId", process.getId());
-                        one.put("processName", process.getName());
-                    }, () -> {
-                        one.put("processId", -1);
-                        one.put("processName", "null");
-                    });
-        }));
+                    Optional.ofNullable(productProcess.getProcess())
+                            .ifPresentOrElse(process -> {
+                                one.put("processId", process.getId());
+                                one.put("processName", process.getName());
+                            }, () -> {
+                                one.put("processId", -1);
+                                one.put("processName", "null");
+                            });
+                }));
 
         response.put("data", data);
         response.put("status", 1);
-        response.put("message", "获取员工" + zonedDateTime.getMonth() + "月工作统计成功");
+        response.put("message", "获取员工" + zonedDateTime.getMonth().getValue() + "月工作统计成功");
 
         return response;
     }
