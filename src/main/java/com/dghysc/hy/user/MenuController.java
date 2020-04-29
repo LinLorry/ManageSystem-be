@@ -28,6 +28,7 @@ public class MenuController {
         menuService.refreshMenuMap();
     }
 
+    // TODO when font end finish update remove this api.
     @GetMapping
     public JSONObject getMenu() {
         JSONObject response = new JSONObject();

@@ -36,6 +36,8 @@ public class UserController {
 
     private final UserService userService;
 
+    private final MenuService menuService;
+
     private final UserProcessService userProcessService;
 
     private final ProductService productService;
@@ -44,11 +46,12 @@ public class UserController {
 
     public UserController(
             TokenUtil tokenUtil, UserService userService,
-            UserProcessService userProcessService, ProductService productService,
-            ProductProcessService productProcessService
+            MenuService menuService, UserProcessService userProcessService,
+            ProductService productService, ProductProcessService productProcessService
     ) {
         this.tokenUtil = tokenUtil;
         this.userService = userService;
+        this.menuService = menuService;
         this.userProcessService = userProcessService;
         this.productService = productService;
         this.productProcessService = productProcessService;
@@ -195,6 +198,40 @@ public class UserController {
         response.put("status", 1);
         response.put("message", "获取今日动态信息成功");
         response.put("data", data);
+
+        return response;
+    }
+
+    /**
+     * Get Menu Api
+     * @return {
+     *     "status": 1,
+     *     "message": message: str,
+     *     "data": [
+     *          {
+     *              "name": parent menu name: str,
+     *              "icon": icon: str,
+     *              "location": menu location: int,
+     *              "children": [
+     *                  {
+     *                      "name": child menu name: str,
+     *                      "location": menu location: int,
+     *                      "url": the url: str
+     *                  },
+     *                  ...
+     *              ]
+     *          },
+     *          ...
+     *     ]
+     * }
+     */
+    @GetMapping("/menu")
+    public JSONObject getMenu() {
+        JSONObject response = new JSONObject();
+
+        response.put("data", menuService.getMenus(SecurityUtil.getAuthorities()));
+        response.put("status", 1);
+        response.put("message", "获取菜单成功");
 
         return response;
     }
