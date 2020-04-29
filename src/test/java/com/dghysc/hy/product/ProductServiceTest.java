@@ -1,6 +1,7 @@
 package com.dghysc.hy.product;
 
 import com.dghysc.hy.product.model.Product;
+import com.dghysc.hy.product.model.ProductProcess;
 import com.dghysc.hy.product.model.ProductProcessId;
 import com.dghysc.hy.product.rep.ProductProcessRepository;
 import com.dghysc.hy.product.rep.ProductRepository;
@@ -18,6 +19,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,8 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityNotFoundException;
 import java.sql.Timestamp;
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.Comparator;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -122,6 +123,56 @@ public class ProductServiceTest {
     }
 
     @Test
+    public void addAll() {
+        LocalDate today = LocalDate.now();
+        int size = testUtil.nextInt(20) + 1;
+
+        List<String> serialList = new ArrayList<>(size);
+        List<String> IGTList = new ArrayList<>(size);
+        List<String> ERPList = new ArrayList<>(size);
+        List<String> centralList = new ArrayList<>(size);
+        List<String> areaList = new ArrayList<>(size);
+        List<String> designList = new ArrayList<>(size);
+        List<Timestamp> beginTimeList = new ArrayList<>(size);
+        List<Timestamp> demandTimeList = new ArrayList<>(size);
+        List<Timestamp> endTimeList = new ArrayList<>(size);
+        List<Integer> workIdList = new ArrayList<>(size);
+
+        for (int i = 0; i < size; ++i) {
+            serialList.add(i, testUtil.nextString());
+            IGTList.add(i, testUtil.nextString());
+            ERPList.add(i, testUtil.nextString());
+            centralList.add(i, testUtil.nextString());
+            areaList.add(i, testUtil.nextString());
+            designList.add(i, testUtil.nextString());
+            beginTimeList.add(i, Timestamp.valueOf(today.plusDays(-testUtil.nextInt(365)).atStartOfDay()));
+            demandTimeList.add(i, Timestamp.valueOf(today.plusDays(testUtil.nextInt(365)).atStartOfDay()));
+            endTimeList.add(i, Timestamp.valueOf(today.plusDays(testUtil.nextInt(365)).atStartOfDay()));
+            workIdList.add(i, testUtil.nextId(Work.class));
+        }
+
+        Iterable<Product> products = productService.addAll(serialList, IGTList, ERPList, centralList, areaList, designList, beginTimeList, demandTimeList, endTimeList, workIdList);
+        Iterator<Product> productIterator = products.iterator();
+
+        int tmp = 0;
+        while (productIterator.hasNext()) {
+            final Product product = productIterator.next();
+
+            assertEquals(serialList.get(tmp), product.getSerial());
+            assertEquals(IGTList.get(tmp), product.getIGT());
+            assertEquals(ERPList.get(tmp), product.getERP());
+            assertEquals(centralList.get(tmp), product.getCentral());
+            assertEquals(areaList.get(tmp), product.getArea());
+            assertEquals(designList.get(tmp), product.getDesign());
+            assertEquals(workIdList.get(tmp), product.getWorkId());
+
+            tmp++;
+        }
+
+        assertEquals(size, tmp);
+    }
+
+    @Test
     @Rollback(false)
     @Transactional
     public void completeProcess() {
@@ -132,7 +183,8 @@ public class ProductServiceTest {
             product = productRepository.findById(testUtil.nextId(Product.class))
                     .orElseThrow(EntityNotFoundException::new);
             if (product.getWork().getWorkProcesses().size() == product.getProductProcesses().size()) {
-                assertFalse(productService.completeProcess(product.getId()));
+                assertFalse(productService.completeProcess(product.getId(),
+                        product.getWork().getWorkProcesses().iterator().next().getProcessId()));
             } else {
                 break;
             }
@@ -144,7 +196,7 @@ public class ProductServiceTest {
 
         boolean userCanDo = userProcessRepository.existsById(
                 new UserProcessId(SecurityUtil.getUserId(), process.getId()));
-        boolean result = productService.completeProcess(product.getId());
+        boolean result = productService.completeProcess(product.getId(), process.getId());
 
         if (userCanDo) {
             assertTrue(result);
@@ -157,19 +209,29 @@ public class ProductServiceTest {
     @Test
     @Rollback(false)
     @Transactional
+    public void unCompleteProcess() {
+        Product product;
+
+        do {
+            product = productRepository.findById(testUtil.nextId(Product.class))
+                    .orElseThrow(EntityNotFoundException::new);
+        } while (product.getProductProcesses().size() == 0);
+
+        int processId = product.getProductProcesses().iterator().next().getProcessId();
+
+        productService.unCompleteProcess(
+                product.getId(),
+                processId
+        );
+
+        assertFalse(productProcessRepository.existsById(new ProductProcessId(product.getId(), processId)));
+    }
+
+    @Test
+    @Rollback(false)
+    @Transactional
     public void complete() {
-        Long id = testUtil.nextId(Product.class);
-        Product product = productRepository.findById(id)
-                .orElseThrow(EntityNotFoundException::new);
-
-        boolean complete = product.getProductProcesses().size() == product.getWork().getWorkProcesses().size();
-        boolean result = productService.complete(id);
-
-        if (complete) {
-            assertTrue(result);
-        } else {
-            assertFalse(result);
-        }
+        productService.complete(testUtil.nextId(Product.class));
     }
 
     @Test
@@ -186,5 +248,16 @@ public class ProductServiceTest {
 
         count = productService.countCreateProductDuringTheMonth();
         System.out.println(count);
+    }
+
+    @Test
+    public void loadProductProcesses() {
+        Page<ProductProcess> productProcesses = productService.loadProductProcesses(0, 20);
+
+        assertNotNull(productProcesses);
+        for (ProductProcess productProcess : productProcesses) {
+            System.out.println(productProcess.getProduct());
+            System.out.println(productProcess.getProcess());
+        }
     }
 }

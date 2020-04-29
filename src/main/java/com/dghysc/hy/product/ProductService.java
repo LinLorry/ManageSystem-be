@@ -2,6 +2,7 @@ package com.dghysc.hy.product;
 
 import com.dghysc.hy.product.model.Product;
 import com.dghysc.hy.product.model.ProductProcess;
+import com.dghysc.hy.product.model.ProductProcessId;
 import com.dghysc.hy.product.rep.ProductProcessRepository;
 import com.dghysc.hy.product.rep.ProductRepository;
 import com.dghysc.hy.user.model.User;
@@ -13,11 +14,13 @@ import com.dghysc.hy.work.model.Work;
 import com.dghysc.hy.work.model.WorkProcess;
 import com.dghysc.hy.work.repo.UserProcessRepository;
 import com.dghysc.hy.work.repo.WorkRepository;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.lang.Nullable;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -90,6 +93,81 @@ public class ProductService {
     }
 
     /**
+     * Add All Products Service
+     * @param serialList the serial list.
+     * @param IGTList the IGT list.
+     * @param ERPList the ERP list
+     * @param centralList the central list.
+     * @param areaList the area list.
+     * @param designList the design list.
+     * @param beginTimeList the begin time list.
+     * @param demandTimeList the demand time list.
+     * @param endTimeList the end time list.
+     * @param workIdList the work id list.
+     * @return the products.
+     * @throws IllegalArgumentException if argument list size not equal.
+     */
+    @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
+    public Iterable<Product> addAll(
+            @NotNull List<String> serialList, @NotNull List<String> IGTList,
+            @NotNull List<String> ERPList, @NotNull List<String> centralList,
+            @NotNull List<String> areaList, @NotNull List<String> designList,
+            @NotNull List<Timestamp> beginTimeList, @NotNull List<Timestamp> demandTimeList,
+            @NotNull List<Timestamp> endTimeList, @NotNull List<Integer> workIdList
+    ) {
+        if (
+                serialList == null || IGTList == null ||
+                ERPList == null || centralList == null ||
+                areaList == null || designList == null ||
+                beginTimeList == null || demandTimeList == null ||
+                endTimeList == null || workIdList == null
+        ) {
+            throw new NullPointerException();
+        }
+        final int size = serialList.size();
+
+        if (
+                IGTList.size() != size || ERPList.size() != size ||
+                centralList.size() != size || areaList.size() != size ||
+                designList.size() != size || beginTimeList.size() != size ||
+                demandTimeList.size() != size || endTimeList.size() != size ||
+                workIdList.size() != size
+        ) {
+            throw new IllegalArgumentException();
+        }
+
+        Iterable<Work> works = workRepository.findAllById(workIdList);
+        Iterator<Work> workIterator = works.iterator();
+        Map<Integer, Work> workMap = new HashMap<>();
+        while (workIterator.hasNext()) {
+            final Work work = workIterator.next();
+            workMap.put(work.getId(), work);
+        }
+
+        Product[] products = new Product[size];
+        final User user = SecurityUtil.getUser();
+
+        for (int i = 0; i < size; ++i) {
+            final Product product =
+                    new Product(serialList.get(i), workMap.get(workIdList.get(i)), user);
+
+            product.setIGT(IGTList.get(i));
+            product.setERP(ERPList.get(i));
+            product.setCentral(centralList.get(i));
+            product.setArea(areaList.get(i));
+            product.setDesign(designList.get(i));
+            product.setBeginTime(beginTimeList.get(i));
+            product.setDemandTime(demandTimeList.get(i));
+            product.setEndTime(endTimeList.get(i));
+
+            products[i] = product;
+        }
+
+        return productRepository.saveAll(Arrays.asList(products));
+    }
+
+    /**
      * Update Product Service.
      * @param id the product id.
      * @param serial the product serial.
@@ -128,43 +206,59 @@ public class ProductService {
 
     /**
      * User Complete Product Process Service
-     * @param id the product id
+     * @param productId the product productId
      * @return complete result:
      *      if product's all process have been complete, return false.
      *      if execute complete user can't complete this process return false.
      *      if complete success return true.
      * @throws EntityNotFoundException the product not exist.
-     * @throws NullPointerException the {@code id} is {@literal null}
+     * @throws NullPointerException the {@code productId} is {@literal null}
      */
     @Transactional
     @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER', 'WORKER')")
-    public boolean completeProcess(@NotNull Long id) {
-        Product product = productRepository.findById(Optional.of(id).get())
+    public boolean completeProcess(@NotNull Long productId, @NotNull Integer processId) {
+        Product product = productRepository.findById(productId)
                 .orElseThrow(EntityNotFoundException::new);
 
-        int processSequence = product.getProductProcesses().size();
-        WorkProcess[] workProcesses = product.getWork().getWorkProcesses().toArray(new WorkProcess[0]);
-
-        if (processSequence == workProcesses.length) return false;
-
-        Arrays.sort(workProcesses, Comparator.comparing(WorkProcess::getSequenceNumber));
-
-        Integer nowProcessId = workProcesses[processSequence].getProcessId();
-
-        List<UserProcess> userProcesses = userProcessRepository.findAllByUserId(SecurityUtil.getUserId());
-
-        boolean canNotDO = true;
-
-        for (UserProcess userProcess : userProcesses) {
-            if (nowProcessId.equals(userProcess.getProcessId())) {
-                canNotDO = false;
+        boolean exist = false;
+        for (WorkProcess workProcess : product.getWork().getWorkProcesses()) {
+            if (workProcess.getProcessId().equals(processId)) {
+                exist = true;
                 break;
             }
         }
 
-        if (canNotDO) return false;
+        if (!exist) return false;
 
-        ProductProcess productProcess = new ProductProcess(id, nowProcessId, SecurityUtil.getUser());
+        if (productProcessRepository.findById(
+                new ProductProcessId(productId, processId)
+        ).isPresent()) {
+            return false;
+        }
+
+        boolean canDo = false;
+
+        for (GrantedAuthority authority : SecurityUtil.getAuthorities()) {
+            if ("ROLE_ADMIN".equals(authority.getAuthority())) {
+                canDo = true;
+            } else if ("ROLE_PRODUCT_MANAGER".equals(authority.getAuthority())) {
+                canDo = true;
+            }
+        }
+
+        if (!canDo) {
+            List<UserProcess> userProcesses = userProcessRepository.findAllByUserId(SecurityUtil.getUserId());
+
+            for (UserProcess userProcess : userProcesses) {
+                if (processId.equals(userProcess.getProcessId())) {
+                    canDo = true;
+                    break;
+                }
+            }
+        }
+        if (!canDo) return false;
+
+        ProductProcess productProcess = new ProductProcess(productId, processId, SecurityUtil.getUser());
 
         productProcessRepository.save(productProcess);
 
@@ -172,27 +266,30 @@ public class ProductService {
     }
 
     /**
-     * Complete Product
-     * @param id the product id.
-     * @return the complete product.
+     * Un Complete Product Process Service.
+     * @param productId the product id.
+     * @param processId the process id.
+     * @throws EmptyResultDataAccessException if product process not exists.
      */
     @Transactional
     @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
-    public boolean complete(@NotNull Long id) {
+    public void unCompleteProcess(@NotNull Long productId, @NotNull Integer processId) {
+        productProcessRepository.deleteById(new ProductProcessId(productId, processId));
+    }
+
+    /**
+     * Complete Product
+     * @param id the product id.
+     */
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
+    public void complete(@NotNull Long id) {
         Product product = productRepository.findById(Optional.of(id).get())
                 .orElseThrow(EntityNotFoundException::new);
 
-        if (product.isComplete()) {
-            return true;
-        } else if (product.getProductProcesses().size() !=
-                product.getWork().getWorkProcesses().size()) {
-            return false;
+        if (!product.isComplete()) {
+            product.setComplete();
+            productRepository.save(product);
         }
-
-        product.setComplete();
-        productRepository.save(product);
-
-        return true;
     }
 
     /**
@@ -257,6 +354,17 @@ public class ProductService {
         product.getWork().getWorkProcesses().size();
 
         return product;
+    }
+
+    /**
+     * Load Product Processes Service
+     * @param pageNumber the page number.
+     * @param pageSize the page size.
+     * @return the product processes page.
+     */
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER', 'WORKER_MANAGER')")
+    Page<ProductProcess> loadProductProcesses(int pageNumber, int pageSize) {
+        return productProcessRepository.findAllByOrderByFinishTimeDesc(PageRequest.of(pageNumber, pageSize));
     }
 
     /**
