@@ -80,4 +80,22 @@ public class WechatMessageUtil {
                     "\nErrmsg" + response.getString("errmsg"));
         }
     }
+
+    public static JSONObject createData(@Nullable Object value) {
+        JSONObject json = new JSONObject();
+
+        json.put("value", Optional.ofNullable(value).orElse(""));
+        json.put("color", "#173177");
+
+        return json;
+    }
+
+    public static JSONObject createData(@Nullable Object value, @NotNull String color) {
+        JSONObject json = new JSONObject();
+
+        json.put("value", Optional.ofNullable(value).orElse(""));
+        json.put("color", Optional.of(color).get());
+
+        return json;
+    }
 }

@@ -24,6 +24,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.dghysc.hy.util.WechatMessageUtil.createData;
+
 /**
  * Schedule Message User Service
  * @author lorry
@@ -118,42 +120,16 @@ public class ScheduleMessageUserService {
         final int noStartValue = productRepository.countAllNotStart();
 
         final Map<String, JSONObject> data = new HashMap<>();
-        final JSONObject first = new JSONObject();
-        final JSONObject keyword1 = new JSONObject();
-        final JSONObject keyword2 = new JSONObject();
-        final JSONObject keyword3 = new JSONObject();
-        final JSONObject remark = new JSONObject();
-
-        data.put("first", first);
-        data.put("keyword1", keyword1);
-        data.put("keyword2", keyword2);
-        data.put("keyword3", keyword3);
-        data.put("remark", remark);
-
-        first.put("color", "#173177");
-        keyword1.put("color", "#173177");
-        keyword2.put("color", "#173177");
-        keyword3.put("color", "#173177");
-        remark.put("color", "#173177");
-
-        final String firstValue = "今日订单统计";
-        first.put("value", firstValue);
-
-        final String keyword1Value = localDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE);
-        keyword1.put("value", keyword1Value);
-
-        final String keyword2Value =
+        data.put("first", createData("今日订单统计"));
+        data.put("keyword1", createData(localDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE)));
+        data.put("keyword2", createData(
                 "今日完成订单数：" + todayComplete +
-                "\n今日创建订单数：" + todayCreateValue +
-                "\n进行中的订单数：" + startValue +
-                "\n还未开始的订单数：" + noStartValue;
-        keyword2.put("value", keyword2Value);
-
-        final String keyword3Value = localDateTime.format(DateTimeFormatter.ISO_LOCAL_TIME);
-        keyword3.put("value", keyword3Value);
-
-        remark.put("value", "");
-
+                        "\n今日创建订单数：" + todayCreateValue +
+                        "\n进行中的订单数：" + startValue +
+                        "\n还未开始的订单数：" + noStartValue)
+        );
+        data.put("keyword3", createData(localDateTime.format(DateTimeFormatter.ISO_LOCAL_TIME)));
+        data.put("value", createData(null));
 
         for (ScheduleMessageUser scheduleMessageUser : loadAll()) {
             try {
