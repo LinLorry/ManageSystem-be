@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityNotFoundException;
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.*;
 
@@ -335,9 +335,8 @@ public class UserController {
         JSONArray finishInfo = new JSONArray();
         JSONArray finisherInfo = new JSONArray();
 
-        LocalDateTime localDateTime = LocalDateTime.now(ZoneIdUtil.CST);
-        ZonedDateTime today = localDateTime
-                .toLocalDate()
+        ZonedDateTime today = LocalDate
+                .now(ZoneIdUtil.CST)
                 .atStartOfDay(ZoneIdUtil.CST);
 
         Timestamp todayTimestamp = Timestamp.from(today.toInstant());
