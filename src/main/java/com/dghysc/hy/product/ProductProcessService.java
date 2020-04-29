@@ -1,6 +1,7 @@
 package com.dghysc.hy.product;
 
 import com.dghysc.hy.product.model.ProductProcess;
+import com.dghysc.hy.product.model.ProductProcessId;
 import com.dghysc.hy.product.rep.ProductProcessRepository;
 import com.dghysc.hy.util.SecurityUtil;
 import org.springframework.data.domain.Page;
@@ -9,6 +10,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.EntityNotFoundException;
 import javax.validation.constraints.NotNull;
 import java.sql.Timestamp;
 import java.util.List;
@@ -26,6 +28,11 @@ public class ProductProcessService {
 
     public ProductProcessService(ProductProcessRepository productProcessRepository) {
         this.productProcessRepository = productProcessRepository;
+    }
+
+    public ProductProcess loadById(@NotNull Long productId, @NotNull Integer processId) {
+        return productProcessRepository.findById(new ProductProcessId(productId, processId))
+                .orElseThrow(EntityNotFoundException::new);
     }
 
     /**
