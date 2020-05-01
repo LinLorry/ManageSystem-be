@@ -1,6 +1,6 @@
-## Manage-be
+## ManageSystem-be
 
-前端仓库： [Manage-fe](https://github.com/LinLorry/Manage-fe)
+前端仓库： [ManageSystem-fe](https://github.com/LinLorry/ManageSystem-fe)
 
 ### 后端开发环境
  spring boot
