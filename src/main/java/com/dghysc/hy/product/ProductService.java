@@ -333,7 +333,7 @@ public class ProductService {
      * @return the product.
      * @throws EntityNotFoundException if the product isn't exist throw this exception.
      */
-    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER', 'WORKER_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
     Product loadById(@NotNull Long id) {
         return productRepository.findById(Optional.of(id).get()).orElseThrow(EntityNotFoundException::new);
     }
@@ -345,7 +345,7 @@ public class ProductService {
      * @throws EntityNotFoundException if the product isn't exist throw this exception.
      */
     @Transactional(readOnly = true)
-    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER', 'WORKER_MANAGER', 'WORKER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER', 'WORKER')")
     public Product loadWithProcessesById(@NotNull Long id) {
         Product product = productRepository.findById(Optional.of(id).get())
                 .orElseThrow(EntityNotFoundException::new);
@@ -362,7 +362,7 @@ public class ProductService {
      * @param pageSize the page size.
      * @return the product processes page.
      */
-    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER', 'WORKER_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
     Page<ProductProcess> loadProductProcesses(int pageNumber, int pageSize) {
         return productProcessRepository.findAllByOrderByFinishTimeDesc(PageRequest.of(pageNumber, pageSize));
     }

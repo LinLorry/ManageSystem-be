@@ -430,7 +430,7 @@ public class ProductController {
      * }
      */
     @GetMapping("/completeProcess")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER', 'WORKER_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PRODUCT_MANAGER')")
     public JSONObject getCompleteProcesses(
             @RequestParam(defaultValue = "0") int pageNumber,
             @RequestParam(defaultValue = "20") int pageSize
