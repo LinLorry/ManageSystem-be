@@ -324,7 +324,7 @@ public class ProductController {
      *     "message": message: str,
      *     "data": {
      *         "total": total page number,
-     *         "pageSize: page size,
+     *         "size: page size,
      *         "products": [
      *              product...
      *         ]
@@ -413,7 +413,7 @@ public class ProductController {
      *     "message": "获取最近完成工序信息成功",
      *     "data": {
      *         "total": total page number,
-     *         "pageSize: page size,
+     *         "size: page size,
      *         "productProcesses": [
      *              {
      *                  "productId": product id: int,
@@ -443,7 +443,7 @@ public class ProductController {
                 .loadProductProcesses(pageNumber, pageSize);
 
         data.put("total", page.getTotalPages());
-        data.put("pageSize", page.getSize());
+        data.put("size", page.getSize());
         data.put("productProcesses", productProcesses);
 
         for (ProductProcess productProcess : page) {
@@ -633,7 +633,7 @@ public class ProductController {
         JSONObject data = new JSONObject();
 
         data.put("total", page.getTotalPages());
-        data.put("pageSize", page.getSize());
+        data.put("size", page.getSize());
         data.put("products", page.getContent());
 
         return data;
